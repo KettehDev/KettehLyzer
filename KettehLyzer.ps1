@@ -4,30 +4,26 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 [System.Windows.Forms.Application]::EnableVisualStyles()
 
 # =============================================================================
-# THEME - Refined Dark Gold / Cyber
+# THEME - Clean Dark + Soft Gold
 # =============================================================================
-$bg          = [System.Drawing.Color]::FromArgb(12, 11, 8)
-$sidebarBg   = [System.Drawing.Color]::FromArgb(18, 16, 12)
-$cardBg      = [System.Drawing.Color]::FromArgb(22, 20, 15)
-$cardHover   = [System.Drawing.Color]::FromArgb(32, 28, 20)
-$panelBg     = [System.Drawing.Color]::FromArgb(16, 15, 11)
-$gold        = [System.Drawing.Color]::FromArgb(218, 175, 55)
-$goldDim     = [System.Drawing.Color]::FromArgb(160, 130, 40)
-$goldBright  = [System.Drawing.Color]::FromArgb(255, 210, 80)
-$txt         = [System.Drawing.Color]::FromArgb(235, 225, 200)
-$dim         = [System.Drawing.Color]::FromArgb(140, 130, 110)
-$green       = [System.Drawing.Color]::FromArgb(100, 200, 120)
-$red         = [System.Drawing.Color]::FromArgb(230, 90, 80)
-$yellow      = [System.Drawing.Color]::FromArgb(230, 190, 60)
+$bg          = [System.Drawing.Color]::FromArgb(14, 14, 16)
+$sidebarBg   = [System.Drawing.Color]::FromArgb(18, 18, 22)
+$cardBg      = [System.Drawing.Color]::FromArgb(24, 24, 28)
+$cardHover   = [System.Drawing.Color]::FromArgb(34, 34, 40)
+$gold        = [System.Drawing.Color]::FromArgb(212, 168, 65)
+$goldSoft    = [System.Drawing.Color]::FromArgb(180, 145, 55)
+$txt         = [System.Drawing.Color]::FromArgb(235, 235, 240)
+$dim         = [System.Drawing.Color]::FromArgb(130, 130, 145)
+$green       = [System.Drawing.Color]::FromArgb(90, 200, 130)
+$red         = [System.Drawing.Color]::FromArgb(230, 90, 90)
+$yellow      = [System.Drawing.Color]::FromArgb(230, 190, 70)
 
-$fontTitle   = New-Object System.Drawing.Font("Segoe UI Semibold", 18)
-$fontHeader  = New-Object System.Drawing.Font("Segoe UI Semibold", 11)
+$fontTitle   = New-Object System.Drawing.Font("Segoe UI Semibold", 20)
 $fontUI      = New-Object System.Drawing.Font("Segoe UI", 9.5)
 $fontSmall   = New-Object System.Drawing.Font("Segoe UI", 8.5)
 $fontMono    = New-Object System.Drawing.Font("Consolas", 9)
-$fontCat     = New-Object System.Drawing.Font("Consolas", 11)
-$fontCard    = New-Object System.Drawing.Font("Segoe UI Semibold", 10)
-$fontDesc    = New-Object System.Drawing.Font("Segoe UI", 8)
+$fontCard    = New-Object System.Drawing.Font("Segoe UI Semibold", 11)
+$fontDesc    = New-Object System.Drawing.Font("Segoe UI", 8.5)
 
 # =============================================================================
 # DETECTION ENGINE
@@ -66,7 +62,7 @@ function Query-Modrinth {
         $ver = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/version_file/$Hash" -Method Get -UseBasicParsing -ErrorAction Stop
         if ($ver.project_id) {
             $proj = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/project/$($ver.project_id)" -Method Get -UseBasicParsing -ErrorAction Stop
-            $r = @{ Name = $proj.title; Spug = $proj.slug; Slug = $proj.slug }
+            $r = @{ Name = $proj.title; Slug = $proj.slug }
         }
     } catch {}
     $script:ModrinthCache[$Hash] = $r
@@ -204,7 +200,7 @@ function Get-PersistenceItems {
 }
 
 # =============================================================================
-# LOGGING HELPER
+# LOGGING
 # =============================================================================
 function Write-Log {
     param([string]$Message, [string]$Level = "INFO")
@@ -227,113 +223,101 @@ function Write-Log {
 # FORM
 # =============================================================================
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "KettehLyzer  —  SS Toolkit"
-$form.Size = New-Object System.Drawing.Size(1180, 780)
+$form.Text = "KettehLyzer"
+$form.Size = New-Object System.Drawing.Size(1160, 760)
 $form.StartPosition = "CenterScreen"
 $form.BackColor = $bg
 $form.ForeColor = $txt
 $form.Font = $fontUI
-$form.MinimumSize = New-Object System.Drawing.Size(1050, 700)
+$form.MinimumSize = New-Object System.Drawing.Size(1020, 680)
 
 # =============================================================================
-# LEFT SIDEBAR
+# SIDEBAR
 # =============================================================================
 $sidebar = New-Object System.Windows.Forms.Panel
 $sidebar.Dock = "Left"
-$sidebar.Width = 220
+$sidebar.Width = 210
 $sidebar.BackColor = $sidebarBg
 
+# Logo
 $logoPanel = New-Object System.Windows.Forms.Panel
-$logoPanel.Size = New-Object System.Drawing.Size(220, 110)
+$logoPanel.Size = New-Object System.Drawing.Size(210, 100)
 $logoPanel.Location = New-Object System.Drawing.Point(0, 0)
-$logoPanel.BackColor = [System.Drawing.Color]::FromArgb(28, 24, 16)
+$logoPanel.BackColor = $sidebarBg
 
-$catLbl = New-Object System.Windows.Forms.Label
-$catLbl.Text = "  /\_/\`n ( o.o )`n  > ^ <"
-$catLbl.Font = $fontCat
-$catLbl.ForeColor = $gold
-$catLbl.Location = New-Object System.Drawing.Point(55, 18)
-$catLbl.AutoSize = $true
-$logoPanel.Controls.Add($catLbl)
+$logoLbl = New-Object System.Windows.Forms.Label
+$logoLbl.Text = "Ketteh"
+$logoLbl.Font = New-Object System.Drawing.Font("Segoe UI Semibold", 18)
+$logoLbl.ForeColor = $gold
+$logoLbl.Location = New-Object System.Drawing.Point(22, 28)
+$logoLbl.AutoSize = $true
 
+$logoSub = New-Object System.Windows.Forms.Label
+$logoSub.Text = "SS Toolkit"
+$logoSub.Font = $fontSmall
+$logoSub.ForeColor = $dim
+$logoSub.Location = New-Object System.Drawing.Point(24, 58)
+$logoSub.AutoSize = $true
+
+$logoPanel.Controls.AddRange(@($logoLbl, $logoSub))
+
+# Actions
 $actLbl = New-Object System.Windows.Forms.Label
-$actLbl.Text = "ACTIONS"
+$actLbl.Text = "QUICK ACTIONS"
 $actLbl.Font = $fontSmall
-$actLbl.ForeColor = $goldDim
-$actLbl.Location = New-Object System.Drawing.Point(18, 125)
+$actLbl.ForeColor = $goldSoft
+$actLbl.Location = New-Object System.Drawing.Point(22, 120)
 $actLbl.AutoSize = $true
 
-function New-SideAction {
+function New-SideBtn {
     param([string]$Text, [int]$Y)
     $b = New-Object System.Windows.Forms.Button
-    $b.Text = "  $Text"
-    $b.Location = New-Object System.Drawing.Point(12, $Y)
-    $b.Size = New-Object System.Drawing.Size(196, 34)
+    $b.Text = $Text
+    $b.Location = New-Object System.Drawing.Point(16, $Y)
+    $b.Size = New-Object System.Drawing.Size(178, 36)
     $b.FlatStyle = "Flat"
     $b.FlatAppearance.BorderSize = 0
-    $b.BackColor = $sidebarBg
+    $b.BackColor = $cardBg
     $b.ForeColor = $txt
     $b.Font = $fontUI
     $b.TextAlign = "MiddleLeft"
+    $b.Padding = New-Object System.Windows.Forms.Padding(12, 0, 0, 0)
     $b.Cursor = [System.Windows.Forms.Cursors]::Hand
     return $b
 }
 
-$btnOpenMods   = New-SideAction "Open Mods Folder"   155
-$btnOpenMC     = New-SideAction "Open .minecraft"    193
-$btnClearCache = New-SideAction "Clear Cache"        231
-$btnOpenCMD    = New-SideAction "Open PowerShell"    269
+$btnOpenMods   = New-SideBtn "  Open Mods Folder"  150
+$btnOpenMC     = New-SideBtn "  Open .minecraft"   194
+$btnClearCache = New-SideBtn "  Clear Cache"       238
+$btnOpenPS     = New-SideBtn "  Open PowerShell"   282
 
-$credLbl = New-Object System.Windows.Forms.Label
-$credLbl.Text = "CREDITS"
-$credLbl.Font = $fontSmall
-$credLbl.ForeColor = $goldDim
-$credLbl.Location = New-Object System.Drawing.Point(18, 330)
-$credLbl.AutoSize = $true
-
-$credText = New-Object System.Windows.Forms.Label
-$credText.Text = "Made by cheese cat`nDiscord: cheese_cat0`nGitHub: cheesecatol"
-$credText.Font = $fontSmall
-$credText.ForeColor = $dim
-$credText.Location = New-Object System.Drawing.Point(18, 352)
-$credText.Size = New-Object System.Drawing.Size(190, 60)
-
-$pathInfo = New-Object System.Windows.Forms.Label
-$pathInfo.Text = "Mods path:`n$env:APPDATA\.minecraft\mods"
-$pathInfo.Font = New-Object System.Drawing.Font("Segoe UI", 7.5)
-$pathInfo.ForeColor = $dim
-$pathInfo.Location = New-Object System.Drawing.Point(18, 680)
-$pathInfo.Size = New-Object System.Drawing.Size(190, 50)
-
-$sidebar.Controls.AddRange(@(
-    $logoPanel, $actLbl, $btnOpenMods, $btnOpenMC, $btnClearCache, $btnOpenCMD,
-    $credLbl, $credText, $pathInfo
-))
+$sidebar.Controls.AddRange(@($logoPanel, $actLbl, $btnOpenMods, $btnOpenMC, $btnClearCache, $btnOpenPS))
 
 # =============================================================================
-# MAIN CONTENT
+# MAIN
 # =============================================================================
 $main = New-Object System.Windows.Forms.Panel
 $main.Dock = "Fill"
 $main.BackColor = $bg
 
+# Header
 $header = New-Object System.Windows.Forms.Panel
 $header.Dock = "Top"
-$header.Height = 78
+$header.Height = 82
 $header.BackColor = $bg
 
 $titleLbl = New-Object System.Windows.Forms.Label
 $titleLbl.Text = "Ready"
 $titleLbl.Font = $fontTitle
 $titleLbl.ForeColor = $txt
-$titleLbl.Location = New-Object System.Drawing.Point(28, 14)
+$titleLbl.Location = New-Object System.Drawing.Point(32, 18)
 $titleLbl.AutoSize = $true
 
 $subLbl = New-Object System.Windows.Forms.Label
-$subLbl.Text = "Select a tool below to run a check"
+$subLbl.Text = "Select a tool to begin"
 $subLbl.Font = $fontUI
 $subLbl.ForeColor = $dim
-$subLbl.Location = New-Object System.Drawing.Point(30, 46)
+$subLbl.Location = New-Object System.Drawing.Point(34, 52)
 $subLbl.AutoSize = $true
 
 $statusBadge = New-Object System.Windows.Forms.Label
@@ -341,27 +325,28 @@ $statusBadge.Text = "  IDLE  "
 $statusBadge.Font = $fontSmall
 $statusBadge.ForeColor = [System.Drawing.Color]::Black
 $statusBadge.BackColor = $gold
-$statusBadge.Location = New-Object System.Drawing.Point(860, 22)
+$statusBadge.Location = New-Object System.Drawing.Point(820, 28)
 $statusBadge.AutoSize = $true
-$statusBadge.Padding = New-Object System.Windows.Forms.Padding(8, 4, 8, 4)
+$statusBadge.Padding = New-Object System.Windows.Forms.Padding(10, 5, 10, 5)
 
 $header.Controls.AddRange(@($titleLbl, $subLbl, $statusBadge))
 
+# Category pills
 $catBar = New-Object System.Windows.Forms.Panel
 $catBar.Dock = "Top"
-$catBar.Height = 48
+$catBar.Height = 52
 $catBar.BackColor = $bg
 
 $categories = @("All", "Mods", "Process", "Network", "Persistence", "Tools")
 $script:ActiveCat = "All"
 $catButtons = @{}
 
-$xPos = 28
+$xPos = 32
 foreach ($cat in $categories) {
     $b = New-Object System.Windows.Forms.Button
     $b.Text = $cat
-    $b.Location = New-Object System.Drawing.Point($xPos, 10)
-    $b.Size = New-Object System.Drawing.Size(90, 28)
+    $b.Location = New-Object System.Drawing.Point($xPos, 12)
+    $b.Size = New-Object System.Drawing.Size(88, 30)
     $b.FlatStyle = "Flat"
     $b.FlatAppearance.BorderSize = 0
     $b.Font = $fontSmall
@@ -375,14 +360,14 @@ foreach ($cat in $categories) {
     }
     $catButtons[$cat] = $b
     $catBar.Controls.Add($b)
-    $xPos += 98
+    $xPos += 96
 }
 
+# Card host
 $cardHost = New-Object System.Windows.Forms.Panel
 $cardHost.Dock = "Fill"
 $cardHost.BackColor = $bg
 $cardHost.AutoScroll = $true
-$cardHost.Padding = New-Object System.Windows.Forms.Padding(20)
 
 function New-ToolCard {
     param(
@@ -394,7 +379,7 @@ function New-ToolCard {
         [int]$Y
     )
     $card = New-Object System.Windows.Forms.Panel
-    $card.Size = New-Object System.Drawing.Size(210, 110)
+    $card.Size = New-Object System.Drawing.Size(215, 118)
     $card.Location = New-Object System.Drawing.Point($X, $Y)
     $card.BackColor = $cardBg
     $card.Cursor = [System.Windows.Forms.Cursors]::Hand
@@ -403,8 +388,8 @@ function New-ToolCard {
     $t = New-Object System.Windows.Forms.Label
     $t.Text = $Title
     $t.Font = $fontCard
-    $t.ForeColor = $goldBright
-    $t.Location = New-Object System.Drawing.Point(14, 16)
+    $t.ForeColor = $gold
+    $t.Location = New-Object System.Drawing.Point(18, 20)
     $t.AutoSize = $true
     $t.Cursor = [System.Windows.Forms.Cursors]::Hand
 
@@ -412,16 +397,13 @@ function New-ToolCard {
     $d.Text = $Desc
     $d.Font = $fontDesc
     $d.ForeColor = $dim
-    $d.Location = New-Object System.Drawing.Point(14, 44)
-    $d.Size = New-Object System.Drawing.Size(180, 50)
+    $d.Location = New-Object System.Drawing.Point(18, 50)
+    $d.Size = New-Object System.Drawing.Size(180, 52)
     $d.Cursor = [System.Windows.Forms.Cursors]::Hand
 
     $card.Controls.AddRange(@($t, $d))
 
-    $click = {
-        & $Action
-    }.GetNewClosure()
-
+    $click = { & $Action }.GetNewClosure()
     $card.Add_Click($click)
     $t.Add_Click($click)
     $d.Add_Click($click)
@@ -438,68 +420,55 @@ function New-ToolCard {
 
 $cards = @()
 
-$cards += New-ToolCard "Full Mod Scan" "Scan mods folder against known cheat signatures + Modrinth" "Mods" {
-    Show-Results "Mods"
+$cards += New-ToolCard "Full Mod Scan" "Scan all jars against known cheat signatures and Modrinth" "Mods" {
+    Show-Results
     Start-ModScan
-} 28 20
+} 32 24
 
-$cards += New-ToolCard "Single JAR Scan" "Deep inspect one JAR for cheats + dangerous behaviour" "Mods" {
-    Show-Results "Single"
-} 250 20
-
-$cards += New-ToolCard "Hash Lookup" "Calculate SHA1 / SHA256 and query Modrinth" "Mods" {
-    Show-Results "Hash"
-} 472 20
-
-$cards += New-ToolCard "Open Mods Folder" "Open the current mods directory in Explorer" "Mods" {
-    $p = Join-Path $env:APPDATA ".minecraft\mods"
-    if (Test-Path $p) { Start-Process explorer $p }
-    Write-Log "Opened mods folder" "OK"
-} 694 20
-
-$cards += New-ToolCard "Process Modules" "List modules loaded by java/javaw + signature check" "Process" {
-    Show-Results "Process"
+$cards += New-ToolCard "Process Modules" "Inspect modules loaded by Java processes" "Process" {
+    Show-Results
     Start-ProcScan
-} 28 150
+} 262 24
+
+$cards += New-ToolCard "Network" "List active TCP connections from Java" "Network" {
+    Show-Results
+    Start-NetScan
+} 492 24
+
+$cards += New-ToolCard "Persistence" "Check Run keys and Startup folder" "Persistence" {
+    Show-Results
+    Start-PersistScan
+} 722 24
 
 $cards += New-ToolCard "Java Snapshot" "Quick overview of running Java processes" "Process" {
     $procs = Get-Process javaw,java -ErrorAction SilentlyContinue
     if (-not $procs) { Write-Log "No Java processes running" "WARN"; return }
-    $msg = ($procs | ForEach-Object { "PID $($_.Id)  $($_.ProcessName)  $([math]::Round($_.WorkingSet64/1MB,1)) MB" }) -join "`n"
+    $msg = ($procs | ForEach-Object { "PID $($_.Id)  •  $($_.ProcessName)  •  $([math]::Round($_.WorkingSet64/1MB,1)) MB" }) -join "`n"
     [System.Windows.Forms.MessageBox]::Show($msg, "Java Snapshot")
-    Write-Log "Java process snapshot shown" "OK"
-} 250 150
+    Write-Log "Java snapshot shown" "OK"
+} 32 160
 
-$cards += New-ToolCard "Network Connections" "List established TCP connections from Java processes" "Network" {
-    Show-Results "Network"
-    Start-NetScan
-} 28 280
-
-$cards += New-ToolCard "Persistence Check" "Run keys, Startup folder, recent scheduled tasks" "Persistence" {
-    Show-Results "Persistence"
-    Start-PersistScan
-} 28 410
-
-$cards += New-ToolCard "Generate Report" "Export full results to a timestamped .txt report" "Tools" {
+$cards += New-ToolCard "Generate Report" "Export current results to a text file" "Tools" {
     Generate-Report
-} 250 410
+} 262 160
 
 $cards += New-ToolCard "Clear Cache" "Clear Modrinth hash cache" "Tools" {
     $script:ModrinthCache.Clear()
-    Write-Log "Modrinth cache cleared" "OK"
-} 472 410
+    Write-Log "Cache cleared" "OK"
+} 492 160
 
 foreach ($c in $cards) { $cardHost.Controls.Add($c) }
 
+# Results view
 $resultsPanel = New-Object System.Windows.Forms.Panel
 $resultsPanel.Dock = "Fill"
 $resultsPanel.BackColor = $bg
 $resultsPanel.Visible = $false
 
 $backBtn = New-Object System.Windows.Forms.Button
-$backBtn.Text = "←  Back to tools"
-$backBtn.Location = New-Object System.Drawing.Point(28, 12)
-$backBtn.Size = New-Object System.Drawing.Size(140, 28)
+$backBtn.Text = "  ←  Back"
+$backBtn.Location = New-Object System.Drawing.Point(32, 16)
+$backBtn.Size = New-Object System.Drawing.Size(110, 32)
 $backBtn.FlatStyle = "Flat"
 $backBtn.FlatAppearance.BorderSize = 0
 $backBtn.BackColor = $cardBg
@@ -509,32 +478,32 @@ $backBtn.Cursor = [System.Windows.Forms.Cursors]::Hand
 $resultsList = New-Object System.Windows.Forms.ListView
 $resultsList.View = "Details"
 $resultsList.FullRowSelect = $true
-$resultsList.Location = New-Object System.Drawing.Point(28, 50)
-$resultsList.Size = New-Object System.Drawing.Size(880, 420)
+$resultsList.Location = New-Object System.Drawing.Point(32, 60)
+$resultsList.Size = New-Object System.Drawing.Size(880, 400)
 $resultsList.BackColor = $cardBg
 $resultsList.ForeColor = $txt
 $resultsList.Font = $fontMono
 $resultsList.BorderStyle = "None"
-$resultsList.GridLines = $false
 
 $resultsPanel.Controls.AddRange(@($backBtn, $resultsList))
 
+# Console
 $consolePanel = New-Object System.Windows.Forms.Panel
 $consolePanel.Dock = "Bottom"
-$consolePanel.Height = 140
-$consolePanel.BackColor = [System.Drawing.Color]::FromArgb(8, 7, 5)
+$consolePanel.Height = 130
+$consolePanel.BackColor = [System.Drawing.Color]::FromArgb(10, 10, 12)
 
 $consoleLbl = New-Object System.Windows.Forms.Label
-$consoleLbl.Text = "ACTIVITY CONSOLE"
+$consoleLbl.Text = "ACTIVITY"
 $consoleLbl.Font = $fontSmall
-$consoleLbl.ForeColor = $goldDim
-$consoleLbl.Location = New-Object System.Drawing.Point(16, 6)
+$consoleLbl.ForeColor = $goldSoft
+$consoleLbl.Location = New-Object System.Drawing.Point(20, 8)
 $consoleLbl.AutoSize = $true
 
 $logBox = New-Object System.Windows.Forms.RichTextBox
-$logBox.Location = New-Object System.Drawing.Point(12, 26)
-$logBox.Size = New-Object System.Drawing.Size(920, 100)
-$logBox.BackColor = [System.Drawing.Color]::FromArgb(8, 7, 5)
+$logBox.Location = New-Object System.Drawing.Point(16, 28)
+$logBox.Size = New-Object System.Drawing.Size(900, 88)
+$logBox.BackColor = [System.Drawing.Color]::FromArgb(10, 10, 12)
 $logBox.ForeColor = $txt
 $logBox.Font = $fontMono
 $logBox.BorderStyle = "None"
@@ -564,7 +533,6 @@ function Set-Status {
 }
 
 function Show-Results {
-    param([string]$Mode)
     $cardHost.Visible = $false
     $resultsPanel.Visible = $true
     $resultsList.Items.Clear()
@@ -574,7 +542,7 @@ function Show-Results {
 function Show-Cards {
     $resultsPanel.Visible = $false
     $cardHost.Visible = $true
-    Set-Status "Ready" "Select a tool below to run a check" "IDLE" $gold
+    Set-Status "Ready" "Select a tool to begin" "IDLE" $gold
 }
 
 $backBtn.Add_Click({ Show-Cards })
@@ -592,38 +560,33 @@ foreach ($key in $catButtons.Keys) {
             }
         }
         foreach ($c in $cards) {
-            if ($script:ActiveCat -eq "All" -or $c.Tag -eq $script:ActiveCat) {
-                $c.Visible = $true
-            } else {
-                $c.Visible = $false
-            }
+            $c.Visible = ($script:ActiveCat -eq "All" -or $c.Tag -eq $script:ActiveCat)
         }
     }.GetNewClosure())
 }
 
 # =============================================================================
-# SCAN FUNCTIONS
+# SCANS
 # =============================================================================
 function Start-ModScan {
-    Set-Status "Scanning Mods..." "Checking jars against signatures + Modrinth" "RUNNING" $yellow
+    Set-Status "Scanning Mods" "Checking jars against signatures + Modrinth" "RUNNING" $yellow
     Write-Log "Starting full mod scan..." "INFO"
 
     $resultsList.Columns.Add("File", 280) | Out-Null
-    $resultsList.Columns.Add("Status", 120) | Out-Null
-    $resultsList.Columns.Add("Detail", 450) | Out-Null
+    $resultsList.Columns.Add("Status", 110) | Out-Null
+    $resultsList.Columns.Add("Detail", 460) | Out-Null
 
     $modsPath = Join-Path $env:APPDATA ".minecraft\mods"
     if (-not (Test-Path $modsPath)) {
-        Write-Log "Mods folder not found: $modsPath" "ERR"
+        Write-Log "Mods folder not found" "ERR"
         Set-Status "Error" "Mods folder missing" "ERROR" $red
         return
     }
 
     $jars = Get-ChildItem $modsPath -Filter *.jar -File -ErrorAction SilentlyContinue
-    $total = $jars.Count
-    Write-Log "Found $total jar(s)" "INFO"
+    Write-Log "Found $($jars.Count) jar(s)" "INFO"
 
-    $v=0;$u=0;$s=0;$c=0;$d=0
+    $v=0; $u=0; $s=0; $c=0; $d=0
     foreach ($jar in $jars) {
         [System.Windows.Forms.Application]::DoEvents()
         $hash = Get-FileSHA1 $jar.FullName
@@ -671,20 +634,20 @@ function Start-ModScan {
     }
 
     foreach ($col in $resultsList.Columns) { $col.Width = -2 }
-    $msg = "Done — V:$v  U:$u  S:$s  C:$c  D:$d"
-    Write-Log $msg "OK"
+    $msg = "V:$v  U:$u  S:$s  C:$c  D:$d"
+    Write-Log "Scan complete — $msg" "OK"
     Set-Status "Scan Complete" $msg "DONE" $green
 }
 
 function Start-ProcScan {
-    Set-Status "Scanning Process..." "Enumerating Java modules" "RUNNING" $yellow
+    Set-Status "Scanning Process" "Enumerating Java modules" "RUNNING" $yellow
     Write-Log "Scanning Java process modules..." "INFO"
 
     $resultsList.Columns.Add("PID", 70) | Out-Null
     $resultsList.Columns.Add("Module", 160) | Out-Null
     $resultsList.Columns.Add("Path", 420) | Out-Null
     $resultsList.Columns.Add("Signed", 90) | Out-Null
-    $resultsList.Columns.Add("Verdict", 120) | Out-Null
+    $resultsList.Columns.Add("Verdict", 110) | Out-Null
 
     $rows = Get-JavaProcessModules
     if ($rows.Count -eq 0) {
@@ -707,15 +670,15 @@ function Start-ProcScan {
     }
     foreach ($col in $resultsList.Columns) { $col.Width = -2 }
     Write-Log "Found $($rows.Count) modules ($review need review)" "OK"
-    Set-Status "Process Scan Done" "$review module(s) flagged for review" "DONE" $green
+    Set-Status "Process Scan Done" "$review module(s) flagged" "DONE" $green
 }
 
 function Start-NetScan {
-    Set-Status "Scanning Network..." "Listing Java TCP connections" "RUNNING" $yellow
+    Set-Status "Scanning Network" "Listing Java TCP connections" "RUNNING" $yellow
     Write-Log "Listing Java network connections..." "INFO"
 
     $resultsList.Columns.Add("PID", 70) | Out-Null
-    $resultsList.Columns.Add("Remote", 300) | Out-Null
+    $resultsList.Columns.Add("Remote", 320) | Out-Null
     $resultsList.Columns.Add("State", 120) | Out-Null
 
     $rows = Get-JavaConnections
@@ -727,13 +690,13 @@ function Start-NetScan {
         $resultsList.Items.Add($item) | Out-Null
     }
     foreach ($col in $resultsList.Columns) { $col.Width = -2 }
-    Write-Log "$($rows.Count) established connection(s)" "OK"
-    Set-Status "Network Scan Done" "$($rows.Count) connection(s) listed" "DONE" $green
+    Write-Log "$($rows.Count) connection(s) found" "OK"
+    Set-Status "Network Scan Done" "$($rows.Count) connection(s)" "DONE" $green
 }
 
 function Start-PersistScan {
-    Set-Status "Checking Persistence..." "Run keys + Startup + recent tasks" "RUNNING" $yellow
-    Write-Log "Checking persistence locations..." "INFO"
+    Set-Status "Checking Persistence" "Run keys + Startup folder" "RUNNING" $yellow
+    Write-Log "Checking persistence..." "INFO"
 
     $resultsList.Columns.Add("Source", 140) | Out-Null
     $resultsList.Columns.Add("Name", 200) | Out-Null
@@ -748,18 +711,18 @@ function Start-PersistScan {
         $resultsList.Items.Add($item) | Out-Null
     }
     foreach ($col in $resultsList.Columns) { $col.Width = -2 }
-    Write-Log "$($rows.Count) persistence item(s) found" "OK"
-    Set-Status "Persistence Check Done" "$($rows.Count) item(s)" "DONE" $green
+    Write-Log "$($rows.Count) item(s) found" "OK"
+    Set-Status "Persistence Done" "$($rows.Count) item(s)" "DONE" $green
 }
 
 function Generate-Report {
     $sb = New-Object System.Text.StringBuilder
-    [void]$sb.AppendLine("KettehLyzer SS Toolkit Report")
+    [void]$sb.AppendLine("KettehLyzer Report")
     [void]$sb.AppendLine("Generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')")
     [void]$sb.AppendLine("")
 
     if ($resultsList.Items.Count -gt 0) {
-        [void]$sb.AppendLine("--- Current Results ---")
+        [void]$sb.AppendLine("--- Results ---")
     } else {
         [void]$sb.AppendLine("No results in view")
     }
@@ -795,12 +758,11 @@ $btnClearCache.Add_Click({
     $script:ModrinthCache.Clear()
     Write-Log "Cache cleared" "OK"
 })
-$btnOpenCMD.Add_Click({
+$btnOpenPS.Add_Click({
     Start-Process powershell
     Write-Log "Opened PowerShell" "OK"
 })
 
 Write-Log "KettehLyzer ready" "OK"
-Write-Log "Select a tool from the grid" "INFO"
 
 [System.Windows.Forms.Application]::Run($form)
