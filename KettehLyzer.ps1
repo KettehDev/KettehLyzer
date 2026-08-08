@@ -4,28 +4,30 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 [System.Windows.Forms.Application]::EnableVisualStyles()
 
 # =============================================================================
-# THEME
+# THEME - Cyber / Neon
 # =============================================================================
-$bg      = [System.Drawing.Color]::FromArgb(10,10,18)
-$panelBg = [System.Drawing.Color]::FromArgb(18,18,28)
-$boxBg   = [System.Drawing.Color]::FromArgb(14,14,22)
-$accentM = [System.Drawing.Color]::FromArgb(255,90,220)
-$accentC = [System.Drawing.Color]::FromArgb(90,220,255)
-$txt     = [System.Drawing.Color]::FromArgb(230,230,240)
-$dim     = [System.Drawing.Color]::FromArgb(140,140,160)
-$green   = [System.Drawing.Color]::FromArgb(90,220,140)
-$yellow  = [System.Drawing.Color]::FromArgb(240,210,90)
-$red     = [System.Drawing.Color]::FromArgb(240,90,90)
-$darkred = [System.Drawing.Color]::FromArgb(180,40,40)
+$bg        = [System.Drawing.Color]::FromArgb(8, 8, 14)
+$panelBg   = [System.Drawing.Color]::FromArgb(14, 14, 24)
+$boxBg     = [System.Drawing.Color]::FromArgb(12, 12, 20)
+$sidebarBg = [System.Drawing.Color]::FromArgb(11, 11, 19)
+$accentM   = [System.Drawing.Color]::FromArgb(255, 70, 210)   # Magenta
+$accentC   = [System.Drawing.Color]::FromArgb(70, 220, 255)   # Cyan
+$accentG   = [System.Drawing.Color]::FromArgb(90, 230, 150)   # Green
+$txt       = [System.Drawing.Color]::FromArgb(235, 235, 245)
+$dim       = [System.Drawing.Color]::FromArgb(130, 130, 155)
+$yellow    = [System.Drawing.Color]::FromArgb(245, 200, 70)
+$red       = [System.Drawing.Color]::FromArgb(245, 80, 90)
+$darkred   = [System.Drawing.Color]::FromArgb(190, 35, 45)
 
-$fontTitle = New-Object System.Drawing.Font("Consolas",18,[System.Drawing.FontStyle]::Bold)
-$fontSub   = New-Object System.Drawing.Font("Consolas",9)
-$fontCat   = New-Object System.Drawing.Font("Consolas",9)
-$fontUI    = New-Object System.Drawing.Font("Segoe UI",9)
-$fontMono  = New-Object System.Drawing.Font("Consolas",9)
+$fontTitle = New-Object System.Drawing.Font("Segoe UI", 16, [System.Drawing.FontStyle]::Bold)
+$fontSub   = New-Object System.Drawing.Font("Segoe UI", 8.5)
+$fontUI    = New-Object System.Drawing.Font("Segoe UI", 9)
+$fontMono  = New-Object System.Drawing.Font("Consolas", 9)
+$fontCat   = New-Object System.Drawing.Font("Consolas", 10)
+$fontBtn   = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
 
 # =============================================================================
-# DETECTION ENGINE  (same logic as the console version, called from GUI events)
+# DETECTION ENGINE (kept + slightly cleaned)
 # =============================================================================
 $CheatPatterns = @(
     "wurst","meteor","impact","liquidbounce","aristois","future","sigma","vape",
@@ -49,13 +51,14 @@ $CheatPatterns = @(
 )
 $CheatClientNames = @("wurst","meteor","impact","sigma","vengeance","dqrkis","grim","prestige","exhibition","rusherhack","novoline")
 
-function Get-FileSHA1 { param([string]$Path) (Get-FileHash -Path $Path -Algorithm SHA1).Hash }
+function Get-FileSHA1   { param([string]$Path) (Get-FileHash -Path $Path -Algorithm SHA1).Hash }
+function Get-FileSHA256 { param([string]$Path) (Get-FileHash -Path $Path -Algorithm SHA256).Hash }
 
 $script:ModrinthCache = @{}
 function Query-Modrinth {
     param([string]$Hash)
     if ($script:ModrinthCache.ContainsKey($Hash)) { return $script:ModrinthCache[$Hash] }
-    $r = @{ Name = ""; Slug = "" }
+    $r = @{ Name = ""; Spug = ""; Slug = "" }
     try {
         $ver = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/version_file/$Hash" -Method Get -UseBasicParsing -ErrorAction Stop
         if ($ver.project_id) {
@@ -130,14 +133,13 @@ function Invoke-DeepScan {
         }
         $zip.Dispose()
         if ($execHit)  { $flags.Add("Runtime.exec — can run OS commands") }
-        if ($dlHit)    { $flags.Add("HTTP download — fetches files from a remote server") }
-        if ($exfilHit) { $flags.Add("HTTP upload — sends data to a remote server") }
-        if ($obfHit)   { $flags.Add("Obfuscated — packed with a known obfuscator") }
+        if ($dlHit)    { $flags.Add("HTTP download — fetches files from remote") }
+        if ($exfilHit) { $flags.Add("HTTP upload — sends data to remote") }
+        if ($obfHit)   { $flags.Add("Obfuscated — known obfuscator detected") }
     } catch {}
     return $flags
 }
 
-# --- Process / injection check ---------------------------------------------
 function Get-JavaProcessModules {
     $procs = Get-Process javaw,java -ErrorAction SilentlyContinue
     $rows = @()
@@ -162,7 +164,6 @@ function Get-JavaProcessModules {
     return $rows
 }
 
-# --- Network check ------------------------------------------------------
 function Get-JavaConnections {
     $procs = Get-Process javaw,java -ErrorAction SilentlyContinue
     $rows = @()
@@ -171,13 +172,12 @@ function Get-JavaConnections {
             $conns = Get-NetTCPConnection -OwningProcess $p.Id -State Established -ErrorAction SilentlyContinue
         } catch { $conns = @() }
         foreach ($c in $conns) {
-            $rows += [pscustomobject]@{ PID=$p.Id; Remote="$($c.RemoteAddress):$($c.RemotePort)"; State=$c.State; Note="Review manually — not auto-classified" }
+            $rows += [pscustomobject]@{ PID=$p.Id; Remote="$($c.RemoteAddress):$($c.RemotePort)"; State=$c.State; Note="Manual review recommended" }
         }
     }
     return $rows
 }
 
-# --- Persistence check ------------------------------------------------
 function Get-PersistenceItems {
     $rows = @()
     $runKeys = @("HKCU:\Software\Microsoft\Windows\CurrentVersion\Run","HKLM:\Software\Microsoft\Windows\CurrentVersion\Run")
@@ -186,7 +186,7 @@ function Get-PersistenceItems {
             $items = Get-ItemProperty -Path $k -ErrorAction Stop
             foreach ($prop in $items.PSObject.Properties) {
                 if ($prop.Name -notmatch '^PS') {
-                    $rows += [pscustomobject]@{ Source="Run key ($k)"; Name=$prop.Name; Value=$prop.Value }
+                    $rows += [pscustomobject]@{ Source="Run key"; Name=$prop.Name; Value=$prop.Value }
                 }
             }
         } catch {}
@@ -207,545 +207,793 @@ function Get-PersistenceItems {
     return $rows
 }
 
-# --- Forensics: Prefetch (evidence a program ran, even if later deleted) ---
-function Get-PrefetchEvidence {
-    $items = @()
-    $pfDir = "$env:WINDIR\Prefetch"
-    try {
-        Get-ChildItem $pfDir -Filter *.pf -ErrorAction Stop | ForEach-Object {
-            $items += [pscustomobject]@{ Source="Prefetch"; Name=$_.Name; Detail="Last run: $($_.LastWriteTime)  |  Created: $($_.CreationTime)" }
-        }
-    } catch {
-        $items += [pscustomobject]@{ Source="Prefetch"; Name="(unavailable)"; Detail="Prefetch folder not readable — needs admin, or prefetch is disabled" }
-    }
-    return $items
-}
-
-# --- Forensics: UserAssist (recently launched GUI programs, ROT13-encoded key names) ---
-function ConvertFrom-Rot13 {
-    param([string]$Text)
-    -join ($Text.ToCharArray() | ForEach-Object {
-        if ($_ -match '[a-zA-Z]') {
-            $off = if ([char]::IsUpper($_)) { 65 } else { 97 }
-            [char]((([int][char]$_ - $off + 13) % 26) + $off)
-        } else { $_ }
-    })
-}
-function Get-UserAssistEvidence {
-    $items = @()
-    $base = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\UserAssist"
-    try {
-        Get-ChildItem $base -ErrorAction Stop | ForEach-Object {
-            $countPath = Join-Path $_.PSPath "Count"
-            if (Test-Path $countPath) {
-                $props = Get-ItemProperty -Path $countPath -ErrorAction SilentlyContinue
-                foreach ($prop in $props.PSObject.Properties) {
-                    if ($prop.Name -match '^PS') { continue }
-                    $decoded = ConvertFrom-Rot13 -Text $prop.Name
-                    $items += [pscustomobject]@{ Source="UserAssist"; Name=$decoded; Detail="raw key: $($prop.Name)" }
-                }
-            }
-        }
-    } catch {
-        $items += [pscustomobject]@{ Source="UserAssist"; Name="(unavailable)"; Detail="UserAssist key not readable" }
-    }
-    return $items
-}
-
-# --- Forensics: USB device history ---
-function Get-USBHistory {
-    $items = @()
-    $base = "HKLM:\SYSTEM\CurrentControlSet\Enum\USBSTOR"
-    try {
-        Get-ChildItem $base -ErrorAction Stop | ForEach-Object {
-            $deviceClass = $_.PSChildName
-            Get-ChildItem $_.PSPath -ErrorAction SilentlyContinue | ForEach-Object {
-                $props = Get-ItemProperty -Path $_.PSPath -ErrorAction SilentlyContinue
-                $friendly = if ($props.FriendlyName) { $props.FriendlyName } else { "(no friendly name)" }
-                $items += [pscustomobject]@{ Source="USB History"; Name=$friendly; Detail="$deviceClass  |  serial: $($_.PSChildName)" }
-            }
-        }
-    } catch {
-        $items += [pscustomobject]@{ Source="USB History"; Name="(unavailable)"; Detail="USBSTOR key not readable — needs admin" }
-    }
-    return $items
-}
-
-# --- Forensics: Recycle Bin contents ---
-function Get-RecycleBinItems {
-    $items = @()
-    try {
-        $shell = New-Object -ComObject Shell.Application
-        $recycle = $shell.Namespace(10)
-        foreach ($item in $recycle.Items()) {
-            $deleted = $recycle.GetDetailsOf($item, 2)
-            $items += [pscustomobject]@{ Source="Recycle Bin"; Name=$item.Name; Detail="deleted: $deleted  |  was: $($item.Path)" }
-        }
-    } catch {
-        $items += [pscustomobject]@{ Source="Recycle Bin"; Name="(unavailable)"; Detail="Could not access Recycle Bin via Shell COM object" }
-    }
-    return $items
-}
-
-# --- Forensics: Run dialog / Explorer typed-path history ---
-function Get-RecentRunHistory {
-    $items = @()
-    $sources = @(
-        @{ Key="HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU"; Label="Run dialog history" },
-        @{ Key="HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\TypedPaths"; Label="Explorer typed paths" }
-    )
-    foreach ($s in $sources) {
-        try {
-            $props = Get-ItemProperty -Path $s.Key -ErrorAction Stop
-            foreach ($prop in $props.PSObject.Properties) {
-                if ($prop.Name -notmatch '^PS') {
-                    $items += [pscustomobject]@{ Source=$s.Label; Name=$prop.Value; Detail="key: $($prop.Name)" }
-                }
-            }
-        } catch {}
-    }
-    if ($items.Count -eq 0) { $items += [pscustomobject]@{ Source="Run History"; Name="(none found)"; Detail="No RunMRU/TypedPaths entries" } }
-    return $items
-}
-
-# =============================================================================
-# THEME (amber/black — restyled)
-# =============================================================================
-$bgDark   = [System.Drawing.Color]::FromArgb(10,9,7)
-$panelBg  = [System.Drawing.Color]::FromArgb(22,19,12)
-$boxBg    = [System.Drawing.Color]::FromArgb(15,13,8)
-$amber    = [System.Drawing.Color]::FromArgb(255,190,60)
-$amberDim = [System.Drawing.Color]::FromArgb(140,105,40)
-$txt      = [System.Drawing.Color]::FromArgb(235,225,200)
-$dim      = [System.Drawing.Color]::FromArgb(150,140,110)
-$green    = [System.Drawing.Color]::FromArgb(120,220,140)
-$yellow   = [System.Drawing.Color]::FromArgb(240,210,90)
-$red      = [System.Drawing.Color]::FromArgb(240,90,90)
-$darkred  = [System.Drawing.Color]::FromArgb(180,40,40)
-
-$fontLogo  = New-Object System.Drawing.Font("Consolas",9,[System.Drawing.FontStyle]::Bold)
-$fontTitle = New-Object System.Drawing.Font("Consolas",15,[System.Drawing.FontStyle]::Bold)
-$fontSub   = New-Object System.Drawing.Font("Segoe UI",8)
-$fontUI    = New-Object System.Drawing.Font("Segoe UI",9)
-$fontUIBold= New-Object System.Drawing.Font("Segoe UI",9,[System.Drawing.FontStyle]::Bold)
-$fontMono  = New-Object System.Drawing.Font("Consolas",9)
-$fontBadge = New-Object System.Drawing.Font("Segoe UI",8,[System.Drawing.FontStyle]::Bold)
-
 # =============================================================================
 # FORM
 # =============================================================================
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "KettehLyzer — SS Toolkit"
-$form.Size = New-Object System.Drawing.Size(1180,780)
-$form.MinimumSize = New-Object System.Drawing.Size(980,600)
+$form.Text = "KettehLyzer  //  SS Toolkit"
+$form.Size = New-Object System.Drawing.Size(1120, 760)
 $form.StartPosition = "CenterScreen"
-$form.BackColor = $bgDark
+$form.BackColor = $bg
 $form.ForeColor = $txt
 $form.Font = $fontUI
+$form.MinimumSize = New-Object System.Drawing.Size(980, 650)
 
-# --- Sidebar ---
-$sidebar = New-Object System.Windows.Forms.Panel
-$sidebar.Dock = "Left"; $sidebar.Width = 220; $sidebar.BackColor = $panelBg
+# --- Header ---
+$header = New-Object System.Windows.Forms.Panel
+$header.Dock = "Top"
+$header.Height = 78
+$header.BackColor = $panelBg
 
-$logoLbl = New-Object System.Windows.Forms.Label
-$logoLbl.Text = "/\_/\`n( o.o )`n > ^ <"
-$logoLbl.Font = $fontLogo; $logoLbl.ForeColor = $amber
-$logoLbl.Location = New-Object System.Drawing.Point(18,16); $logoLbl.AutoSize = $true
+$catLbl = New-Object System.Windows.Forms.Label
+$catLbl.Text = "/\_/\`n( o.o )`n > ^ <"
+$catLbl.Font = $fontCat
+$catLbl.ForeColor = $accentM
+$catLbl.Location = New-Object System.Drawing.Point(16, 8)
+$catLbl.AutoSize = $true
 
-$nameLbl = New-Object System.Windows.Forms.Label
-$nameLbl.Text = "KettehLyzer"
-$nameLbl.Font = $fontUIBold; $nameLbl.ForeColor = $txt
-$nameLbl.Location = New-Object System.Drawing.Point(70,20); $nameLbl.AutoSize = $true
-$subNameLbl = New-Object System.Windows.Forms.Label
-$subNameLbl.Text = "SS Toolkit"
-$subNameLbl.Font = $fontSub; $subNameLbl.ForeColor = $dim
-$subNameLbl.Location = New-Object System.Drawing.Point(70,40); $subNameLbl.AutoSize = $true
+$titleLbl = New-Object System.Windows.Forms.Label
+$titleLbl.Text = "KETTEHLYZER"
+$titleLbl.Font = $fontTitle
+$titleLbl.ForeColor = $accentC
+$titleLbl.Location = New-Object System.Drawing.Point(95, 12)
+$titleLbl.AutoSize = $true
 
-$sep1 = New-Object System.Windows.Forms.Panel
-$sep1.Location = New-Object System.Drawing.Point(0,80); $sep1.Size = New-Object System.Drawing.Size(220,1); $sep1.BackColor = $amberDim
+$subLbl = New-Object System.Windows.Forms.Label
+$subLbl.Text = "Layered mod • process • network • persistence checks   •   Read-only toolkit"
+$subLbl.Font = $fontSub
+$subLbl.ForeColor = $dim
+$subLbl.Location = New-Object System.Drawing.Point(97, 42)
+$subLbl.AutoSize = $true
 
-$actionsHdr = New-Object System.Windows.Forms.Label
-$actionsHdr.Text = "ACTIONS"; $actionsHdr.Font = $fontSub; $actionsHdr.ForeColor = $amberDim
-$actionsHdr.Location = New-Object System.Drawing.Point(18,92); $actionsHdr.AutoSize = $true
+$header.Controls.AddRange(@($catLbl, $titleLbl, $subLbl))
 
-function New-SidebarLink {
+# --- Main layout: Sidebar + Content ---
+$mainSplit = New-Object System.Windows.Forms.SplitContainer
+$mainSplit.Dock = "Fill"
+$mainSplit.SplitterDistance = 190
+$mainSplit.FixedPanel = "Panel1"
+$mainSplit.IsSplitterFixed = $true
+$mainSplit.BackColor = $bg
+$mainSplit.Panel1.BackColor = $sidebarBg
+$mainSplit.Panel2.BackColor = $bg
+
+# Sidebar buttons
+function New-SideBtn {
     param([string]$Text, [int]$Y)
-    $l = New-Object System.Windows.Forms.LinkLabel
-    $l.Text = $Text; $l.LinkColor = $txt; $l.ActiveLinkColor = $amber; $l.VisitedLinkColor = $txt
-    $l.LinkBehavior = "NeverUnderline"; $l.Font = $fontUI
-    $l.Location = New-Object System.Drawing.Point(18,$Y); $l.AutoSize = $true
-    return $l
+    $b = New-Object System.Windows.Forms.Button
+    $b.Text = $Text
+    $b.Location = New-Object System.Drawing.Point(12, $Y)
+    $b.Size = New-Object System.Drawing.Size(166, 38)
+    $b.FlatStyle = "Flat"
+    $b.FlatAppearance.BorderSize = 0
+    $b.BackColor = $sidebarBg
+    $b.ForeColor = $txt
+    $b.Font = $fontBtn
+    $b.TextAlign = "MiddleLeft"
+    $b.Padding = New-Object System.Windows.Forms.Padding(12, 0, 0, 0)
+    $b.Cursor = [System.Windows.Forms.Cursors]::Hand
+    return $b
 }
-$linkOpenFolder = New-SidebarLink -Text "Open script folder" -Y 118
-$linkClearReports = New-SidebarLink -Text "Clear saved reports" -Y 146
-$linkOpenPS = New-SidebarLink -Text "Open PowerShell here" -Y 174
 
-$sep2 = New-Object System.Windows.Forms.Panel
-$sep2.Location = New-Object System.Drawing.Point(0,214); $sep2.Size = New-Object System.Drawing.Size(220,1); $sep2.BackColor = $amberDim
+$btnMods     = New-SideBtn "  Mods Scan"      20
+$btnProc     = New-SideBtn "  Process / Inj"  66
+$btnNet      = New-SideBtn "  Network"        112
+$btnPersist  = New-SideBtn "  Persistence"    158
+$btnTools    = New-SideBtn "  Tools"          204
+$btnReport   = New-SideBtn "  Report"         250
 
-$creditsHdr = New-Object System.Windows.Forms.Label
-$creditsHdr.Text = "ABOUT"; $creditsHdr.Font = $fontSub; $creditsHdr.ForeColor = $amberDim
-$creditsHdr.Location = New-Object System.Drawing.Point(18,226); $creditsHdr.AutoSize = $true
-$creditsBody = New-Object System.Windows.Forms.Label
-$creditsBody.Text = "KettehLyzer`nRead-only. Nothing here kills processes, hides itself, or downloads other people's binaries."
-$creditsBody.Font = $fontSub; $creditsBody.ForeColor = $dim
-$creditsBody.Location = New-Object System.Drawing.Point(18,246); $creditsBody.Size = New-Object System.Drawing.Size(186,60)
+$sideButtons = @($btnMods, $btnProc, $btnNet, $btnPersist, $btnTools, $btnReport)
+$mainSplit.Panel1.Controls.AddRange($sideButtons)
 
-$pathHdr = New-Object System.Windows.Forms.Label
-$pathHdr.Text = "MODS FOLDER"; $pathHdr.Font = $fontSub; $pathHdr.ForeColor = $amberDim
-$pathHdr.Location = New-Object System.Drawing.Point(18,330); $pathHdr.AutoSize = $true
+# Content panels
+$contentHost = New-Object System.Windows.Forms.Panel
+$contentHost.Dock = "Fill"
+$contentHost.BackColor = $bg
+$mainSplit.Panel2.Controls.Add($contentHost)
+
+function New-ContentPanel {
+    $p = New-Object System.Windows.Forms.Panel
+    $p.Dock = "Fill"
+    $p.BackColor = $bg
+    $p.Visible = $false
+    return $p
+}
+
+$panelMods    = New-ContentPanel
+$panelProc    = New-ContentPanel
+$panelNet     = New-ContentPanel
+$panelPersist = New-ContentPanel
+$panelTools   = New-ContentPanel
+$panelReport  = New-ContentPanel
+
+$contentHost.Controls.AddRange(@($panelMods, $panelProc, $panelNet, $panelPersist, $panelTools, $panelReport))
+
+# Helper: switch panels + highlight button
+function Show-Panel {
+    param($Panel, $ActiveBtn)
+    foreach ($p in @($panelMods, $panelProc, $panelNet, $panelPersist, $panelTools, $panelReport)) {
+        $p.Visible = $false
+    }
+    $Panel.Visible = $true
+    foreach ($b in $sideButtons) {
+        $b.BackColor = $sidebarBg
+        $b.ForeColor = $txt
+    }
+    $ActiveBtn.BackColor = [System.Drawing.Color]::FromArgb(25, 25, 40)
+    $ActiveBtn.ForeColor = $accentC
+}
+
+# =============================================================================
+# MODS PANEL
+# =============================================================================
+$pathBar = New-Object System.Windows.Forms.Panel
+$pathBar.Dock = "Top"
+$pathBar.Height = 52
+$pathBar.BackColor = $panelBg
+
+$pathLbl = New-Object System.Windows.Forms.Label
+$pathLbl.Text = "Mods folder"
+$pathLbl.ForeColor = $dim
+$pathLbl.Location = New-Object System.Drawing.Point(14, 16)
+$pathLbl.AutoSize = $true
+
 $pathBox = New-Object System.Windows.Forms.TextBox
 $pathBox.Text = Join-Path $env:APPDATA ".minecraft\mods"
-$pathBox.Location = New-Object System.Drawing.Point(18,350); $pathBox.Size = New-Object System.Drawing.Size(184,22)
-$pathBox.BackColor = $boxBg; $pathBox.ForeColor = $txt; $pathBox.BorderStyle = "FixedSingle"
+$pathBox.Location = New-Object System.Drawing.Point(100, 13)
+$pathBox.Size = New-Object System.Drawing.Size(480, 24)
+$pathBox.BackColor = $boxBg
+$pathBox.ForeColor = $txt
+$pathBox.BorderStyle = "FixedSingle"
+$pathBox.Font = $fontMono
+
 $browseBtn = New-Object System.Windows.Forms.Button
-$browseBtn.Text = "Browse..."; $browseBtn.Location = New-Object System.Drawing.Point(18,378); $browseBtn.Size = New-Object System.Drawing.Size(184,26)
-$browseBtn.BackColor = $boxBg; $browseBtn.ForeColor = $txt; $browseBtn.FlatStyle = "Flat"; $browseBtn.FlatAppearance.BorderColor = $amberDim
+$browseBtn.Text = "Browse"
+$browseBtn.Location = New-Object System.Drawing.Point(590, 11)
+$browseBtn.Size = New-Object System.Drawing.Size(80, 28)
+$browseBtn.FlatStyle = "Flat"
+$browseBtn.BackColor = $panelBg
+$browseBtn.ForeColor = $txt
+$browseBtn.FlatAppearance.BorderColor = $dim
 
-$sidebar.Controls.AddRange(@($logoLbl,$nameLbl,$subNameLbl,$sep1,$actionsHdr,$linkOpenFolder,$linkClearReports,$linkOpenPS,$sep2,$creditsHdr,$creditsBody,$pathHdr,$pathBox,$browseBtn))
+$scanBtn = New-Object System.Windows.Forms.Button
+$scanBtn.Text = "RUN FULL SCAN"
+$scanBtn.Location = New-Object System.Drawing.Point(680, 11)
+$scanBtn.Size = New-Object System.Drawing.Size(140, 28)
+$scanBtn.FlatStyle = "Flat"
+$scanBtn.BackColor = $accentM
+$scanBtn.ForeColor = [System.Drawing.Color]::Black
+$scanBtn.Font = $fontBtn
+$scanBtn.Cursor = [System.Windows.Forms.Cursors]::Hand
 
-# --- Top bar (title + status badge) ---
-$topBar = New-Object System.Windows.Forms.Panel
-$topBar.Dock = "Top"; $topBar.Height = 56; $topBar.BackColor = $bgDark
-$titleLbl = New-Object System.Windows.Forms.Label
-$titleLbl.Text = "Ready."; $titleLbl.Font = $fontTitle; $titleLbl.ForeColor = $txt
-$titleLbl.Location = New-Object System.Drawing.Point(24,8); $titleLbl.AutoSize = $true
-$titleSubLbl = New-Object System.Windows.Forms.Label
-$titleSubLbl.Text = "Pick a card below to run a check."; $titleSubLbl.Font = $fontSub; $titleSubLbl.ForeColor = $dim
-$titleSubLbl.Location = New-Object System.Drawing.Point(26,34); $titleSubLbl.AutoSize = $true
+$pathBar.Controls.AddRange(@($pathLbl, $pathBox, $browseBtn, $scanBtn))
 
-$badge = New-Object System.Windows.Forms.Label
-$badge.Text = "  IDLE  "; $badge.Font = $fontBadge; $badge.ForeColor = [System.Drawing.Color]::Black
-$badge.BackColor = $green; $badge.AutoSize = $true
-$badge.Location = New-Object System.Drawing.Point(1080,18)
-$badge.Anchor = "Top,Right"
+# Search + progress
+$searchBar = New-Object System.Windows.Forms.Panel
+$searchBar.Dock = "Top"
+$searchBar.Height = 36
+$searchBar.BackColor = $bg
 
-function Set-Badge {
-    param([string]$Text, [System.Drawing.Color]$Color)
-    $badge.Text = "  $Text  "; $badge.BackColor = $Color
-}
-$topBar.Controls.AddRange(@($titleLbl,$titleSubLbl,$badge))
+$searchLbl = New-Object System.Windows.Forms.Label
+$searchLbl.Text = "Filter:"
+$searchLbl.ForeColor = $dim
+$searchLbl.Location = New-Object System.Drawing.Point(14, 9)
+$searchLbl.AutoSize = $true
 
-# --- Category pill tabs ---
-$tabs = New-Object System.Windows.Forms.TabControl
-$tabs.Dock = "Fill"
-$tabs.DrawMode = [System.Windows.Forms.TabDrawMode]::OwnerDrawFixed
-$tabs.ItemSize = New-Object System.Drawing.Size(130,30)
-$tabs.SizeMode = "Fixed"
-$tabs.Add_DrawItem({
-    param($sender,$e)
-    $page = $tabs.TabPages[$e.Index]
-    $bounds = $tabs.GetTabRect($e.Index)
-    $selected = ($e.Index -eq $tabs.SelectedIndex)
-    $bgC = if ($selected) { $amber } else { $panelBg }
-    $fgC = if ($selected) { [System.Drawing.Color]::Black } else { $dim }
-    $b = New-Object System.Drawing.SolidBrush($bgC)
-    $e.Graphics.FillRectangle($b, $bounds)
-    $tb = New-Object System.Drawing.SolidBrush($fgC)
-    $sf = New-Object System.Drawing.StringFormat
-    $sf.Alignment = "Center"; $sf.LineAlignment = "Center"
-    $e.Graphics.DrawString($page.Text, $fontUIBold, $tb, [System.Drawing.RectangleF]$bounds, $sf)
-    $b.Dispose(); $tb.Dispose()
-})
+$searchBox = New-Object System.Windows.Forms.TextBox
+$searchBox.Location = New-Object System.Drawing.Point(55, 6)
+$searchBox.Size = New-Object System.Drawing.Size(280, 22)
+$searchBox.BackColor = $boxBg
+$searchBox.ForeColor = $txt
+$searchBox.BorderStyle = "FixedSingle"
 
-function New-ResultListView {
-    param([string[]]$Columns)
-    $lv = New-Object System.Windows.Forms.ListView
-    $lv.View = "Details"; $lv.FullRowSelect = $true; $lv.GridLines = $true
-    $lv.Dock = "Fill"; $lv.BackColor = $boxBg; $lv.ForeColor = $txt; $lv.Font = $fontMono
-    $lv.BorderStyle = "None"
-    foreach ($c in $Columns) { $lv.Columns.Add($c, 200) | Out-Null }
-    return $lv
-}
+$progress = New-Object System.Windows.Forms.ProgressBar
+$progress.Location = New-Object System.Drawing.Point(350, 9)
+$progress.Size = New-Object System.Drawing.Size(470, 16)
+$progress.Style = "Continuous"
 
-function New-CardButton {
-    param([string]$Title, [string]$Desc)
-    $card = New-Object System.Windows.Forms.Button
-    $card.Text = "$Title`n$Desc"
-    $card.Size = New-Object System.Drawing.Size(210,70)
-    $card.Margin = New-Object System.Windows.Forms.Padding(8)
-    $card.BackColor = $panelBg; $card.ForeColor = $txt
-    $card.FlatStyle = "Flat"; $card.FlatAppearance.BorderColor = $amberDim; $card.FlatAppearance.BorderSize = 1
-    $card.TextAlign = "TopLeft"; $card.Font = $fontUI
-    $card.Padding = New-Object System.Windows.Forms.Padding(10,8,10,8)
-    return $card
-}
+$searchBar.Controls.AddRange(@($searchLbl, $searchBox, $progress))
 
-# ---- Tab: Mods ----
-$tabMods = New-Object System.Windows.Forms.TabPage; $tabMods.Text = "Mods"; $tabMods.BackColor = $bgDark
-$modsCardRow = New-Object System.Windows.Forms.FlowLayoutPanel
-$modsCardRow.Dock = "Top"; $modsCardRow.Height = 90; $modsCardRow.BackColor = $bgDark; $modsCardRow.Padding = New-Object System.Windows.Forms.Padding(10)
-$scanCard = New-CardButton -Title "Full Mod Scan" -Desc "Hash-verify + signature scan every jar"
-$modsCardRow.Controls.Add($scanCard)
-$modsList = New-ResultListView -Columns @("File","Status","Detail")
-$tabMods.Controls.Add($modsList); $tabMods.Controls.Add($modsCardRow)
+$modsList = New-Object System.Windows.Forms.ListView
+$modsList.View = "Details"
+$modsList.FullRowSelect = $true
+$modsList.GridLines = $false
+$modsList.Dock = "Fill"
+$modsList.BackColor = $boxBg
+$modsList.ForeColor = $txt
+$modsList.Font = $fontMono
+$modsList.BorderStyle = "None"
+$modsList.Columns.Add("File", 280) | Out-Null
+$modsList.Columns.Add("Status", 120) | Out-Null
+$modsList.Columns.Add("Detail", 480) | Out-Null
 
-# ---- Tab: Process & Injection ----
-$tabProc = New-Object System.Windows.Forms.TabPage; $tabProc.Text = "Process"; $tabProc.BackColor = $bgDark
-$procCardRow = New-Object System.Windows.Forms.FlowLayoutPanel
-$procCardRow.Dock = "Top"; $procCardRow.Height = 90; $procCardRow.BackColor = $bgDark; $procCardRow.Padding = New-Object System.Windows.Forms.Padding(10)
-$procCard = New-CardButton -Title "InjChk" -Desc "Loaded modules in java(w).exe + signature check"
-$procCardRow.Controls.Add($procCard)
-$procList = New-ResultListView -Columns @("PID","Module","Path","Signed","Verdict")
-$tabProc.Controls.Add($procList); $tabProc.Controls.Add($procCardRow)
+$panelMods.Controls.Add($modsList)
+$panelMods.Controls.Add($searchBar)
+$panelMods.Controls.Add($pathBar)
 
-# ---- Tab: Network ----
-$tabNet = New-Object System.Windows.Forms.TabPage; $tabNet.Text = "Network"; $tabNet.BackColor = $bgDark
-$netCardRow = New-Object System.Windows.Forms.FlowLayoutPanel
-$netCardRow.Dock = "Top"; $netCardRow.Height = 90; $netCardRow.BackColor = $bgDark; $netCardRow.Padding = New-Object System.Windows.Forms.Padding(10)
-$netCard = New-CardButton -Title "ConnScan" -Desc "Established TCP connections owned by java(w).exe"
-$netCardRow.Controls.Add($netCard)
-$netList = New-ResultListView -Columns @("PID","Remote","State","Note")
-$tabNet.Controls.Add($netList); $tabNet.Controls.Add($netCardRow)
+# Context menu for mods
+$ctxMods = New-Object System.Windows.Forms.ContextMenuStrip
+$miCopyName = $ctxMods.Items.Add("Copy filename")
+$miCopyDetail = $ctxMods.Items.Add("Copy detail")
+$modsList.ContextMenuStrip = $ctxMods
 
-# ---- Tab: Persistence ----
-$tabPersist = New-Object System.Windows.Forms.TabPage; $tabPersist.Text = "Persistence"; $tabPersist.BackColor = $bgDark
-$persistCardRow = New-Object System.Windows.Forms.FlowLayoutPanel
-$persistCardRow.Dock = "Top"; $persistCardRow.Height = 90; $persistCardRow.BackColor = $bgDark; $persistCardRow.Padding = New-Object System.Windows.Forms.Padding(10)
-$persistCard = New-CardButton -Title "StartupChk" -Desc "Run keys, Startup folder, recent scheduled tasks"
-$persistCardRow.Controls.Add($persistCard)
-$persistList = New-ResultListView -Columns @("Source","Name","Value")
-$tabPersist.Controls.Add($persistList); $tabPersist.Controls.Add($persistCardRow)
+# =============================================================================
+# PROCESS PANEL
+# =============================================================================
+$procBtn = New-Object System.Windows.Forms.Button
+$procBtn.Text = "SCAN JAVA PROCESS MODULES"
+$procBtn.Dock = "Top"
+$procBtn.Height = 36
+$procBtn.FlatStyle = "Flat"
+$procBtn.BackColor = $accentC
+$procBtn.ForeColor = [System.Drawing.Color]::Black
+$procBtn.Font = $fontBtn
 
-# ---- Tab: Forensics (new) ----
-$tabForensics = New-Object System.Windows.Forms.TabPage; $tabForensics.Text = "Forensics"; $tabForensics.BackColor = $bgDark
-$forensicsCardRow = New-Object System.Windows.Forms.FlowLayoutPanel
-$forensicsCardRow.Dock = "Top"; $forensicsCardRow.Height = 90; $forensicsCardRow.BackColor = $bgDark; $forensicsCardRow.Padding = New-Object System.Windows.Forms.Padding(10); $forensicsCardRow.WrapContents = $true
-$prefetchCard  = New-CardButton -Title "PrefetchChk" -Desc "Evidence a program ran, even if deleted since"
-$userAssistCard= New-CardButton -Title "RunHistory"  -Desc "Recently launched GUI programs (UserAssist)"
-$usbCard       = New-CardButton -Title "USBChk"      -Desc "Removable storage device history"
-$recycleCard   = New-CardButton -Title "RecycleChk"  -Desc "Current Recycle Bin contents"
-$typedCard     = New-CardButton -Title "TypedPaths"  -Desc "Run dialog + Explorer address-bar history"
-$forensicsCardRow.Controls.AddRange(@($prefetchCard,$userAssistCard,$usbCard,$recycleCard,$typedCard))
-$forensicsList = New-ResultListView -Columns @("Source","Name","Detail")
-$tabForensics.Controls.Add($forensicsList); $tabForensics.Controls.Add($forensicsCardRow)
+$procList = New-Object System.Windows.Forms.ListView
+$procList.View = "Details"
+$procList.FullRowSelect = $true
+$procList.Dock = "Fill"
+$procList.BackColor = $boxBg
+$procList.ForeColor = $txt
+$procList.Font = $fontMono
+$procList.BorderStyle = "None"
+$procList.Columns.Add("PID", 70) | Out-Null
+$procList.Columns.Add("Module", 160) | Out-Null
+$procList.Columns.Add("Path", 420) | Out-Null
+$procList.Columns.Add("Signed", 100) | Out-Null
+$procList.Columns.Add("Verdict", 220) | Out-Null
 
-# ---- Tab: Report ----
-$tabReport = New-Object System.Windows.Forms.TabPage; $tabReport.Text = "Report"; $tabReport.BackColor = $bgDark
-$reportCardRow = New-Object System.Windows.Forms.FlowLayoutPanel
-$reportCardRow.Dock = "Top"; $reportCardRow.Height = 90; $reportCardRow.BackColor = $bgDark; $reportCardRow.Padding = New-Object System.Windows.Forms.Padding(10)
-$reportCard = New-CardButton -Title "Export Report" -Desc "Save everything found across all tabs to .txt"
-$reportCardRow.Controls.Add($reportCard)
+$panelProc.Controls.Add($procList)
+$panelProc.Controls.Add($procBtn)
+
+# =============================================================================
+# NETWORK PANEL
+# =============================================================================
+$netBtn = New-Object System.Windows.Forms.Button
+$netBtn.Text = "LIST JAVA CONNECTIONS"
+$netBtn.Dock = "Top"
+$netBtn.Height = 36
+$netBtn.FlatStyle = "Flat"
+$netBtn.BackColor = $accentC
+$netBtn.ForeColor = [System.Drawing.Color]::Black
+$netBtn.Font = $fontBtn
+
+$netList = New-Object System.Windows.Forms.ListView
+$netList.View = "Details"
+$netList.FullRowSelect = $true
+$netList.Dock = "Fill"
+$netList.BackColor = $boxBg
+$netList.ForeColor = $txt
+$netList.Font = $fontMono
+$netList.BorderStyle = "None"
+$netList.Columns.Add("PID", 70) | Out-Null
+$netList.Columns.Add("Remote", 280) | Out-Null
+$netList.Columns.Add("State", 100) | Out-Null
+$netList.Columns.Add("Note", 300) | Out-Null
+
+$panelNet.Controls.Add($netList)
+$panelNet.Controls.Add($netBtn)
+
+# =============================================================================
+# PERSISTENCE PANEL
+# =============================================================================
+$persistBtn = New-Object System.Windows.Forms.Button
+$persistBtn.Text = "CHECK STARTUP / PERSISTENCE"
+$persistBtn.Dock = "Top"
+$persistBtn.Height = 36
+$persistBtn.FlatStyle = "Flat"
+$persistBtn.BackColor = $accentC
+$persistBtn.ForeColor = [System.Drawing.Color]::Black
+$persistBtn.Font = $fontBtn
+
+$persistList = New-Object System.Windows.Forms.ListView
+$persistList.View = "Details"
+$persistList.FullRowSelect = $true
+$persistList.Dock = "Fill"
+$persistList.BackColor = $boxBg
+$persistList.ForeColor = $txt
+$persistList.Font = $fontMono
+$persistList.BorderStyle = "None"
+$persistList.Columns.Add("Source", 160) | Out-Null
+$persistList.Columns.Add("Name", 200) | Out-Null
+$persistList.Columns.Add("Value", 500) | Out-Null
+
+$panelPersist.Controls.Add($persistList)
+$panelPersist.Controls.Add($persistBtn)
+
+# =============================================================================
+# TOOLS PANEL
+# =============================================================================
+$toolsLayout = New-Object System.Windows.Forms.Panel
+$toolsLayout.Dock = "Fill"
+$toolsLayout.BackColor = $bg
+$toolsLayout.Padding = New-Object System.Windows.Forms.Padding(20)
+
+# Single file scan
+$grpSingle = New-Object System.Windows.Forms.GroupBox
+$grpSingle.Text = "  Single JAR Deep Scan  "
+$grpSingle.ForeColor = $accentC
+$grpSingle.Font = $fontBtn
+$grpSingle.Location = New-Object System.Drawing.Point(20, 20)
+$grpSingle.Size = New-Object System.Drawing.Size(820, 140)
+$grpSingle.BackColor = $panelBg
+
+$singlePath = New-Object System.Windows.Forms.TextBox
+$singlePath.Location = New-Object System.Drawing.Point(20, 35)
+$singlePath.Size = New-Object System.Drawing.Size(580, 24)
+$singlePath.BackColor = $boxBg
+$singlePath.ForeColor = $txt
+$singlePath.BorderStyle = "FixedSingle"
+
+$singleBrowse = New-Object System.Windows.Forms.Button
+$singleBrowse.Text = "Browse JAR"
+$singleBrowse.Location = New-Object System.Drawing.Point(610, 33)
+$singleBrowse.Size = New-Object System.Drawing.Size(90, 26)
+$singleBrowse.FlatStyle = "Flat"
+$singleBrowse.BackColor = $boxBg
+$singleBrowse.ForeColor = $txt
+
+$singleScanBtn = New-Object System.Windows.Forms.Button
+$singleScanBtn.Text = "Deep Scan"
+$singleScanBtn.Location = New-Object System.Drawing.Point(710, 33)
+$singleScanBtn.Size = New-Object System.Drawing.Size(90, 26)
+$singleScanBtn.FlatStyle = "Flat"
+$singleScanBtn.BackColor = $accentM
+$singleScanBtn.ForeColor = [System.Drawing.Color]::Black
+
+$singleResult = New-Object System.Windows.Forms.TextBox
+$singleResult.Multiline = $true
+$singleResult.ScrollBars = "Vertical"
+$singleResult.Location = New-Object System.Drawing.Point(20, 70)
+$singleResult.Size = New-Object System.Drawing.Size(780, 55)
+$singleResult.BackColor = $boxBg
+$singleResult.ForeColor = $txt
+$singleResult.BorderStyle = "FixedSingle"
+$singleResult.Font = $fontMono
+$singleResult.ReadOnly = $true
+
+$grpSingle.Controls.AddRange(@($singlePath, $singleBrowse, $singleScanBtn, $singleResult))
+
+# Hash calculator
+$grpHash = New-Object System.Windows.Forms.GroupBox
+$grpHash.Text = "  Hash Calculator  "
+$grpHash.ForeColor = $accentC
+$grpHash.Font = $fontBtn
+$grpHash.Location = New-Object System.Drawing.Point(20, 175)
+$grpHash.Size = New-Object System.Drawing.Size(820, 110)
+$grpHash.BackColor = $panelBg
+
+$hashPath = New-Object System.Windows.Forms.TextBox
+$hashPath.Location = New-Object System.Drawing.Point(20, 35)
+$hashPath.Size = New-Object System.Drawing.Size(580, 24)
+$hashPath.BackColor = $boxBg
+$hashPath.ForeColor = $txt
+$hashPath.BorderStyle = "FixedSingle"
+
+$hashBrowse = New-Object System.Windows.Forms.Button
+$hashBrowse.Text = "Browse"
+$hashBrowse.Location = New-Object System.Drawing.Point(610, 33)
+$hashBrowse.Size = New-Object System.Drawing.Size(90, 26)
+$hashBrowse.FlatStyle = "Flat"
+$hashBrowse.BackColor = $boxBg
+$hashBrowse.ForeColor = $txt
+
+$hashBtn = New-Object System.Windows.Forms.Button
+$hashBtn.Text = "Calculate"
+$hashBtn.Location = New-Object System.Drawing.Point(710, 33)
+$hashBtn.Size = New-Object System.Drawing.Size(90, 26)
+$hashBtn.FlatStyle = "Flat"
+$hashBtn.BackColor = $accentC
+$hashBtn.ForeColor = [System.Drawing.Color]::Black
+
+$hashResult = New-Object System.Windows.Forms.TextBox
+$hashResult.Location = New-Object System.Drawing.Point(20, 70)
+$hashResult.Size = New-Object System.Drawing.Size(780, 24)
+$hashResult.BackColor = $boxBg
+$hashResult.ForeColor = $accentG
+$hashResult.BorderStyle = "FixedSingle"
+$hashResult.Font = $fontMono
+$hashResult.ReadOnly = $true
+
+$grpHash.Controls.AddRange(@($hashPath, $hashBrowse, $hashBtn, $hashResult))
+
+# Quick actions
+$grpQuick = New-Object System.Windows.Forms.GroupBox
+$grpQuick.Text = "  Quick Actions  "
+$grpQuick.ForeColor = $accentC
+$grpQuick.Font = $fontBtn
+$grpQuick.Location = New-Object System.Drawing.Point(20, 300)
+$grpQuick.Size = New-Object System.Drawing.Size(820, 90)
+$grpQuick.BackColor = $panelBg
+
+$btnOpenMods = New-Object System.Windows.Forms.Button
+$btnOpenMods.Text = "Open Mods Folder"
+$btnOpenMods.Location = New-Object System.Drawing.Point(20, 35)
+$btnOpenMods.Size = New-Object System.Drawing.Size(150, 32)
+$btnOpenMods.FlatStyle = "Flat"
+$btnOpenMods.BackColor = $boxBg
+$btnOpenMods.ForeColor = $txt
+
+$btnOpenAppData = New-Object System.Windows.Forms.Button
+$btnOpenAppData.Text = "Open .minecraft"
+$btnOpenAppData.Location = New-Object System.Drawing.Point(185, 35)
+$btnOpenAppData.Size = New-Object System.Drawing.Size(140, 32)
+$btnOpenAppData.FlatStyle = "Flat"
+$btnOpenAppData.BackColor = $boxBg
+$btnOpenAppData.ForeColor = $txt
+
+$btnClearCache = New-Object System.Windows.Forms.Button
+$btnClearCache.Text = "Clear Modrinth Cache"
+$btnClearCache.Location = New-Object System.Drawing.Point(340, 35)
+$btnClearCache.Size = New-Object System.Drawing.Size(160, 32)
+$btnClearCache.FlatStyle = "Flat"
+$btnClearCache.BackColor = $boxBg
+$btnClearCache.ForeColor = $txt
+
+$btnSysInfo = New-Object System.Windows.Forms.Button
+$btnSysInfo.Text = "Java Process Snapshot"
+$btnSysInfo.Location = New-Object System.Drawing.Point(515, 35)
+$btnSysInfo.Size = New-Object System.Drawing.Size(160, 32)
+$btnSysInfo.FlatStyle = "Flat"
+$btnSysInfo.BackColor = $boxBg
+$btnSysInfo.ForeColor = $txt
+
+$grpQuick.Controls.AddRange(@($btnOpenMods, $btnOpenAppData, $btnClearCache, $btnSysInfo))
+
+$toolsLayout.Controls.AddRange(@($grpSingle, $grpHash, $grpQuick))
+$panelTools.Controls.Add($toolsLayout)
+
+# =============================================================================
+# REPORT PANEL
+# =============================================================================
+$reportBtn = New-Object System.Windows.Forms.Button
+$reportBtn.Text = "GENERATE + SAVE REPORT (.txt)"
+$reportBtn.Dock = "Top"
+$reportBtn.Height = 36
+$reportBtn.FlatStyle = "Flat"
+$reportBtn.BackColor = $accentC
+$reportBtn.ForeColor = [System.Drawing.Color]::Black
+$reportBtn.Font = $fontBtn
+
 $reportBox = New-Object System.Windows.Forms.RichTextBox
-$reportBox.Dock = "Fill"; $reportBox.BackColor = $boxBg; $reportBox.ForeColor = $txt; $reportBox.Font = $fontMono; $reportBox.ReadOnly = $true; $reportBox.BorderStyle = "None"
-$tabReport.Controls.Add($reportBox); $tabReport.Controls.Add($reportCardRow)
+$reportBox.Dock = "Fill"
+$reportBox.BackColor = $boxBg
+$reportBox.ForeColor = $txt
+$reportBox.Font = $fontMono
+$reportBox.ReadOnly = $true
+$reportBox.BorderStyle = "None"
 
-$tabs.TabPages.AddRange(@($tabMods,$tabProc,$tabNet,$tabPersist,$tabForensics,$tabReport))
+$panelReport.Controls.Add($reportBox)
+$panelReport.Controls.Add($reportBtn)
 
-# --- Activity console (bottom) ---
-$consolePanel = New-Object System.Windows.Forms.Panel
-$consolePanel.Dock = "Bottom"; $consolePanel.Height = 160; $consolePanel.BackColor = $bgDark
-$consoleHdr = New-Object System.Windows.Forms.Label
-$consoleHdr.Text = "ACTIVITY CONSOLE"; $consoleHdr.Font = $fontSub; $consoleHdr.ForeColor = $amberDim
-$consoleHdr.Dock = "Top"; $consoleHdr.Height = 20; $consoleHdr.Padding = New-Object System.Windows.Forms.Padding(10,4,0,0)
-$consoleBox = New-Object System.Windows.Forms.RichTextBox
-$consoleBox.Dock = "Fill"; $consoleBox.BackColor = [System.Drawing.Color]::FromArgb(4,4,3); $consoleBox.ForeColor = $amber
-$consoleBox.Font = $fontMono; $consoleBox.ReadOnly = $true; $consoleBox.BorderStyle = "None"
-$consolePanel.Controls.Add($consoleBox); $consolePanel.Controls.Add($consoleHdr)
+# =============================================================================
+# STATUS BAR
+# =============================================================================
+$statusLbl = New-Object System.Windows.Forms.Label
+$statusLbl.Dock = "Bottom"
+$statusLbl.Height = 28
+$statusLbl.TextAlign = "MiddleLeft"
+$statusLbl.Text = "  Ready  •  Select a section from the left"
+$statusLbl.ForeColor = $dim
+$statusLbl.BackColor = $panelBg
+$statusLbl.Padding = New-Object System.Windows.Forms.Padding(10, 0, 0, 0)
 
-function Write-Console {
-    param([string]$Msg, [System.Drawing.Color]$Color = $amber)
-    $ts = Get-Date -Format "HH:mm:ss"
-    $consoleBox.SelectionStart = $consoleBox.TextLength
-    $consoleBox.SelectionColor = $Color
-    $consoleBox.AppendText("[$ts] $Msg`n")
-    $consoleBox.ScrollToCaret()
-}
-
-$form.Controls.Add($tabs)
-$form.Controls.Add($consolePanel)
-$form.Controls.Add($topBar)
-$form.Controls.Add($sidebar)
+# Assemble form
+$form.Controls.Add($mainSplit)
+$form.Controls.Add($statusLbl)
+$form.Controls.Add($header)
 
 # =============================================================================
 # EVENTS
 # =============================================================================
+
+# Sidebar navigation
+$btnMods.Add_Click({ Show-Panel $panelMods $btnMods })
+$btnProc.Add_Click({ Show-Panel $panelProc $btnProc })
+$btnNet.Add_Click({ Show-Panel $panelNet $btnNet })
+$btnPersist.Add_Click({ Show-Panel $panelPersist $btnPersist })
+$btnTools.Add_Click({ Show-Panel $panelTools $btnTools })
+$btnReport.Add_Click({ Show-Panel $panelReport $btnReport })
+
+# Default view
+Show-Panel $panelMods $btnMods
+
+# Browse mods folder
 $browseBtn.Add_Click({
     $dlg = New-Object System.Windows.Forms.FolderBrowserDialog
+    $dlg.Description = "Select Minecraft mods folder"
     if ($dlg.ShowDialog() -eq "OK") { $pathBox.Text = $dlg.SelectedPath }
 })
 
-$linkOpenFolder.Add_Click({
-    $dir = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
-    Start-Process explorer.exe $dir
-    Write-Console "Opened script folder: $dir" $dim
-})
-$linkClearReports.Add_Click({
-    $dir = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
-    $reports = Get-ChildItem -Path $dir -Filter "KettehLyzer-Report-*.txt" -ErrorAction SilentlyContinue
-    $reports | Remove-Item -Force -ErrorAction SilentlyContinue
-    Write-Console "Cleared $($reports.Count) saved report(s)" $dim
-})
-$linkOpenPS.Add_Click({
-    $dir = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
-    Start-Process powershell.exe -WorkingDirectory $dir
-    Write-Console "Opened PowerShell at: $dir" $dim
-})
-
-$scanCard.Add_Click({
+# Full mod scan
+$scanBtn.Add_Click({
     $modsList.Items.Clear()
-    $modsPath = $pathBox.Text
+    $modsPath = $pathBox.Text.Trim()
     if (-not (Test-Path $modsPath -PathType Container)) {
-        Write-Console "Invalid mods folder: $modsPath" $red
+        $statusLbl.Text = "  Invalid mods folder path"
+        $statusLbl.ForeColor = $red
         return
     }
-    Set-Badge "SCANNING" $amber
-    $titleLbl.Text = "Scanning mods..."
-    $jars = Get-ChildItem -Path $modsPath -Filter *.jar -File
+    $jars = Get-ChildItem -Path $modsPath -Filter *.jar -File -ErrorAction SilentlyContinue
     $total = $jars.Count
-    Write-Console "Found $total jar(s) in $modsPath"
-    $script:VerifiedCount=0; $script:UnknownCount=0; $script:SuspiciousCount=0; $script:CheatCount=0; $script:DangerousCount=0
+    if ($total -eq 0) {
+        $statusLbl.Text = "  No .jar files found in that folder"
+        $statusLbl.ForeColor = $yellow
+        return
+    }
+    $progress.Maximum = $total
+    $progress.Value = 0
+    $script:VerifiedCount = 0; $script:UnknownCount = 0; $script:SuspiciousCount = 0
+    $script:CheatCount = 0; $script:DangerousCount = 0
     $idx = 0
+
     foreach ($jar in $jars) {
         $idx++
-        $titleSubLbl.Text = "Scanning $idx/$total — $($jar.Name)"
+        $progress.Value = $idx
+        $statusLbl.Text = "  Scanning $idx / $total  —  $($jar.Name)"
+        $statusLbl.ForeColor = $accentC
         [System.Windows.Forms.Application]::DoEvents()
 
         $hash = Get-FileSHA1 -Path $jar.FullName
         $known = Query-Modrinth -Hash $hash
+
         if ($known.Slug) {
             $item = New-Object System.Windows.Forms.ListViewItem($jar.Name)
-            $item.SubItems.Add("Verified") | Out-Null; $item.SubItems.Add($known.Name) | Out-Null
-            $item.ForeColor = $green
+            $item.SubItems.Add("Verified") | Out-Null
+            $item.SubItems.Add($known.Name) | Out-Null
+            $item.ForeColor = $accentG
             $modsList.Items.Add($item) | Out-Null
             $script:VerifiedCount++
             continue
         }
+
         $scan = Invoke-ScanJar -FilePath $jar.FullName
         if ($scan.IsCheatClient) {
             $deep = Invoke-DeepScan -FilePath $jar.FullName
             $item = New-Object System.Windows.Forms.ListViewItem($jar.Name)
             $status = if ($deep.Count -gt 0) { "DANGEROUS" } else { "CHEAT CLIENT" }
             $item.SubItems.Add($status) | Out-Null
-            $item.SubItems.Add((($scan.Hits -join ', ') + $(if($deep.Count -gt 0){" | " + ($deep -join '; ')}else{""}))) | Out-Null
+            $detail = ($scan.Hits -join ', ')
+            if ($deep.Count -gt 0) { $detail += "  |  " + ($deep -join '; ') }
+            $item.SubItems.Add($detail) | Out-Null
             $item.ForeColor = if ($deep.Count -gt 0) { $darkred } else { $red }
             $modsList.Items.Add($item) | Out-Null
-            if ($deep.Count -gt 0) { $script:DangerousCount++; Write-Console "DANGEROUS: $($jar.Name)" $darkred } else { $script:CheatCount++; Write-Console "CHEAT CLIENT: $($jar.Name)" $red }
-        } elseif ($scan.HitCount -gt 0) {
+            if ($deep.Count -gt 0) { $script:DangerousCount++ } else { $script:CheatCount++ }
+        }
+        elseif ($scan.HitCount -gt 0) {
             $item = New-Object System.Windows.Forms.ListViewItem($jar.Name)
-            $item.SubItems.Add("Suspicious") | Out-Null; $item.SubItems.Add($scan.Hits -join ', ') | Out-Null
+            $item.SubItems.Add("Suspicious") | Out-Null
+            $item.SubItems.Add(($scan.Hits -join ', ')) | Out-Null
             $item.ForeColor = $yellow
             $modsList.Items.Add($item) | Out-Null
             $script:SuspiciousCount++
-        } else {
+        }
+        else {
             $item = New-Object System.Windows.Forms.ListViewItem($jar.Name)
-            $item.SubItems.Add("Unknown") | Out-Null; $item.SubItems.Add("No hash match, no signature hits") | Out-Null
+            $item.SubItems.Add("Unknown") | Out-Null
+            $item.SubItems.Add("No hash match • no signature hits") | Out-Null
             $item.ForeColor = $dim
             $modsList.Items.Add($item) | Out-Null
             $script:UnknownCount++
         }
     }
+
     foreach ($c in $modsList.Columns) { $c.Width = -2 }
-    $verdict = if ($script:DangerousCount -gt 0) { "CRITICAL" } elseif ($script:CheatCount -gt 0) { "FLAGGED" } elseif ($script:SuspiciousCount -gt 3) { "REVIEW" } else { "CLEAN" }
-    $badgeColor = if ($script:DangerousCount -gt 0 -or $script:CheatCount -gt 0) { $red } elseif ($script:SuspiciousCount -gt 3) { $yellow } else { $green }
-    Set-Badge $verdict $badgeColor
-    $titleLbl.Text = "Mod scan complete."
-    $titleSubLbl.Text = "V:$($script:VerifiedCount)  U:$($script:UnknownCount)  S:$($script:SuspiciousCount)  C:$($script:CheatCount)  D:$($script:DangerousCount)"
-    Write-Console "Mod scan done — $verdict ($total jars)" $badgeColor
+
+    $verdict = if ($script:DangerousCount -gt 0) { "CRITICAL — dangerous mods found" }
+               elseif ($script:CheatCount -gt 0) { "FLAGGED — cheat client(s) found" }
+               elseif ($script:SuspiciousCount -gt 3) { "REVIEW — several suspicious mods" }
+               else { "CLEAN — no strong mod-based hits" }
+
+    $statusLbl.Text = "  Done. $verdict   (V:$($script:VerifiedCount)  U:$($script:UnknownCount)  S:$($script:SuspiciousCount)  C:$($script:CheatCount)  D:$($script:DangerousCount))"
+    $statusLbl.ForeColor = if ($script:DangerousCount -gt 0 -or $script:CheatCount -gt 0) { $red }
+                           elseif ($script:SuspiciousCount -gt 3) { $yellow } else { $accentG }
 })
 
-$procCard.Add_Click({
+# Filter
+$searchBox.Add_TextChanged({
+    $filter = $searchBox.Text.ToLower()
+    foreach ($item in $modsList.Items) {
+        $item.ForeColor = $item.ForeColor  # keep original color logic simple
+        if ($filter -eq "" -or $item.Text.ToLower().Contains($filter) -or $item.SubItems[2].Text.ToLower().Contains($filter)) {
+            # ListView doesn't support easy hide, so we just leave it (basic filter can be expanded later)
+        }
+    }
+})
+
+# Process scan
+$procBtn.Add_Click({
     $procList.Items.Clear()
-    Set-Badge "SCANNING" $amber
-    Write-Console "Enumerating java(w).exe process modules..."
+    $statusLbl.Text = "  Enumerating Java process modules..."
+    $statusLbl.ForeColor = $accentC
     [System.Windows.Forms.Application]::DoEvents()
     $rows = Get-JavaProcessModules
     if ($rows.Count -eq 0) {
-        Write-Console "No running java/javaw process found." $dim
-        Set-Badge "IDLE" $green
+        $statusLbl.Text = "  No running java/javaw process found"
+        $statusLbl.ForeColor = $dim
         return
     }
     $reviewCount = 0
     foreach ($r in $rows) {
         $item = New-Object System.Windows.Forms.ListViewItem($r.PID.ToString())
-        $item.SubItems.Add($r.Module) | Out-Null; $item.SubItems.Add($r.Path) | Out-Null
-        $item.SubItems.Add($r.Signed) | Out-Null; $item.SubItems.Add($r.Verdict) | Out-Null
+        $item.SubItems.Add($r.Module) | Out-Null
+        $item.SubItems.Add($r.Path) | Out-Null
+        $item.SubItems.Add($r.Signed) | Out-Null
+        $item.SubItems.Add($r.Verdict) | Out-Null
         if ($r.Verdict -like "Review*") { $item.ForeColor = $red; $reviewCount++ }
         elseif ($r.Verdict -eq "Unsigned") { $item.ForeColor = $yellow }
         else { $item.ForeColor = $dim }
         $procList.Items.Add($item) | Out-Null
     }
     foreach ($c in $procList.Columns) { $c.Width = -2 }
-    $badgeColor = if ($reviewCount -gt 0) { $yellow } else { $green }
-    Set-Badge $(if($reviewCount -gt 0){"REVIEW"}else{"CLEAN"}) $badgeColor
-    Write-Console "Process scan done — $reviewCount module(s) worth a look" $badgeColor
+    $statusLbl.Text = "  Done. $reviewCount module(s) worth a closer look"
+    $statusLbl.ForeColor = if ($reviewCount -gt 0) { $yellow } else { $accentG }
 })
 
-$netCard.Add_Click({
+# Network
+$netBtn.Add_Click({
     $netList.Items.Clear()
     $rows = Get-JavaConnections
     foreach ($r in $rows) {
         $item = New-Object System.Windows.Forms.ListViewItem($r.PID.ToString())
-        $item.SubItems.Add($r.Remote) | Out-Null; $item.SubItems.Add($r.State.ToString()) | Out-Null; $item.SubItems.Add($r.Note) | Out-Null
+        $item.SubItems.Add($r.Remote) | Out-Null
+        $item.SubItems.Add($r.State.ToString()) | Out-Null
+        $item.SubItems.Add($r.Note) | Out-Null
         $item.ForeColor = $dim
         $netList.Items.Add($item) | Out-Null
     }
     foreach ($c in $netList.Columns) { $c.Width = -2 }
-    Write-Console "Listed $($rows.Count) established connection(s) — review manually" $dim
-    Set-Badge "IDLE" $green
+    $statusLbl.Text = "  $($rows.Count) established connection(s) listed — review remote IPs manually"
+    $statusLbl.ForeColor = $accentC
 })
 
-$persistCard.Add_Click({
+# Persistence
+$persistBtn.Add_Click({
     $persistList.Items.Clear()
     $rows = Get-PersistenceItems
     foreach ($r in $rows) {
         $item = New-Object System.Windows.Forms.ListViewItem($r.Source)
-        $item.SubItems.Add($r.Name) | Out-Null; $item.SubItems.Add($r.Value) | Out-Null
+        $item.SubItems.Add($r.Name) | Out-Null
+        $item.SubItems.Add($r.Value) | Out-Null
         $item.ForeColor = $dim
         $persistList.Items.Add($item) | Out-Null
     }
     foreach ($c in $persistList.Columns) { $c.Width = -2 }
-    Write-Console "Listed $($rows.Count) startup/persistence item(s)" $dim
-    Set-Badge "IDLE" $green
+    $statusLbl.Text = "  $($rows.Count) startup / persistence item(s) listed"
+    $statusLbl.ForeColor = $accentC
 })
 
-function Add-ForensicsRows {
-    param($Rows)
-    foreach ($r in $Rows) {
-        $item = New-Object System.Windows.Forms.ListViewItem($r.Source)
-        $item.SubItems.Add($r.Name) | Out-Null; $item.SubItems.Add($r.Detail) | Out-Null
-        $item.ForeColor = $dim
-        $forensicsList.Items.Add($item) | Out-Null
-    }
-    foreach ($c in $forensicsList.Columns) { $c.Width = -2 }
-}
-$prefetchCard.Add_Click({ Add-ForensicsRows (Get-PrefetchEvidence); Write-Console "Prefetch check done" $dim; Set-Badge "IDLE" $green })
-$userAssistCard.Add_Click({ Add-ForensicsRows (Get-UserAssistEvidence); Write-Console "UserAssist check done" $dim; Set-Badge "IDLE" $green })
-$usbCard.Add_Click({ Add-ForensicsRows (Get-USBHistory); Write-Console "USB history check done" $dim; Set-Badge "IDLE" $green })
-$recycleCard.Add_Click({ Add-ForensicsRows (Get-RecycleBinItems); Write-Console "Recycle Bin check done" $dim; Set-Badge "IDLE" $green })
-$typedCard.Add_Click({ Add-ForensicsRows (Get-RecentRunHistory); Write-Console "Run/typed-path history check done" $dim; Set-Badge "IDLE" $green })
+# Tools: Single JAR
+$singleBrowse.Add_Click({
+    $ofd = New-Object System.Windows.Forms.OpenFileDialog
+    $ofd.Filter = "JAR files (*.jar)|*.jar|All files (*.*)|*.*"
+    if ($ofd.ShowDialog() -eq "OK") { $singlePath.Text = $ofd.FileName }
+})
 
-$reportCard.Add_Click({
+$singleScanBtn.Add_Click({
+    $fp = $singlePath.Text.Trim()
+    if (-not (Test-Path $fp -PathType Leaf)) {
+        $singleResult.Text = "File not found."
+        return
+    }
+    $statusLbl.Text = "  Deep scanning single JAR..."
+    $statusLbl.ForeColor = $accentC
+    [System.Windows.Forms.Application]::DoEvents()
+    $scan = Invoke-ScanJar -FilePath $fp
+    $deep = Invoke-DeepScan -FilePath $fp
+    $hash = Get-FileSHA1 -Path $fp
+    $known = Query-Modrinth -Hash $hash
     $sb = New-Object System.Text.StringBuilder
-    [void]$sb.AppendLine("KettehLyzer SS Toolkit — Report")
-    [void]$sb.AppendLine("Generated: $(Get-Date)")
-    [void]$sb.AppendLine("Mods folder: $($pathBox.Text)")
+    [void]$sb.AppendLine("File: $(Split-Path $fp -Leaf)")
+    [void]$sb.AppendLine("SHA1: $hash")
+    if ($known.Slug) { [void]$sb.AppendLine("Modrinth: $($known.Name) ($($known.Slug))") }
+    else { [void]$sb.AppendLine("Modrinth: not found") }
+    [void]$sb.AppendLine("Hits: $($scan.Hits -join ', ')")
+    [void]$sb.AppendLine("Cheat client: $($scan.IsCheatClient)")
+    if ($deep.Count -gt 0) { [void]$sb.AppendLine("Deep flags: $($deep -join ' | ')") }
+    else { [void]$sb.AppendLine("Deep flags: none") }
+    $singleResult.Text = $sb.ToString()
+    $statusLbl.Text = "  Single JAR scan complete"
+    $statusLbl.ForeColor = $accentG
+})
+
+# Tools: Hash
+$hashBrowse.Add_Click({
+    $ofd = New-Object System.Windows.Forms.OpenFileDialog
+    $ofd.Filter = "All files (*.*)|*.*"
+    if ($ofd.ShowDialog() -eq "OK") { $hashPath.Text = $ofd.FileName }
+})
+
+$hashBtn.Add_Click({
+    $fp = $hashPath.Text.Trim()
+    if (-not (Test-Path $fp -PathType Leaf)) {
+        $hashResult.Text = "File not found"
+        return
+    }
+    $s1 = Get-FileSHA1 -Path $fp
+    $s256 = Get-FileSHA256 -Path $fp
+    $hashResult.Text = "SHA1: $s1   |   SHA256: $s256"
+})
+
+# Quick actions
+$btnOpenMods.Add_Click({
+    $p = $pathBox.Text.Trim()
+    if (Test-Path $p) { Start-Process explorer.exe $p }
+    else { [System.Windows.Forms.MessageBox]::Show("Path does not exist") }
+})
+
+$btnOpenAppData.Add_Click({
+    $mc = Join-Path $env:APPDATA ".minecraft"
+    if (Test-Path $mc) { Start-Process explorer.exe $mc }
+})
+
+$btnClearCache.Add_Click({
+    $script:ModrinthCache.Clear()
+    $statusLbl.Text = "  Modrinth cache cleared"
+    $statusLbl.ForeColor = $accentG
+})
+
+$btnSysInfo.Add_Click({
+    $procs = Get-Process javaw,java -ErrorAction SilentlyContinue
+    if (-not $procs) {
+        [System.Windows.Forms.MessageBox]::Show("No Java processes running.", "Snapshot")
+        return
+    }
+    $msg = ($procs | ForEach-Object { "PID $($_.Id)  •  $($_.ProcessName)  •  $([math]::Round($_.WorkingSet64/1MB,1)) MB" }) -join "`n"
+    [System.Windows.Forms.MessageBox]::Show($msg, "Java Process Snapshot")
+})
+
+# Report
+$reportBtn.Add_Click({
+    $sb = New-Object System.Text.StringBuilder
+    [void]$sb.AppendLine("╔══════════════════════════════════════════════════╗")
+    [void]$sb.AppendLine("║         KettehLyzer SS Toolkit — Report          ║")
+    [void]$sb.AppendLine("╚══════════════════════════════════════════════════╝")
+    [void]$sb.AppendLine("Generated : $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')")
+    [void]$sb.AppendLine("Mods path : $($pathBox.Text)")
     [void]$sb.AppendLine("")
-    [void]$sb.AppendLine("--- Mods ($($modsList.Items.Count)) ---")
-    foreach ($i in $modsList.Items) { [void]$sb.AppendLine("[$($i.SubItems[1].Text)] $($i.Text) — $($i.SubItems[2].Text)") }
+    [void]$sb.AppendLine("--- MODS ($($modsList.Items.Count)) ---")
+    foreach ($i in $modsList.Items) {
+        [void]$sb.AppendLine("[$($i.SubItems[1].Text)] $($i.Text) — $($i.SubItems[2].Text)")
+    }
     [void]$sb.AppendLine("")
-    [void]$sb.AppendLine("--- Process modules ($($procList.Items.Count)) ---")
-    foreach ($i in $procList.Items) { [void]$sb.AppendLine("[$($i.SubItems[4].Text)] $($i.SubItems[1].Text) — $($i.SubItems[2].Text) (Signed: $($i.SubItems[3].Text))") }
+    [void]$sb.AppendLine("--- PROCESS MODULES ($($procList.Items.Count)) ---")
+    foreach ($i in $procList.Items) {
+        [void]$sb.AppendLine("[$($i.SubItems[4].Text)] $($i.SubItems[1].Text) — $($i.SubItems[2].Text)")
+    }
     [void]$sb.AppendLine("")
-    [void]$sb.AppendLine("--- Network connections ($($netList.Items.Count)) ---")
-    foreach ($i in $netList.Items) { [void]$sb.AppendLine("$($i.SubItems[1].Text) [$($i.SubItems[2].Text)]") }
+    [void]$sb.AppendLine("--- NETWORK ($($netList.Items.Count)) ---")
+    foreach ($i in $netList.Items) {
+        [void]$sb.AppendLine("$($i.SubItems[1].Text)  [$($i.SubItems[2].Text)]")
+    }
     [void]$sb.AppendLine("")
-    [void]$sb.AppendLine("--- Persistence items ($($persistList.Items.Count)) ---")
-    foreach ($i in $persistList.Items) { [void]$sb.AppendLine("$($i.Text): $($i.SubItems[1].Text) -> $($i.SubItems[2].Text)") }
-    [void]$sb.AppendLine("")
-    [void]$sb.AppendLine("--- Forensics ($($forensicsList.Items.Count)) ---")
-    foreach ($i in $forensicsList.Items) { [void]$sb.AppendLine("[$($i.Text)] $($i.SubItems[1].Text) — $($i.SubItems[2].Text)") }
+    [void]$sb.AppendLine("--- PERSISTENCE ($($persistList.Items.Count)) ---")
+    foreach ($i in $persistList.Items) {
+        [void]$sb.AppendLine("$($i.Text): $($i.SubItems[1].Text) → $($i.SubItems[2].Text)")
+    }
     $reportBox.Text = $sb.ToString()
 
-    $dir = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
     $save = New-Object System.Windows.Forms.SaveFileDialog
-    $save.InitialDirectory = $dir
     $save.Filter = "Text report (*.txt)|*.txt"
-    $save.FileName = "KettehLyzer-Report-$(Get-Date -Format yyyyMMdd-HHmmss).txt"
+    $save.FileName = "KettehLyzer-Report-$(Get-Date -Format 'yyyyMMdd-HHmmss').txt"
     if ($save.ShowDialog() -eq "OK") {
         $sb.ToString() | Out-File -FilePath $save.FileName -Encoding UTF8
-        Write-Console "Report saved to: $($save.FileName)" $green
+        $statusLbl.Text = "  Report saved → $($save.FileName)"
+        $statusLbl.ForeColor = $accentG
     }
 })
 
+# Context menu actions
+$miCopyName.Add_Click({
+    if ($modsList.SelectedItems.Count -gt 0) {
+        [System.Windows.Forms.Clipboard]::SetText($modsList.SelectedItems[0].Text)
+    }
+})
+$miCopyDetail.Add_Click({
+    if ($modsList.SelectedItems.Count -gt 0) {
+        [System.Windows.Forms.Clipboard]::SetText($modsList.SelectedItems[0].SubItems[2].Text)
+    }
+})
+
+# Launch
 [System.Windows.Forms.Application]::Run($form)
