@@ -26,7 +26,7 @@ Write-Host
 # ---------------------------------------------------------------------------
 Write-Host "Enter path to the mods folder: " -NoNewline
 Write-Host "(press Enter to use default)" -ForegroundColor DarkGray
-$mods = Read-Host "PATH"
+$mods = Read-Host "Paste Your Mod Path Here"
 Write-Host
 
 if (-not $mods) {
