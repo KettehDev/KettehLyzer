@@ -5,7 +5,7 @@
 #  ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██║██║    ██║
 #  ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║███████╗██║
 #  ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝╚═╝
-#              KETTEH MOD ANALYZER v4.0
+#              KETTEH MOD ANALYZER v4.0 - TERMINAL
 #           DETECT CHEATS · VERIFY MODS · SERVE JUSTICE 🔥
 # ============================================================
 
@@ -207,22 +207,12 @@ function Get-NameHit {
     param([string]$FileName)
     $lower = $FileName.ToLower()
     
-    # Check legit mods first
     foreach ($legit in $LegitMods.Keys) {
         if ($lower -match [regex]::Escape($legit)) { return $null }
     }
     
-    # Check cheat clients
     foreach ($cheat in $CheatClientNames) {
         if ($lower -match [regex]::Escape($cheat)) { return $cheat }
-    }
-    
-    # Check for suspicious keywords
-    $suspicious = @('client', 'hack', 'cheat', 'module', 'v6', 'v7', 'v8', 'beta', 'alpha')
-    foreach ($word in $suspicious) {
-        if ($lower -match [regex]::Escape($word)) {
-            return "SUSPICIOUS: $word"
-        }
     }
     
     return $null
@@ -262,14 +252,12 @@ $counter = 0
 $tempRoot = Join-Path $env:TEMP ("kettehlyzer_" + [guid]::NewGuid().ToString('N').Substring(0,8))
 New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
 
-# ─── SCAN LOOP ─────────────────────────────────────────────────
 try {
     foreach ($file in $jarFiles) {
         $counter++
         $pct = [math]::Round(100 * $counter / $total)
         Write-Host "`r  [>>] Scanning $counter/$total ($pct%)...$(' ' * 30)" -ForegroundColor Cyan -NoNewline
 
-        # 1. NAME CHECK
         $nameHit = Get-NameHit -FileName $file.Name
         if ($nameHit) {
             $cheatMods += [pscustomobject]@{ 
@@ -280,7 +268,6 @@ try {
             continue
         }
 
-        # 2. HASH CHECK
         $sha1 = Get-JarHash -Path $file.FullName -Algo SHA1
         $known = Fetch-Modrinth -Sha1 $sha1
         if ($known.Slug) {
@@ -291,7 +278,6 @@ try {
             continue
         }
 
-        # 3. DEEP SCAN
         $extractDir = Join-Path $tempRoot ([System.IO.Path]::GetFileNameWithoutExtension($file.Name))
         New-Item -ItemType Directory -Path $extractDir -Force | Out-Null
         
