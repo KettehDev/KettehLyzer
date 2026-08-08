@@ -5,7 +5,7 @@
 #  ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██║██║    ██║
 #  ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║███████╗██║
 #  ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝╚═╝
-#                 CHEATER CATCHER v8  ::  NO BS, JUST RESULTS
+#              CHEATER CATCHER v9  ::  ENHANCED EDITION
 # ============================================================
 
 Clear-Host
@@ -21,32 +21,33 @@ $Gray = "Gray"
 $DarkGray = "DarkGray"
 $DarkMagenta = "DarkMagenta"
 $DarkCyan = "DarkCyan"
+$DarkGreen = "DarkGreen"
+$DarkRed = "DarkRed"
 
 # ─── ASCII BANNER ─────────────────────────────────────────────
 Write-Host @"
 ╔═══════════════════════════════════════════════════════════════╗
 ║                                                               ║
-║       ██╗  ██╗███████╗████████╗████████╗███████╗██╗  ██╗      ║
-║       ██║ ██╔╝██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██║  ██║      ║
-║       █████╔╝ █████╗     ██║      ██║   █████╗  ███████║      ║
-║       ██╔═██╗ ██╔══╝     ██║      ██║   ██╔══╝  ██╔══██║      ║
-║       ██║  ██╗███████╗   ██║      ██║   ███████╗██║  ██║      ║
-║       ╚═╝  ╚═╝╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝      ║
+║      ██╗  ██╗███████╗████████╗████████╗███████╗██╗  ██╗     ║
+║      ██║ ██╔╝██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██║  ██║     ║
+║      █████╔╝ █████╗     ██║      ██║   █████╗  ███████║     ║
+║      ██╔═██╗ ██╔══╝     ██║      ██║   ██╔══╝  ██╔══██║     ║
+║      ██║  ██╗███████╗   ██║      ██║   ███████╗██║  ██║     ║
+║      ╚═╝  ╚═╝╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝     ║
 ║                                                               ║
-║               ⚡ ULTIMATE CHEATER CATCHER ⚡                  ║
-║                       DETECTS CHEATERS                        ║
-║                     NUMBER 1 MOD ANELYZER                     ║    
+║           ⚡ ULTIMATE CHEATER CATCHER v9 ⚡                 ║
+║              CRYSTAL & ANCHOR DETECTION ACTIVE               ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
 "@ -ForegroundColor Magenta
 
 Write-Host ""
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host "  ⚡  CHEATER DETECTION ENGINE v8  ⚡" -ForegroundColor Cyan
+Write-Host "  ⚡  ENHANCED CHEATER DETECTION ENGINE  ⚡" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
 Write-Host "  [LOADING] Initializing cheat detection..." -ForegroundColor Yellow
-Write-Host "  [LOADING] Loading signature database..." -ForegroundColor Yellow
+Write-Host "  [LOADING] Loading enhanced signature database..." -ForegroundColor Yellow
 Write-Host "  [LOADING] Connecting to Modrinth API..." -ForegroundColor Yellow
 Write-Host ""
 
@@ -57,10 +58,10 @@ for ($i = 0; $i -le 100; $i += 5) {
     $bar += ("█" * $filled).PadRight(20, "░")
     $bar += "]"
     Write-Host "`r  $bar $i% " -ForegroundColor Cyan -NoNewline
-    Start-Sleep -Milliseconds 20
+    Start-Sleep -Milliseconds 15
 }
 Write-Host "`r  [████████████████████] 100% " -ForegroundColor Green
-Write-Host "  [SYSTEM] Ready to catch cheaters." -ForegroundColor Green
+Write-Host "  [SYSTEM] Enhanced cheat detection ready." -ForegroundColor Green
 Write-Host ""
 
 # ─── PATH INPUT ───────────────────────────────────────────────
@@ -147,7 +148,6 @@ function Expand-JarLimited {
     } catch {
         return
     }
-    # Check for nested jars but don't recurse too deep
     $nested = Get-ChildItem -Path $DestDir -Recurse -Filter *.jar -File -ErrorAction SilentlyContinue
     foreach ($n in $nested) {
         $sub = Join-Path $n.DirectoryName ("_extract_" + [System.IO.Path]::GetFileNameWithoutExtension($n.Name))
@@ -158,24 +158,58 @@ function Expand-JarLimited {
     }
 }
 
-# ─── CHEAT DETECTION ──────────────────────────────────────────
+# ─── ENHANCED CHEAT DETECTION ────────────────────────────────
+
+# CRYSTAL PVP CHEAT CLIENTS (SPECIFIC TO YOUR MOD LIST)
+$CrystalCheatClients = @(
+    'crystal', 'anchor', 'optimizer', 'glax', 'kindas', 'marlow', 'autocrystal',
+    'crystalaura', 'crystalpvp', 'crystaltweaks', 'anchoraura', 'bedaura',
+    'glaxcrystal', 'kindcrystal', 'marlowcrystal'
+)
+
+# MAIN CHEAT CLIENTS
 $CheatClientNames = @(
-    'wurst','meteorclient','impact','liquidbounce','aristois','future','lambdaclient',
+    'wurst','meteor','impact','liquidbounce','aristois','future','lambdaclient',
     'rusherhack','sigmaclient','novoline','ghostclient','kamiblue','salhack','clickcrystals',
     'baritone','vengeance','immediatelyfast','sigma','jello','exhibition','vape','entropy',
-    'kuro','rise','flux','zero','raven','astolfo','exhibition','dortware','xenon'
+    'kuro','rise','flux','zero','raven','astolfo','exhibition','dortware','xenon',
+    'tenacity','gamesense','skeet','primordial','azura','recode','fdp','fdpclient',
+    'aero','exhi','trident','skid','skidded','crystalia','crystalfight'
 )
 
+# CHEAT FEATURES (EXPANDED)
 $CheatStrings = @(
+    # CRYSTAL PVP SPECIFIC
+    'AutoCrystal','CrystalAura','AnchorAura','BedAura','CrystalOptimizer','AnchorOptimizer',
+    'CrystalPlace','CrystalBreak','AnchorPlace','AnchorBreak','GlaxCrystal','KindCrystal',
+    'MarlowCrystal','CrystalMod','CrystalHelper','AutoAnchor','AutoCrystalAura',
+    
+    # COMBAT
     'AimAssist','KillAura','Reach','HitBox','Aura','BowAimbot','Velocity','AntiKnockback',
-    'Criticals','AutoClicker','Flight','BHop','SpeedMine','NoFall','Phase','Blink',
-    'Freecam','NoSlow','Scaffold','ElytraFly','XRay','ESP','Nametags','Chams',
-    'Tracers','Radar','ChestStealer','Nuker','AutoCrystal','AutoAnchor','AutoPot',
-    'AutoTotem','AutoArmor','CrystalAura','PingSpoof','SelfDestruct','FastPlace',
-    'FastBreak','ClickGUI','AltManager','Meteor','Wurst','Impact','Aristois',
-    'LiquidBounce','Future','RusherHack','Sigma','Novoline','GhostClient'
+    'Criticals','AutoClicker','HitSelect','MultiAura','TriggerBot','AxeSpam','ShieldBreaker',
+    'Combat','Fight','PvP','Crystal','TotemPop','HitBox','Aura',
+    
+    # MOVEMENT
+    'Flight','BHop','SpeedMine','NoFall','Phase','Blink','Freecam','NoSlow','Scaffold',
+    'ElytraFly','JumpReset','LongJump','Strafe','Sprint','Fly','Glide','Step',
+    'Speed','FlyHack','NoFallHack','BunnyHop',
+    
+    # WORLD
+    'XRay','ESP','Nametags','Chams','Tracers','Radar','ChestStealer','Nuker',
+    'AutoCrystal','AutoAnchor','AutoDoubleHand','AutoHitCrystal','AutoPot','AutoTotem',
+    'AutoArmor','InventoryTotem','CrystalAura','AnchorMacro','HoleFiller','AutoBlockPlace',
+    
+    # UTILITY
+    'PingSpoof','SelfDestruct','WebMacro','FastPlace','FastBreak','AutoGapple','AutoEat',
+    'AutoFish','AutoPearl','AutoSoup','AutoSwitch','AutoTrap','AutoMine','AutoBed',
+    
+    # CLIENT SPECIFIC
+    'Meteor','Wurst','Impact','Aristois','LiquidBounce','Future','RusherHack',
+    'Sigma','Novoline','GhostClient','KamiBlue','SalHack','ClickCrystals',
+    'Baritone','Vengeance','ImmediatelyFast','Exhibition','Vape','Entropy'
 )
 
+# LEGIT MODS WHITELIST (UPDATED)
 $LegitMods = @{
     'fabric' = $true; 'forge' = $true; 'optifine' = $true; 'sodium' = $true
     'lithium' = $true; 'phosphor' = $true; 'iris' = $true; 'indium' = $true
@@ -185,14 +219,30 @@ $LegitMods = @{
     'starlight' = $true; 'viafabric' = $true; 'fabric-api' = $true
     'modmenu' = $true; 'worldedit' = $true; 'jei' = $true; 'rei' = $true
     'emi' = $true; 'xaero' = $true; 'journeymap' = $true
+    'polytone' = $true; 'sodium-extra' = $true; 'placeholder-api' = $true
+    'walksylib' = $true; 'yetanotherconfiglib' = $true; 'collective' = $true
+    'essential' = $true; 'borderlessfullscreen' = $true; 'autoreconnect' = $true
+    'fullbrightnesstoggle' = $true; 'naturalmotionblur' = $true
+    'shieldfixes' = $true; 'shieldstatus' = $true
 }
 
 function Get-NameHit {
     param([string]$FileName)
     $lower = $FileName.ToLower()
+    
+    # First check legit mods
     foreach ($legit in $LegitMods.Keys) {
         if ($lower -match [regex]::Escape($legit)) { return $null }
     }
+    
+    # Check crystal cheat clients
+    foreach ($cheat in $CrystalCheatClients) {
+        if ($lower -match [regex]::Escape($cheat)) { 
+            return "CRYSTAL PVP: $cheat" 
+        }
+    }
+    
+    # Check main cheat clients
     return ($CheatClientNames | Where-Object { $lower -match [regex]::Escape($_) } | Select-Object -First 1)
 }
 
@@ -209,7 +259,7 @@ function Get-CheatHits {
         foreach ($sig in $CheatStrings) {
             if ($text -match [regex]::Escape($sig)) { $hits += $sig }
         }
-        if ($hits.Count -gt 10) { break }
+        if ($hits.Count -gt 15) { break }
     }
     return $hits | Select-Object -Unique
 }
@@ -223,6 +273,7 @@ Write-Host ""
 $verifiedMods = @()
 $unknownMods = @()
 $cheatMods = @()
+$crystalCheats = @()
 
 $jarFiles = Get-ChildItem -Path $mods -Filter *.jar -File
 $total = $jarFiles.Count
@@ -236,14 +287,16 @@ try {
         $pct = [math]::Round(100 * $counter / $total)
         Write-Host "`r  [>>] Scanning $counter/$total ($pct%)...$(' ' * 30)" -ForegroundColor Cyan -NoNewline
 
-        # 1. NAME CHECK
+        # 1. NAME CHECK - ENHANCED
         $nameHit = Get-NameHit -FileName $file.Name
         if ($nameHit) {
+            $isCrystal = ($nameHit -match "CRYSTAL PVP")
             $cheatMods += [pscustomobject]@{ 
                 FileName = $file.Name
                 Reason = "NAME MATCH: $nameHit"
-                Type = "CLIENT"
+                Type = if ($isCrystal) { "CRYSTAL PVP" } else { "CHEAT CLIENT" }
             }
+            if ($isCrystal) { $crystalCheats += $file.Name }
             continue
         }
 
@@ -266,11 +319,13 @@ try {
 
         $hits = Get-CheatHits -ExtractedDir $extractDir
         if ($hits.Count -gt 0) {
+            $isCrystal = ($hits | Where-Object { $_ -match 'Crystal|Anchor' })
             $cheatMods += [pscustomobject]@{ 
                 FileName = $file.Name
                 Reason = "STRING MATCH: $($hits[0..5] -join ', ')"
-                Type = "CHEAT"
+                Type = if ($isCrystal) { "CRYSTAL PVP" } else { "CHEAT" }
             }
+            if ($isCrystal) { $crystalCheats += $file.Name }
         } else {
             $zone = Get-ZoneIdentifier -Path $file.FullName
             $unknownMods += [pscustomobject]@{ 
@@ -295,10 +350,21 @@ Write-Host ""
 
 # ─── SUMMARY ──────────────────────────────────────────────────
 Write-Host "  ┌─────────────────────────────────────────────────────────────────────┐" -ForegroundColor DarkMagenta
-Write-Host "  │  ✅ VERIFIED  │  ❓ UNKNOWN  │  🚨 CHEATERS  │  📦 TOTAL  │        " -ForegroundColor White
-Write-Host "  │  $($verifiedMods.Count.ToString().PadLeft(4))           │  $($unknownMods.Count.ToString().PadLeft(4))          │  $($cheatMods.Count.ToString().PadLeft(4))           │  $($total.ToString().PadLeft(4))        │        " -ForegroundColor White
+Write-Host "  │  ✅ VERIFIED  │  ❓ UNKNOWN  │  🚨 CHEATERS  │  💎 CRYSTAL  │      " -ForegroundColor White
+Write-Host "  │  $($verifiedMods.Count.ToString().PadLeft(4))           │  $($unknownMods.Count.ToString().PadLeft(4))          │  $($cheatMods.Count.ToString().PadLeft(4))           │  $($crystalCheats.Count.ToString().PadLeft(4))        │      " -ForegroundColor White
 Write-Host "  └─────────────────────────────────────────────────────────────────────┘" -ForegroundColor DarkMagenta
 Write-Host ""
+
+# ─── CRYSTAL PVP CHEATS (SPECIAL SECTION) ────────────────────
+if ($crystalCheats.Count -gt 0) {
+    Write-Host "  💎 CRYSTAL PVP CHEATS DETECTED!" -ForegroundColor DarkRed
+    Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkGray
+    foreach ($cheat in $crystalCheats) {
+        Write-Host "  ▸ $cheat" -ForegroundColor DarkRed
+    }
+    Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkGray
+    Write-Host ""
+}
 
 # ─── VERIFIED ──────────────────────────────────────────────────
 if ($verifiedMods.Count -gt 0) {
@@ -331,8 +397,13 @@ if ($cheatMods.Count -gt 0) {
     Write-Host "  🚨 CHEATERS DETECTED!" -ForegroundColor Red
     Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
     foreach ($mod in $cheatMods) {
-        Write-Host "  ⚡ $($mod.FileName)" -ForegroundColor Red -NoNewline
-        Write-Host "  — $($mod.Reason)" -ForegroundColor DarkMagenta
+        if ($mod.Type -eq "CRYSTAL PVP") {
+            Write-Host "  💎 $($mod.FileName)" -ForegroundColor DarkRed -NoNewline
+            Write-Host "  — $($mod.Reason) [CRYSTAL PVP]" -ForegroundColor Red
+        } else {
+            Write-Host "  ⚡ $($mod.FileName)" -ForegroundColor Red -NoNewline
+            Write-Host "  — $($mod.Reason)" -ForegroundColor DarkMagenta
+        }
         Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
     }
     Write-Host ""
@@ -344,23 +415,26 @@ Write-Host "  🛡️  SECURITY ASSESSMENT" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
 
-if ($cheatMods.Count -gt 0) {
-    Write-Host "  ⚠️  STATUS: COMPROMISED" -ForegroundColor Red
-    Write-Host "  ${cheatMods.Count} cheat clients/mods detected!" -ForegroundColor Red
+if ($crystalCheats.Count -gt 0) {
+    Write-Host "  💎 STATUS: CRYSTAL PVP CHEATS DETECTED" -ForegroundColor DarkRed
     Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-    Write-Host "  ▸ These mods contain known cheat signatures" -ForegroundColor Yellow
-    Write-Host "  ▸ Remove them immediately to ensure fair play" -ForegroundColor Yellow
+    Write-Host "  ▸ $($crystalCheats.Count) crystal/anchor optimization mods found" -ForegroundColor Red
+    Write-Host "  ▸ These are used for crystal PVP cheating" -ForegroundColor Red
+    Write-Host "  ▸ Recommended action: REMOVE IMMEDIATELY" -ForegroundColor DarkRed
+} elseif ($cheatMods.Count -gt 0) {
+    Write-Host "  ⚠️  STATUS: COMPROMISED" -ForegroundColor Red
+    Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "  ▸ ${cheatMods.Count} cheat clients/mods detected" -ForegroundColor Red
+    Write-Host "  ▸ Remove them immediately to ensure fair play" -ForegroundColor Red
 } elseif ($unknownMods.Count -gt 3) {
     Write-Host "  ⚠️  STATUS: CAUTION" -ForegroundColor Yellow
-    Write-Host "  $($unknownMods.Count) unknown mods found." -ForegroundColor Yellow
     Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-    Write-Host "  ▸ These mods couldn't be verified" -ForegroundColor Yellow
+    Write-Host "  ▸ $($unknownMods.Count) unknown mods found" -ForegroundColor Yellow
     Write-Host "  ▸ Manual inspection recommended" -ForegroundColor Yellow
 } else {
     Write-Host "  ✅ STATUS: CLEAN" -ForegroundColor Green
-    Write-Host "  No suspicious mods detected!" -ForegroundColor Green
     Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-    Write-Host "  ▸ All mods verified or safe" -ForegroundColor Green
+    Write-Host "  ▸ No suspicious mods detected" -ForegroundColor Green
     Write-Host "  ▸ You're good to go!" -ForegroundColor Green
 }
 
@@ -375,6 +449,7 @@ Write-Host "  Total Scanned   : $total" -ForegroundColor White
 Write-Host "  Verified        : $($verifiedMods.Count)" -ForegroundColor Green
 Write-Host "  Unknown         : $($unknownMods.Count)" -ForegroundColor Yellow
 Write-Host "  Cheaters Found  : $($cheatMods.Count)" -ForegroundColor Red
+Write-Host "  Crystal PVP     : $($crystalCheats.Count)" -ForegroundColor DarkRed
 Write-Host "  Scan Completed  : $((Get-Date).ToString('HH:mm:ss'))" -ForegroundColor White
 Write-Host ""
 
@@ -383,9 +458,9 @@ Write-Host "  ══════════════════════
 Write-Host "  ⚡  SCAN COMPLETE  ⚡" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
-Write-Host "  Stay safe, stay vigilant. 🔥" -ForegroundColor Magenta
+Write-Host "  Crystal PVP cheats detected? Time to clean house! 🔥" -ForegroundColor Magenta
 Write-Host ""
-Write-Host "  [SYSTEM] Ketteh's Cheater Catcher v8 — Done." -ForegroundColor Green
+Write-Host "  [SYSTEM] Ketteh's Cheater Catcher v9 — Done." -ForegroundColor Green
 Write-Host ""
 
 # ─── KITTY ─────────────────────────────────────────────────────
