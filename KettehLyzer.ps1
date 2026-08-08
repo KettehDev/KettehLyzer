@@ -5,17 +5,17 @@
 #  ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██║██║    ██║
 #  ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║███████╗██║
 #  ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝╚═╝
-#              KETTEH MOD ANALYZER v10.0
-#           PURE CHEAT STRING DETECTION 🔥
+#              KETTEH MOD ANALYZER v11.0
+#       CATCHES GRIM CLIENT + ALL CHEATS 🔥
 # ============================================================
 
 Clear-Host
-$Host.UI.RawUI.WindowTitle = "⚡ KETTEH MOD ANALYZER v10.0 ⚡"
+$Host.UI.RawUI.WindowTitle = "⚡ KETTEH MOD ANALYZER v11.0 ⚡"
 
 # ─── COLOR DEFINITIONS ────────────────────────────────────────
 $Cyan = "Cyan"; $Magenta = "Magenta"; $Green = "Green"; $Yellow = "Yellow"; $Red = "Red"
 $White = "White"; $Gray = "Gray"; $DarkGray = "DarkGray"; $DarkMagenta = "DarkMagenta"
-$DarkCyan = "DarkCyan"; $DarkRed = "DarkRed"
+$DarkCyan = "DarkCyan"; $DarkRed = "DarkRed"; $DarkGreen = "DarkGreen"
 
 # ─── ASCII BANNER ─────────────────────────────────────────────
 Write-Host @"
@@ -28,22 +28,23 @@ Write-Host @"
 ║      ██║  ██╗███████╗   ██║      ██║   ███████╗██║  ██║     ║
 ║      ╚═╝  ╚═╝╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝     ║
 ║                                                               ║
-║           ⚡ MOD ANALYZER v10.0 ⚡                         ║
-║        CHEAT STRING DETECTION ENGINE 🔥                  ║
+║        ⚡ ULTIMATE CHEAT DETECTOR v11.0 ⚡                 ║
+║     CATCHES GRIM CLIENT + ALL CHEATS 🔥                  ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
 "@ -ForegroundColor Magenta
 
 Write-Host ""
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host "  ⚡  CHEAT STRING DETECTION ENGINE" -ForegroundColor Cyan
+Write-Host "  ⚡  ULTIMATE CHEAT DETECTION ENGINE" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
 
-# ─── LOADING ──────────────────────────────────────────────────
 Write-Host "  [SYSTEM] Loading cheat string database..." -ForegroundColor Yellow
 Start-Sleep -Milliseconds 300
-Write-Host "  [SYSTEM] Initializing detection engine..." -ForegroundColor Yellow
+Write-Host "  [SYSTEM] Loading Grim Client signatures..." -ForegroundColor Yellow
+Start-Sleep -Milliseconds 300
+Write-Host "  [SYSTEM] Loading injector detection..." -ForegroundColor Yellow
 Start-Sleep -Milliseconds 300
 Write-Host "  [SYSTEM] Ready to catch cheaters." -ForegroundColor Green
 Write-Host ""
@@ -120,6 +121,22 @@ $CheatStrings = @(
     'AutoMine', 'AutoPearl', 'AutoGapple', 'AutoEat'
 )
 
+# ─── GRIM CLIENT SIGNATURES ───────────────────────────────────
+$GrimSignatures = @(
+    'Grim', 'GrimClient', 'GrimClientV2', 'GrimInject', 'GrimInjector',
+    'GrimBypass', 'GrimAC', 'GrimAntiCheat', 'GrimBypasser',
+    'ClientV2', 'GhostClient', 'GhostInject', 'StealthClient',
+    'InvisibleClient', 'DarkClient', 'ShadowClient'
+)
+
+# ─── INJECTOR SIGNATURES ──────────────────────────────────────
+$InjectorSignatures = @(
+    'Injector', 'Injection', 'Inject', 'Hook', 'Hooking', 'Detour',
+    'JNI_CreateJavaVM', 'AttachCurrentThread', 'System.load', 'loadLibrary',
+    'Unsafe', 'DirectBuffer', 'MappedByteBuffer', 'Instrumentation',
+    'ClassFileTransformer', 'Agent_OnLoad', 'Agent_OnAttach', 'JVM_LoadClass'
+)
+
 # ─── CHEAT CLIENT NAMES ───────────────────────────────────────
 $CheatClientNames = @(
     'wurst','meteor','impact','liquidbounce','aristois','future',
@@ -127,7 +144,8 @@ $CheatClientNames = @(
     'crystalaura','autocrystal','anchoraura','bedaura',
     'rusherhack','novoline','ghostclient','kamiblue','salhack','clickcrystals',
     'baritone','vengeance','exhibition','kuro','rise','flux',
-    'zero','raven','astolfo','dortware','xenon','tenacity'
+    'zero','raven','astolfo','dortware','xenon','tenacity',
+    'grim','grimclient','griminject','ghostclient','stealthclient'
 )
 
 # ─── LEGIT MODS ─────────────────────────────────────────────────
@@ -185,7 +203,7 @@ function Get-NameHit {
 
 function Get-CheatHits {
     param([string]$ExtractedDir)
-    $hits = @()
+    $hits = @{ Cheat = @(); Grim = @(); Injector = @() }
     $files = Get-ChildItem -Path $ExtractedDir -Recurse -File -Include *.class -ErrorAction SilentlyContinue
     foreach ($f in $files) {
         try {
@@ -194,24 +212,37 @@ function Get-CheatHits {
             $text = [System.Text.Encoding]::ASCII.GetString($bytes)
         } catch { continue }
         foreach ($sig in $CheatStrings) {
-            if ($text -match $sig) { $hits += $sig }
+            if ($text -match $sig) { $hits.Cheat += $sig }
         }
-        if ($hits.Count -gt 20) { break }
+        foreach ($sig in $GrimSignatures) {
+            if ($text -match $sig) { $hits.Grim += $sig }
+        }
+        foreach ($sig in $InjectorSignatures) {
+            if ($text -match $sig) { $hits.Injector += $sig }
+        }
+        $totalHits = $hits.Cheat.Count + $hits.Grim.Count + $hits.Injector.Count
+        if ($totalHits -gt 30) { break }
     }
-    return $hits | Select-Object -Unique
+    $hits.Cheat = $hits.Cheat | Select-Object -Unique
+    $hits.Grim = $hits.Grim | Select-Object -Unique
+    $hits.Injector = $hits.Injector | Select-Object -Unique
+    return $hits
 }
 
 function Get-ThreatLevel {
-    param([int]$Count)
-    if ($Count -ge 10) { return "CRITICAL" }
-    if ($Count -ge 5) { return "HIGH" }
-    if ($Count -ge 2) { return "MEDIUM" }
+    param([hashtable]$Hits)
+    $total = $Hits.Cheat.Count + $Hits.Grim.Count + $Hits.Injector.Count
+    if ($Hits.Grim.Count -gt 0) { return "CRITICAL - GRIM CLIENT" }
+    if ($Hits.Injector.Count -gt 2) { return "CRITICAL - INJECTOR" }
+    if ($total -ge 10) { return "CRITICAL" }
+    if ($total -ge 5) { return "HIGH" }
+    if ($total -ge 2) { return "MEDIUM" }
     return "LOW"
 }
 
 # ─── SCAN ──────────────────────────────────────────────────────
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host "  🔍  SCANNING MODS" -ForegroundColor Cyan
+Write-Host "  🔍  SCANNING FOR CHEATS + GRIM CLIENT" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
 
@@ -234,12 +265,12 @@ try {
                 Type = "NAME MATCH"
                 Reason = "BLATANT CHEAT: $nameHit"
                 Threat = "CRITICAL"
-                Hits = @()
+                Hits = @{ Cheat = @(); Grim = @(); Injector = @() }
             }
             continue
         }
 
-        # 2. HASH CHECK (Modrinth verification)
+        # 2. HASH CHECK
         $sha1 = Get-JarHash -Path $file.FullName -Algo SHA1
         try {
             $ver = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/version_file/$sha1" -Method Get -ErrorAction Stop
@@ -250,18 +281,20 @@ try {
             }
         } catch {}
 
-        # 3. DEEP SCAN - CHEAT STRING DETECTION
+        # 3. DEEP SCAN
         $extractDir = Join-Path $tempRoot ([System.IO.Path]::GetFileNameWithoutExtension($file.Name))
         New-Item -ItemType Directory -Path $extractDir -Force | Out-Null
         Expand-JarLimited -JarPath $file.FullName -DestDir $extractDir
 
         $hits = Get-CheatHits -ExtractedDir $extractDir
-        if ($hits.Count -gt 0) {
+        $totalHits = $hits.Cheat.Count + $hits.Grim.Count + $hits.Injector.Count
+        
+        if ($totalHits -gt 0) {
             $cheatMods += [pscustomobject]@{ 
                 FileName = $file.Name
-                Type = "CHEAT FEATURES"
-                Reason = "$($hits.Count) cheat strings found"
-                Threat = Get-ThreatLevel -Count $hits.Count
+                Type = if ($hits.Grim.Count -gt 0) { "GRIM CLIENT" } else { "CHEAT FEATURES" }
+                Reason = "$totalHits signatures found"
+                Threat = Get-ThreatLevel -Hits $hits
                 Hits = $hits
             }
         } else {
@@ -274,6 +307,40 @@ try {
     Remove-Item -Recurse -Force $tempRoot -ErrorAction SilentlyContinue
 }
 
+# ─── GRIM CLIENT RUNNING CHECK ───────────────────────────────
+Write-Host ""
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
+Write-Host "  🕵️  SCANNING FOR RUNNING GRIM CLIENT" -ForegroundColor Cyan
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
+Write-Host ""
+
+$grimFound = $false
+$processes = Get-Process
+$javaProcesses = $processes | Where-Object { $_.ProcessName -match "java|javaw" }
+
+foreach ($p in $javaProcesses) {
+    try {
+        $modules = Get-Process -Id $p.Id -Module -ErrorAction SilentlyContinue
+        $grimModules = $modules | Where-Object { 
+            $_.ModuleName -match "grim|client|inject|hook|ghost|stealth|shadow|dark" 
+        }
+        if ($grimModules) {
+            Write-Host "  🚨 GRIM CLIENT DETECTED IN MEMORY!" -ForegroundColor DarkRed
+            Write-Host "  ▸ Process: $($p.ProcessName).exe (PID: $($p.Id))" -ForegroundColor Red
+            Write-Host "  ▸ Suspicious modules found:" -ForegroundColor Yellow
+            foreach ($mod in $grimModules) {
+                Write-Host "    🔸 $($mod.ModuleName)" -ForegroundColor Red
+            }
+            $grimFound = $true
+        }
+    } catch {}
+}
+
+if (-not $grimFound) {
+    Write-Host "  ✅ No running Grim Client detected." -ForegroundColor Green
+}
+Write-Host ""
+
 # ─── RESULTS ──────────────────────────────────────────────────
 Write-Host ""
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
@@ -281,14 +348,15 @@ Write-Host "  📊  ANALYSIS COMPLETE" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
 
-$criticalCount = ($cheatMods | Where-Object { $_.Threat -eq "CRITICAL" }).Count
+$criticalCount = ($cheatMods | Where-Object { $_.Threat -match "CRITICAL" }).Count
 $highCount = ($cheatMods | Where-Object { $_.Threat -eq "HIGH" }).Count
 $mediumCount = ($cheatMods | Where-Object { $_.Threat -eq "MEDIUM" }).Count
+$grimCount = ($cheatMods | Where-Object { $_.Type -eq "GRIM CLIENT" }).Count
 
-Write-Host "  ┌─────────────────────────────────────────────────────────────────────────────────────┐" -ForegroundColor DarkMagenta
-Write-Host "  │  ✅ VERIFIED  │  ❓ UNKNOWN  │  🚨 CHEATS  │  💀 CRITICAL  │  📦 TOTAL  │   " -ForegroundColor White
-Write-Host "  │  $($verifiedMods.Count.ToString().PadLeft(4))           │  $($unknownMods.Count.ToString().PadLeft(4))          │  $($cheatMods.Count.ToString().PadLeft(4))           │  $criticalCount.ToString().PadLeft(4)           │  $($total.ToString().PadLeft(4))        │   " -ForegroundColor White
-Write-Host "  └─────────────────────────────────────────────────────────────────────────────────────┘" -ForegroundColor DarkMagenta
+Write-Host "  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐" -ForegroundColor DarkMagenta
+Write-Host "  │  ✅ VERIFIED  │  ❓ UNKNOWN  │  🚨 CHEATS  │  ☠️ GRIM  │  💀 CRITICAL  │  📦 TOTAL  │   " -ForegroundColor White
+Write-Host "  │  $($verifiedMods.Count.ToString().PadLeft(4))           │  $($unknownMods.Count.ToString().PadLeft(4))          │  $($cheatMods.Count.ToString().PadLeft(4))           │  $grimCount.ToString().PadLeft(4)           │  $criticalCount.ToString().PadLeft(4)           │  $($total.ToString().PadLeft(4))        │   " -ForegroundColor White
+Write-Host "  └─────────────────────────────────────────────────────────────────────────────────────────────┘" -ForegroundColor DarkMagenta
 Write-Host ""
 
 # ─── VERIFIED MODS ─────────────────────────────────────────────
@@ -321,13 +389,13 @@ if ($cheatMods.Count -gt 0) {
     Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkRed
     
     foreach ($mod in $cheatMods | Sort-Object { 
-        if ($_.Threat -eq "CRITICAL") { return 0 }
+        if ($_.Threat -match "CRITICAL") { return 0 }
         if ($_.Threat -eq "HIGH") { return 1 }
         if ($_.Threat -eq "MEDIUM") { return 2 }
         return 3
     }) {
-        $threatColor = switch ($mod.Threat) {
-            "CRITICAL" { $DarkRed }
+        $threatColor = switch -Wildcard ($mod.Threat) {
+            "*CRITICAL*" { $DarkRed }
             "HIGH" { $Red }
             "MEDIUM" { $Yellow }
             default { $DarkGray }
@@ -342,10 +410,26 @@ if ($cheatMods.Count -gt 0) {
         Write-Host "  ║  THREAT : " -NoNewline -ForegroundColor Yellow
         Write-Host $mod.Threat -ForegroundColor $threatColor
         
-        if ($mod.Hits.Count -gt 0) {
+        if ($mod.Hits.Grim.Count -gt 0) {
             Write-Host "  ╠══════════════════════════════════════════════════════════════════╣" -ForegroundColor DarkRed
-            Write-Host "  ║  🎯 CHEAT STRINGS FOUND:" -ForegroundColor Cyan
-            foreach ($hit in $mod.Hits) {
+            Write-Host "  ║  ☠️ GRIM CLIENT SIGNATURES:" -ForegroundColor DarkRed
+            foreach ($hit in $mod.Hits.Grim) {
+                Write-Host "  ║     🔸 $hit" -ForegroundColor Red
+            }
+        }
+        
+        if ($mod.Hits.Injector.Count -gt 0) {
+            Write-Host "  ╠══════════════════════════════════════════════════════════════════╣" -ForegroundColor DarkRed
+            Write-Host "  ║  💉 INJECTOR SIGNATURES:" -ForegroundColor Cyan
+            foreach ($hit in $mod.Hits.Injector) {
+                Write-Host "  ║     🔸 $hit" -ForegroundColor Magenta
+            }
+        }
+        
+        if ($mod.Hits.Cheat.Count -gt 0) {
+            Write-Host "  ╠══════════════════════════════════════════════════════════════════╣" -ForegroundColor DarkRed
+            Write-Host "  ║  🎯 CHEAT STRINGS:" -ForegroundColor Cyan
+            foreach ($hit in $mod.Hits.Cheat) {
                 Write-Host "  ║     🔸 $hit" -ForegroundColor Red
             }
         }
@@ -360,9 +444,14 @@ Write-Host "  🛡️  SECURITY ASSESSMENT" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
 
-if ($criticalCount -gt 0) {
-    Write-Host "  ⚠️  STATUS: CHEATS DETECTED!" -ForegroundColor DarkRed
-    Write-Host "  ▸ $criticalCount mods with CRITICAL cheat signatures!" -ForegroundColor DarkRed
+if ($grimCount -gt 0) {
+    Write-Host "  ☠️  STATUS: GRIM CLIENT DETECTED!" -ForegroundColor DarkRed
+    Write-Host "  ▸ $grimCount mods with GRIM CLIENT signatures!" -ForegroundColor DarkRed
+    Write-Host "  ▸ These are ghost clients that bypass screenshares!" -ForegroundColor Red
+    Write-Host "  ▸ ACTION REQUIRED: REMOVE IMMEDIATELY" -ForegroundColor DarkRed
+} elseif ($criticalCount -gt 0) {
+    Write-Host "  ⚠️  STATUS: CRITICAL THREATS DETECTED!" -ForegroundColor DarkRed
+    Write-Host "  ▸ $criticalCount mods with CRITICAL signatures!" -ForegroundColor DarkRed
     Write-Host "  ▸ ACTION REQUIRED: REMOVE IMMEDIATELY" -ForegroundColor Red
 } elseif ($highCount -gt 0) {
     Write-Host "  ⚠️  STATUS: HIGH SUSPICION" -ForegroundColor Red
@@ -374,7 +463,7 @@ if ($criticalCount -gt 0) {
     Write-Host "  ▸ Manual inspection recommended" -ForegroundColor Yellow
 } else {
     Write-Host "  ✅ STATUS: CLEAN" -ForegroundColor Green
-    Write-Host "  ▸ No cheat signatures detected" -ForegroundColor Green
+    Write-Host "  ▸ No cheats detected" -ForegroundColor Green
     Write-Host "  ▸ You're good to go!" -ForegroundColor Green
 }
 
@@ -389,47 +478,21 @@ Write-Host "  Total Scanned   : $total" -ForegroundColor White
 Write-Host "  Verified Safe   : $($verifiedMods.Count)" -ForegroundColor Green
 Write-Host "  Unknown         : $($unknownMods.Count)" -ForegroundColor Yellow
 Write-Host "  Cheats Found    : $($cheatMods.Count)" -ForegroundColor Red
+Write-Host "    Grim Client   : $grimCount" -ForegroundColor DarkRed
 Write-Host "    Critical      : $criticalCount" -ForegroundColor DarkRed
 Write-Host "    High          : $highCount" -ForegroundColor Red
 Write-Host "    Medium        : $mediumCount" -ForegroundColor Yellow
 Write-Host "  Scan Completed  : $((Get-Date).ToString('HH:mm:ss'))" -ForegroundColor White
 Write-Host ""
 
-# ─── CHEAT STRING DATABASE ────────────────────────────────────
-Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host "  📋  CHEAT STRING DATABASE" -ForegroundColor Cyan
-Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host ""
-Write-Host "  Loaded $($CheatStrings.Count) cheat signatures:" -ForegroundColor Yellow
-Write-Host ""
-
-$cols = 4
-$colWidth = 25
-$row = 0
-$output = "  "
-foreach ($sig in $CheatStrings) {
-    $output += $sig.PadRight($colWidth)
-    $row++
-    if ($row -ge $cols) {
-        Write-Host $output -ForegroundColor DarkGray
-        $output = "  "
-        $row = 0
-    }
-}
-if ($output -ne "  ") { Write-Host $output -ForegroundColor DarkGray }
-
-Write-Host ""
-Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-
 # ─── FOOTER ────────────────────────────────────────────────────
-Write-Host ""
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host "  ⚡  SCAN COMPLETE  ⚡" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
-Write-Host "  🔥  Justice served. Cheaters caught." -ForegroundColor Magenta
+Write-Host "  🔥  Justice served. Grim Client + Cheaters caught." -ForegroundColor Magenta
 Write-Host ""
-Write-Host "  [SYSTEM] Ketteh Mod Analyzer v10.0 — Done." -ForegroundColor Green
+Write-Host "  [SYSTEM] Ketteh Mod Analyzer v11.0 — Done." -ForegroundColor Green
 Write-Host ""
 
 # ─── KITTY ─────────────────────────────────────────────────────
@@ -444,5 +507,5 @@ $kitty = @"
       (___|___)
 "@
 Write-Host $kitty -ForegroundColor Magenta
-Write-Host "  🔥  Catching cheaters since 2024" -ForegroundColor Magenta
+Write-Host "  🔥  No mercy for cheaters!" -ForegroundColor Magenta
 Write-Host ""
