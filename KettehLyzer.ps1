@@ -5,7 +5,8 @@
 #  ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██║██║    ██║
 #  ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║███████╗██║
 #  ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝╚═╝
-#              CHEATER CATCHER v10  ::  PRECISION EDITION
+#              AGGRESSIVE CHEATER CATCHER v11
+#           CATCHES BLATANT CHEATS BY NAME & STRINGS
 # ============================================================
 
 Clear-Host
@@ -21,7 +22,6 @@ $Gray = "Gray"
 $DarkGray = "DarkGray"
 $DarkMagenta = "DarkMagenta"
 $DarkCyan = "DarkCyan"
-$DarkGreen = "DarkGreen"
 $DarkRed = "DarkRed"
 
 # ─── ASCII BANNER ─────────────────────────────────────────────
@@ -35,19 +35,19 @@ Write-Host @"
 ║      ██║  ██╗███████╗   ██║      ██║   ███████╗██║  ██║     ║
 ║      ╚═╝  ╚═╝╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝     ║
 ║                                                               ║
-║           ⚡ PRECISION CHEATER CATCHER v10 ⚡               ║
-║              NO FALSE POSITIVES - ONLY REAL CHEATS          ║
+║           ⚡ AGGRESSIVE CHEATER CATCHER v11 ⚡              ║
+║            CATCHES BLATANT CHEATS ON SIGHT 🔥              ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
 "@ -ForegroundColor Magenta
 
 Write-Host ""
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host "  ⚡  PRECISION DETECTION ENGINE  ⚡" -ForegroundColor Cyan
+Write-Host "  ⚡  AGGRESSIVE DETECTION ENGINE  ⚡" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
-Write-Host "  [LOADING] Initializing precision cheat detection..." -ForegroundColor Yellow
-Write-Host "  [LOADING] Loading accurate signature database..." -ForegroundColor Yellow
+Write-Host "  [LOADING] Initializing aggressive cheat detection..." -ForegroundColor Yellow
+Write-Host "  [LOADING] Loading cheat signatures (EXPANDED)..." -ForegroundColor Yellow
 Write-Host "  [LOADING] Connecting to Modrinth API..." -ForegroundColor Yellow
 Write-Host ""
 
@@ -58,10 +58,10 @@ for ($i = 0; $i -le 100; $i += 5) {
     $bar += ("█" * $filled).PadRight(20, "░")
     $bar += "]"
     Write-Host "`r  $bar $i% " -ForegroundColor Cyan -NoNewline
-    Start-Sleep -Milliseconds 15
+    Start-Sleep -Milliseconds 10
 }
 Write-Host "`r  [████████████████████] 100% " -ForegroundColor Green
-Write-Host "  [SYSTEM] Precision cheat detection ready." -ForegroundColor Green
+Write-Host "  [SYSTEM] Aggressive detection ready." -ForegroundColor Green
 Write-Host ""
 
 # ─── PATH INPUT ───────────────────────────────────────────────
@@ -158,77 +158,84 @@ function Expand-JarLimited {
     }
 }
 
-# ─── PRECISION CHEAT DETECTION ─────────────────────────────────
+# ─── AGGRESSIVE CHEAT DETECTION ──────────────────────────────
 
-# ONLY TRUE CHEAT CLIENTS - NOT OPTIMIZATION MODS
+# EXPANDED CHEAT CLIENT NAMES - CATCHES EVERYTHING
 $CheatClientNames = @(
-    # Actual cheat clients
-    'wurst','meteorclient','meteor','impact','liquidbounce','aristois','future','lambdaclient',
-    'rusherhack','sigmaclient','novoline','ghostclient','kamiblue','salhack','clickcrystals',
-    'baritone','vengeance','sigma','jello','exhibition','vape','entropy',
-    'kuro','rise','flux','zero','raven','astolfo','dortware','xenon',
-    'tenacity','gamesense','skeet','primordial','azura','recode','fdp'
+    # Common cheats
+    'wurst','meteor','impact','liquidbounce','aristois','future','lambda',
+    'rusherhack','sigma','novoline','ghostclient','kamiblue','salhack','clickcrystals',
+    'baritone','vengeance','exhibition','vape','entropy','kuro','rise','flux',
+    'zero','raven','astolfo','dortware','xenon','tenacity','gamesense','skeet',
+    'primordial','azura','recode','fdp','aero','exhi','trident','skid','skidded',
+    
+    # CRYSTAL CHEATS
+    'autocrystal','crystalaura','anchoraura','bedaura','crystalfight','crystalia',
+    'crystaloptimizer','anchoroptimizer','glaxcrystal','kindcrystal','marlowcrystal',
+    
+    # BLATANT CHEATS - SPECIFIC TO YOUR LIST
+    'dqrkis','dqrkis-client','dqrkis-v6','darkis','darkis-client',
+    'ketteh','kettehseventplugin','kettehs','eventplugin',
+    'client-mod','cheat-client','hack-client','ghost-client',
+    
+    # Additional cheats
+    'jello','kura','rise','flux','zero','raven','astolfo'
 )
 
-# TRUE CHEAT FEATURES - not optimization features
+# EXPANDED CHEAT STRINGS
 $CheatStrings = @(
-    # Combat cheats (clearly cheat features)
-    'KillAura','AimAssist','ReachHack','HitBoxHack','BowAimbot','VelocityHack',
-    'AntiKnockback','CriticalsHack','AutoClicker','TriggerBot','AxeSpam','ShieldBreaker',
-    'MultiAura','HitSelect','CombatHack',
+    # Combat
+    'KillAura','AimAssist','Reach','HitBox','Aura','BowAimbot','Velocity','AntiKnockback',
+    'Criticals','AutoClicker','HitSelect','MultiAura','TriggerBot','AxeSpam','ShieldBreaker',
+    'CombatHack','FightHack','PvPHack',
     
-    # Movement cheats (clearly cheat features)
-    'FlightHack','BHop','SpeedHack','NoFallHack','PhaseHack','BlinkHack',
-    'FreecamHack','NoSlowHack','ScaffoldHack','ElytraFlyHack','JumpResetHack',
-    'LongJumpHack','StrafeHack','FlyHack','GlideHack','StepHack',
+    # Movement
+    'Flight','BHop','SpeedMine','NoFall','Phase','Blink','Freecam','NoSlow','Scaffold',
+    'ElytraFly','JumpReset','LongJump','Strafe','Sprint','Fly','Glide','Step',
+    'SpeedHack','FlyHack','NoFallHack','BunnyHop','MotionHack',
     
-    # Visual cheats (clearly cheat features)
-    'XRayHack','ESPHack','NametagsHack','ChamsHack','TracersHack','RadarHack',
-    'ChestStealer','NukerHack',
+    # World
+    'XRay','ESP','Nametags','Chams','Tracers','Radar','ChestStealer','Nuker',
+    'AutoCrystal','AutoAnchor','AutoDoubleHand','AutoHitCrystal','AutoPot','AutoTotem',
+    'AutoArmor','InventoryTotem','CrystalAura','AnchorMacro','HoleFiller','AutoBlockPlace',
     
-    # Crystal PVP cheats (ACTUAL crystal cheats, not optimization)
-    'AutoCrystalAura','AutoAnchorAura','BedAuraHack','CrystalAuraHack',
-    'CrystalPlaceHack','CrystalBreakHack','AnchorPlaceHack','AnchorBreakHack',
+    # Utility
+    'PingSpoof','SelfDestruct','WebMacro','FastPlace','FastBreak','AutoGapple','AutoEat',
+    'AutoFish','AutoPearl','AutoSoup','AutoSwitch','AutoTrap','AutoMine','AutoBed',
+    'AutoFarm','AutoBreed','AutoShear','AutoHoe',
     
-    # Utility cheats
-    'PingSpoof','SelfDestruct','FastPlaceHack','FastBreakHack','AutoGappleHack',
-    'AutoEatHack','AutoFishHack','AutoPearlHack','AutoSoupHack','AutoSwitchHack',
-    'AutoTrapHack','AutoMineHack','AutoBedHack',
+    # Client Specific
+    'Meteor','Wurst','Impact','Aristois','LiquidBounce','Future','RusherHack',
+    'Sigma','Novoline','GhostClient','KamiBlue','SalHack','ClickCrystals',
+    'Baritone','Vengeance','ImmediatelyFast','Exhibition','Vape','Entropy',
     
-    # Client specific (actual clients)
-    'MeteorClient','WurstClient','ImpactClient','AristoisClient','LiquidBounceClient',
-    'FutureClient','RusherHackClient','SigmaClient','NovolineClient','GhostClient',
-    'KamiBlue','SalHack','ClickCrystals','Baritone','Vengeance','Exhibition','Vape','Entropy'
+    # Event System (KettehsEventPlugin)
+    'EventHandler','Listener','Subscribe','EventBus','PostEvent','RegisterEvent',
+    'PacketEvent','TickEvent','RenderEvent','KeyInputEvent','MouseEvent',
+    
+    # Blatant cheat indicators
+    'Hack','Cheat','Client','Module','Toggle','KeyBind','ClickGUI','HUDEditor'
 )
 
-# LEGIT MODS - THESE ARE SAFE
+# LEGIT MODS - SAFE
 $LegitMods = @{
-    # Fabric/Forge
     'fabric' = $true; 'forge' = $true; 'fabric-api' = $true
-    
-    # Performance mods
     'sodium' = $true; 'lithium' = $true; 'phosphor' = $true; 'iris' = $true
     'indium' = $true; 'continuity' = $true; 'cullleaves' = $true
     'entityculling' = $true; 'ferritecore' = $true; 'krypton' = $true
     'lazy-dfu' = $true; 'memoryleakfix' = $true; 'modernfix' = $true
     'spark' = $true; 'starlight' = $true; 'viafabric' = $true
-    
-    # UI mods
     'modmenu' = $true; 'worldedit' = $true; 'jei' = $true; 'rei' = $true
     'emi' = $true; 'xaero' = $true; 'journeymap' = $true
-    
-    # Optimization mods (LEGIT)
-    'anchoroptimizer' = $true; 'crystaloptimizer' = $true
-    'crossbowoptimizer' = $true; 'consumableoptimizer' = $true
-    'optimizer' = $true
-    
-    # Other legit mods
     'polytone' = $true; 'sodium-extra' = $true; 'placeholder-api' = $true
     'walksylib' = $true; 'yetanotherconfiglib' = $true; 'collective' = $true
     'essential' = $true; 'borderlessfullscreen' = $true; 'autoreconnect' = $true
     'fullbrightnesstoggle' = $true; 'naturalmotionblur' = $true
     'shieldfixes' = $true; 'shieldstatus' = $true
-    'ambience' = $true; 'crosshairaddons' = $true; 'glow' = $true
+    'ambience' = $true; 'crosshairaddons' = $true
+    'anchoroptimizer' = $true; 'crystaloptimizer' = $true
+    'crossbowoptimizer' = $true; 'consumableoptimizer' = $true
+    'optimizer' = $true; 'glow' = $true
 }
 
 function Get-NameHit {
@@ -238,14 +245,23 @@ function Get-NameHit {
     # First check if it's a legit mod
     foreach ($legit in $LegitMods.Keys) {
         if ($lower -match [regex]::Escape($legit)) { 
-            return $null  # It's legit, skip it
+            return $null
         }
     }
     
-    # Now check for actual cheat clients
+    # Check for blatant cheats
     foreach ($cheat in $CheatClientNames) {
         if ($lower -match [regex]::Escape($cheat)) { 
-            return $cheat 
+            return $cheat
+        }
+    }
+    
+    # Check for suspicious keywords
+    $suspicious = @('client', 'hack', 'cheat', 'module', 'v6', 'v7', 'v8', 'beta', 'alpha')
+    foreach ($word in $suspicious) {
+        if ($lower -match [regex]::Escape($word)) {
+            # Only flag if it's not a known legit mod
+            return "SUSPICIOUS: $word"
         }
     }
     
@@ -255,24 +271,26 @@ function Get-NameHit {
 function Get-CheatHits {
     param([string]$ExtractedDir)
     $hits = @()
-    $files = Get-ChildItem -Path $ExtractedDir -Recurse -File -Include *.class -ErrorAction SilentlyContinue
+    $files = Get-ChildItem -Path $ExtractedDir -Recurse -File -Include *.class,*.json -ErrorAction SilentlyContinue
     foreach ($f in $files) {
         try {
             $bytes = [System.IO.File]::ReadAllBytes($f.FullName)
-            if ($bytes.Length -gt 524288) { $bytes = $bytes[0..524287] }
+            if ($bytes.Length -gt 1048576) { $bytes = $bytes[0..1048575] }
             $text = [System.Text.Encoding]::ASCII.GetString($bytes)
         } catch { continue }
         foreach ($sig in $CheatStrings) {
-            if ($text -match [regex]::Escape($sig)) { $hits += $sig }
+            if ($text -match [regex]::Escape($sig)) { 
+                $hits += $sig 
+            }
         }
-        if ($hits.Count -gt 15) { break }
+        if ($hits.Count -gt 20) { break }
     }
     return $hits | Select-Object -Unique
 }
 
 # ─── SCAN ──────────────────────────────────────────────────────
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host "  🔍  PRECISION SCANNING" -ForegroundColor Cyan
+Write-Host "  🔍  AGGRESSIVE SCANNING" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
 
@@ -292,12 +310,12 @@ try {
         $pct = [math]::Round(100 * $counter / $total)
         Write-Host "`r  [>>] Scanning $counter/$total ($pct%)...$(' ' * 30)" -ForegroundColor Cyan -NoNewline
 
-        # 1. SMART NAME CHECK
+        # 1. AGGRESSIVE NAME CHECK
         $nameHit = Get-NameHit -FileName $file.Name
         if ($nameHit) {
             $cheatMods += [pscustomobject]@{ 
                 FileName = $file.Name
-                Reason = "CHEAT CLIENT: $nameHit"
+                Reason = "BLATANT CHEAT: $nameHit"
                 Type = "CLIENT"
             }
             continue
@@ -314,17 +332,17 @@ try {
             continue
         }
 
-        # 3. DEEP SCAN - ONLY IF NOT A LEGIT MOD
+        # 3. DEEP SCAN
         $extractDir = Join-Path $tempRoot ([System.IO.Path]::GetFileNameWithoutExtension($file.Name))
         New-Item -ItemType Directory -Path $extractDir -Force | Out-Null
         
         Expand-JarLimited -JarPath $file.FullName -DestDir $extractDir
 
         $hits = Get-CheatHits -ExtractedDir $extractDir
-        if ($hits.Count -gt 2) {  # Need at least 3 hits to flag
+        if ($hits.Count -gt 1) {
             $cheatMods += [pscustomobject]@{ 
                 FileName = $file.Name
-                Reason = "CHEAT FEATURES: $($hits[0..3] -join ', ')"
+                Reason = "CHEAT FEATURES: $($hits[0..4] -join ', ')"
                 Type = "FEATURE"
             }
         } else {
@@ -345,16 +363,33 @@ try {
 # ─── RESULTS ──────────────────────────────────────────────────
 Write-Host ""
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host "  📊  PRECISION RESULTS" -ForegroundColor Cyan
+Write-Host "  📊  AGGRESSIVE SCAN RESULTS" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
 
 # ─── SUMMARY ──────────────────────────────────────────────────
 Write-Host "  ┌─────────────────────────────────────────────────────────────────────┐" -ForegroundColor DarkMagenta
-Write-Host "  │  ✅ VERIFIED  │  ❓ UNKNOWN  │  🚨 ACTUAL CHEATS  │  📦 TOTAL  │    " -ForegroundColor White
-Write-Host "  │  $($verifiedMods.Count.ToString().PadLeft(4))           │  $($unknownMods.Count.ToString().PadLeft(4))          │  $($cheatMods.Count.ToString().PadLeft(4))           │  $($total.ToString().PadLeft(4))        │    " -ForegroundColor White
+Write-Host "  │  ✅ VERIFIED  │  ❓ UNKNOWN  │  🚨 CHEATS CAUGHT  │  📦 TOTAL  │   " -ForegroundColor White
+Write-Host "  │  $($verifiedMods.Count.ToString().PadLeft(4))           │  $($unknownMods.Count.ToString().PadLeft(4))          │  $($cheatMods.Count.ToString().PadLeft(4))           │  $($total.ToString().PadLeft(4))        │   " -ForegroundColor White
 Write-Host "  └─────────────────────────────────────────────────────────────────────┘" -ForegroundColor DarkMagenta
 Write-Host ""
+
+# ─── CHEATS CAUGHT (MOST IMPORTANT) ──────────────────────────
+if ($cheatMods.Count -gt 0) {
+    Write-Host "  🚨 CHEATS CAUGHT!" -ForegroundColor Red
+    Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkRed
+    foreach ($mod in $cheatMods) {
+        if ($mod.Type -eq "CLIENT") {
+            Write-Host "  ⚡ $($mod.FileName)" -ForegroundColor Red -NoNewline
+            Write-Host "  — $($mod.Reason) [BLATANT CHEAT]" -ForegroundColor DarkRed
+        } else {
+            Write-Host "  ⚡ $($mod.FileName)" -ForegroundColor Red -NoNewline
+            Write-Host "  — $($mod.Reason)" -ForegroundColor DarkMagenta
+        }
+        Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    }
+    Write-Host ""
+}
 
 # ─── VERIFIED ──────────────────────────────────────────────────
 if ($verifiedMods.Count -gt 0) {
@@ -369,7 +404,7 @@ if ($verifiedMods.Count -gt 0) {
 
 # ─── UNKNOWN ──────────────────────────────────────────────────
 if ($unknownMods.Count -gt 0) {
-    Write-Host "  ❓ UNKNOWN MODS (CHECK MANUALLY)" -ForegroundColor Yellow
+    Write-Host "  ❓ UNKNOWN MODS" -ForegroundColor Yellow
     Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
     foreach ($mod in $unknownMods) {
         if ($mod.ZoneId) {
@@ -382,18 +417,6 @@ if ($unknownMods.Count -gt 0) {
     Write-Host ""
 }
 
-# ─── ACTUAL CHEATS ─────────────────────────────────────────────
-if ($cheatMods.Count -gt 0) {
-    Write-Host "  🚨 ACTUAL CHEATS DETECTED!" -ForegroundColor Red
-    Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-    foreach ($mod in $cheatMods) {
-        Write-Host "  ⚡ $($mod.FileName)" -ForegroundColor Red -NoNewline
-        Write-Host "  — $($mod.Reason)" -ForegroundColor DarkMagenta
-        Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-    }
-    Write-Host ""
-}
-
 # ─── SECURITY ASSESSMENT ──────────────────────────────────────
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host "  🛡️  SECURITY ASSESSMENT" -ForegroundColor Cyan
@@ -401,11 +424,11 @@ Write-Host "  ══════════════════════
 Write-Host ""
 
 if ($cheatMods.Count -gt 0) {
-    Write-Host "  ⚠️  STATUS: CHEATS DETECTED" -ForegroundColor Red
+    Write-Host "  ⚠️  STATUS: CHEATS DETECTED!" -ForegroundColor Red
     Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-    Write-Host "  ▸ ${cheatMods.Count} actual cheat clients/features found" -ForegroundColor Red
-    Write-Host "  ▸ These are confirmed cheats, not optimization mods" -ForegroundColor Red
-    Write-Host "  ▸ Recommended action: REMOVE IMMEDIATELY" -ForegroundColor DarkRed
+    Write-Host "  ▸ ${cheatMods.Count} cheats found!" -ForegroundColor Red
+    Write-Host "  ▸ These are confirmed cheat clients/features" -ForegroundColor Red
+    Write-Host "  ▸ ACTION REQUIRED: REMOVE IMMEDIATELY" -ForegroundColor DarkRed
 } elseif ($unknownMods.Count -gt 3) {
     Write-Host "  ⚠️  STATUS: CAUTION" -ForegroundColor Yellow
     Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
@@ -428,18 +451,18 @@ Write-Host ""
 Write-Host "  Total Scanned   : $total" -ForegroundColor White
 Write-Host "  Verified Safe   : $($verifiedMods.Count)" -ForegroundColor Green
 Write-Host "  Unknown         : $($unknownMods.Count)" -ForegroundColor Yellow
-Write-Host "  Real Cheats     : $($cheatMods.Count)" -ForegroundColor Red
+Write-Host "  Cheats Caught   : $($cheatMods.Count)" -ForegroundColor Red
 Write-Host "  Scan Completed  : $((Get-Date).ToString('HH:mm:ss'))" -ForegroundColor White
 Write-Host ""
 
 # ─── FOOTER ────────────────────────────────────────────────────
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host "  ⚡  PRECISION SCAN COMPLETE  ⚡" -ForegroundColor Cyan
+Write-Host "  ⚡  AGGRESSIVE SCAN COMPLETE  ⚡" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
-Write-Host "  No more false positives - only REAL cheats detected! 🔥" -ForegroundColor Magenta
+Write-Host "  Caught blatant cheats by name AND strings! 🔥" -ForegroundColor Magenta
 Write-Host ""
-Write-Host "  [SYSTEM] Ketteh's Precision Cheater Catcher v10 — Done." -ForegroundColor Green
+Write-Host "  [SYSTEM] Ketteh's Aggressive Cheater Catcher v11 — Done." -ForegroundColor Green
 Write-Host ""
 
 # ─── KITTY ─────────────────────────────────────────────────────
@@ -454,5 +477,5 @@ $kitty = @"
       (___|___)
 "@
 Write-Host $kitty -ForegroundColor Magenta
-Write-Host "  🔥  Only catching REAL cheaters since 2024" -ForegroundColor Magenta
+Write-Host "  🔥  Catching ALL cheaters - no mercy!" -ForegroundColor Magenta
 Write-Host ""
