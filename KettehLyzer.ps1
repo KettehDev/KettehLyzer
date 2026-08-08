@@ -2,7 +2,6 @@ Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName PresentationCore
 Add-Type -AssemblyName WindowsBase
 Add-Type -AssemblyName System.Xaml
-Add-Type -AssemblyName System.Windows.Forms
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
@@ -12,10 +11,8 @@ $installDir = "$env:USERPROFILE\Downloads\KettehSSTool"
 # TOOL DATA
 # =============================================================================
 $ToolData = @(
-    # Ketteh built-in
     @{ Name="Ketteh Mod Analyzer";   Desc="Full cheat + rat scanner for Minecraft mods"; Category="Ketteh"; Type="Builtin"; Command="ModAnalyzer" },
 
-    # Orbdiff
     @{ Name="PrefetchView";          Desc="Parses prefetch, extracts file info";          Category="Orbdiff";    Type="GitHub"; URL="https://github.com/Orbdiff/PrefetchView/releases/latest" },
     @{ Name="BAMReveal";             Desc="Parses BAM forensic artefact";                 Category="Orbdiff";    Type="GitHub"; URL="https://github.com/Orbdiff/BAMReveal/releases/latest" },
     @{ Name="StringsParser";         Desc="Strings + YARA + signatures scanner";          Category="Orbdiff";    Type="GitHub"; URL="https://github.com/Orbdiff/StringsParser/releases/latest" },
@@ -29,7 +26,6 @@ $ToolData = @(
     @{ Name="CheckDeletedUSN";       Desc="Compares USN timestamp vs boot time";          Category="Orbdiff";    Type="GitHub"; URL="https://github.com/Orbdiff/CheckDeletedUSN/releases/latest" },
     @{ Name="JARParser";             Desc="Parses JAR prefetch, DcomLaunch strings";      Category="Orbdiff";    Type="GitHub"; URL="https://github.com/Orbdiff/JARParser/releases/latest" },
 
-    # Spokwn
     @{ Name="BAM-parser";            Desc="Parses BAM entries for execution history";     Category="Spokwn";     Type="GitHub"; URL="https://github.com/spokwn/BAM-parser/releases/latest" },
     @{ Name="PathsParser";           Desc="Extracts and analyzes executable paths";       Category="Spokwn";     Type="GitHub"; URL="https://github.com/spokwn/PathsParser/releases/latest" },
     @{ Name="JournalTrace";          Desc="Traces file activity via USN journal";         Category="Spokwn";     Type="GitHub"; URL="https://github.com/spokwn/JournalTrace/releases/latest" },
@@ -41,7 +37,6 @@ $ToolData = @(
     @{ Name="prefetch-parser";       Desc="Parses Windows prefetch files";                Category="Spokwn";     Type="GitHub"; URL="https://github.com/spokwn/prefetch-parser/releases/latest" },
     @{ Name="ActivitiesCache";       Desc="Parses ActivitiesCache execution history";     Category="Spokwn";     Type="GitHub"; URL="https://github.com/spokwn/ActivitiesCache-execution/releases/latest" },
 
-    # Tonynoh
     @{ Name="MeowDoomsdayFucker";    Desc="Detects Doomsday cheat artefacts";             Category="Tonynoh";    Type="GitHub"; URL="https://github.com/MeowTonynoh/MeowDoomsdayFucker/releases/latest" },
     @{ Name="MeowModAnalyzer";       Desc="Analyzes mod files for suspicious content";    Category="Tonynoh";    Type="Cmd";    Command="Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/MeowTonynoh/MeowModAnalyzer/main/MeowModAnalyzer.ps1')" },
     @{ Name="MeowResolver";          Desc="Resolves obfuscated strings in binaries";      Category="Tonynoh";    Type="GitHub"; URL="https://github.com/MeowTonynoh/MeowResolver/releases/latest" },
@@ -49,7 +44,6 @@ $ToolData = @(
     @{ Name="MeowImportsChecker";    Desc="Checks PE imports for suspicious DLLs";        Category="Tonynoh";    Type="GitHub"; URL="https://github.com/MeowTonynoh/MeowImportsChecker/releases/latest" },
     @{ Name="MeowClientsFucker";     Desc="Detects known cheat client artefacts";         Category="Tonynoh";    Type="GitHub"; URL="https://github.com/MeowTonynoh/MeowClientFucker/releases/latest" },
 
-    # Praiselily
     @{ Name="PSHunter";              Desc="Hunts suspicious PowerShell activity";         Category="Praiselily"; Type="GitHub"; URL="https://github.com/praiselily/PSHunter/releases/latest" },
     @{ Name="AltDetector";           Desc="Detects alternate account artefacts";          Category="Praiselily"; Type="GitHub"; URL="https://github.com/praiselily/AltDetector/releases/latest" },
     @{ Name="WeHateFakers";          Desc="Checks hotspot / tethering logs";              Category="Praiselily"; Type="Cmd";    Command="iwr https://raw.githubusercontent.com/praiselily/WeHateFakers/refs/heads/main/HotspotLogs.ps1 | iex" },
@@ -58,12 +52,10 @@ $ToolData = @(
     @{ Name="Services";              Desc="Lists and analyzes running services";          Category="Praiselily"; Type="Cmd";    Command="Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/praiselily/lilith-ps/refs/heads/main/Services.ps1')" },
     @{ Name="SignedScheduledTasks";  Desc="Finds unsigned / suspicious scheduled tasks"; Category="Praiselily"; Type="Cmd";    Command="Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/praiselily/lilith-ps/refs/heads/main/Signed-Scheduled-Tasks.ps1')" },
 
-    # RedLotus
     @{ Name="RL ModAnalyzer";        Desc="Analyzes mod files for cheat indicators";     Category="RedLotus";   Type="GitHub"; URL="https://github.com/ItzIceHere/RedLotus-Mod-Analyzer/releases/latest" },
     @{ Name="RL TaskSentinel";       Desc="Monitors scheduled tasks for anomalies";      Category="RedLotus";   Type="GitHub"; URL="https://github.com/ItzIceHere/RedLotus-Task-Sentinel/releases/latest" },
     @{ Name="RL AltChecker";         Desc="Checks for alternate account indicators";     Category="RedLotus";   Type="GitHub"; URL="https://github.com/ItzIceHere/RedLotusAltChecker/releases/latest" },
 
-    # Others
     @{ Name="ComputerActivityView";  Desc="Timeline of computer activity events";        Category="Others";     Type="Web";    URL="https://www.nirsoft.net/utils/computer_activity_view.html" },
     @{ Name="AmcacheParser";         Desc="Parses AMCache with YARA + signatures";       Category="Others";     Type="Web";    URL="https://download.ericzimmermanstools.com/net9/AmcacheParser.zip" },
     @{ Name="SystemInformer";        Desc="Advanced process and kernel inspector";        Category="Others";     Type="Link";   URL="https://www.systeminformer.com/canary" },
@@ -78,7 +70,6 @@ $ToolData = @(
     @{ Name="Everything";            Desc="Instant filename search engine for Windows";  Category="Others";     Type="Link";   URL="https://www.voidtools.com/downloads/" },
     @{ Name="HxD";                   Desc="Fast hex editor with disk and RAM editing";   Category="Others";     Type="Link";   URL="https://mh-nexus.de/en/hxd/" },
 
-    # Zimmerman
     @{ Name="bstrings";              Desc="Searches strings with regex + YARA";          Category="Zimmerman";  Type="Web";    URL="https://download.ericzimmermanstools.com/net9/bstrings.zip" },
     @{ Name="JLECmd";                Desc="Parses Jump List files (CLI)";                Category="Zimmerman";  Type="Web";    URL="https://download.ericzimmermanstools.com/net9/JLECmd.zip" },
     @{ Name="JumpListExplorer";      Desc="GUI explorer for Jump List artefacts";        Category="Zimmerman";  Type="Web";    URL="https://download.ericzimmermanstools.com/net9/JumpListExplorer.zip" },
@@ -90,7 +81,6 @@ $ToolData = @(
     @{ Name="SrumECmd";              Desc="Parses SRUM database for usage data";         Category="Zimmerman";  Type="Web";    URL="https://download.ericzimmermanstools.com/net9/SrumECmd.zip" },
     @{ Name="TimelineExplorer";      Desc="GUI viewer for CSV timeline output";          Category="Zimmerman";  Type="Web";    URL="https://download.ericzimmermanstools.com/net9/TimelineExplorer.zip" },
 
-    # NirSoft
     @{ Name="FullEventLogView";      Desc="Views all Windows event log entries";         Category="NirSoft";    Type="Web";    URL="https://www.nirsoft.net/utils/fulleventlogview.zip" },
     @{ Name="NetworkUsageView";      Desc="Shows network usage per process";             Category="NirSoft";    Type="Web";    URL="https://www.nirsoft.net/utils/networkusageview.zip" },
     @{ Name="BrowserDownloadsView";  Desc="Lists all browser download history";          Category="NirSoft";    Type="Web";    URL="https://www.nirsoft.net/utils/browserdownloadsview.zip" },
@@ -104,294 +94,180 @@ $ToolData = @(
     @{ Name="RegScanner";            Desc="Scans registry for values / patterns";        Category="NirSoft";    Type="Web";    URL="https://www.nirsoft.net/utils/regscanner.zip" },
     @{ Name="ShellBagsView";         Desc="Views ShellBags folder access history";       Category="NirSoft";    Type="Web";    URL="https://www.nirsoft.net/utils/shellbagsview.zip" },
 
-    # Dependencies
     @{ Name="NET 9.0";               Desc="Microsoft .NET 9 SDK runtime";                Category="Dependencies"; Type="Web"; URL="https://download.visualstudio.microsoft.com/download/pr/92dba916-bc51-4e76-8b0e-d41d37ce5fa4/ab08f3e95bf7a3d3da336a7e8c8eca63/dotnet-sdk-9.0.203-win-x64.exe" },
     @{ Name="VSRedist";              Desc="Visual C++ redistributable (x64)";            Category="Dependencies"; Type="Web"; URL="https://aka.ms/vs/17/release/vc_redist.x64.exe" }
 )
 
 # =============================================================================
-# UI (Ketteh theme - deep cyber purple + cyan)
+# NEW UI - Completely different design
 # =============================================================================
 [xml]$xaml = @"
 <Window
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="KettehSSTool"
-    Width="1200" Height="760"
-    MinWidth="1200" MinHeight="760"
+    Title="Ketteh"
+    Width="1280" Height="820"
+    MinWidth="1100" MinHeight="700"
     WindowStartupLocation="CenterScreen"
-    ResizeMode="NoResize"
     WindowStyle="None"
     AllowsTransparency="True"
     Background="Transparent"
     FontFamily="Segoe UI">
 
     <Window.Resources>
-        <SolidColorBrush x:Key="MainBg"     Color="#0A0A12"/>
-        <SolidColorBrush x:Key="SidebarBg"  Color="#12121C"/>
-        <SolidColorBrush x:Key="CardBg"     Color="#1A1A28"/>
-        <SolidColorBrush x:Key="Accent"     Color="#5CE1FF"/>
-        <SolidColorBrush x:Key="AccentDim"  Color="#2A8A9E"/>
-        <SolidColorBrush x:Key="TextMain"   Color="#E8F4FF"/>
-        <SolidColorBrush x:Key="TextMuted"  Color="#6A7A9A"/>
-        <SolidColorBrush x:Key="ConsoleBg"  Color="#06060C"/>
-
-        <Style x:Key="SideBtn" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Height" Value="38"/>
-            <Setter Property="Margin" Value="0,0,0,4"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="6">
-                            <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="14,0"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#1E2A40"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="TitleBtn" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-            <Setter Property="Width" Value="40"/>
-            <Setter Property="Height" Value="36"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#335CE1FF"/>
-                                <Setter Property="Foreground" Value="#5CE1FF"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+        <SolidColorBrush x:Key="Bg"        Color="#07070C"/>
+        <SolidColorBrush x:Key="Surface"   Color="#0F0F18"/>
+        <SolidColorBrush x:Key="Card"      Color="#161622"/>
+        <SolidColorBrush x:Key="CardHover" Color="#1E1E2E"/>
+        <SolidColorBrush x:Key="Accent"    Color="#FF3CAC"/>
+        <SolidColorBrush x:Key="Accent2"   Color="#00E5FF"/>
+        <SolidColorBrush x:Key="Text"      Color="#F0F0F8"/>
+        <SolidColorBrush x:Key="Muted"     Color="#6B6B85"/>
+        <SolidColorBrush x:Key="Border"    Color="#252538"/>
     </Window.Resources>
 
-    <Border Background="{StaticResource MainBg}" BorderBrush="#2A3A5A" BorderThickness="1" CornerRadius="10">
+    <Border Background="{StaticResource Bg}" CornerRadius="14" BorderBrush="{StaticResource Border}" BorderThickness="1">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="42"/>
+                <RowDefinition Height="56"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="132"/>
             </Grid.RowDefinitions>
 
-            <!-- Title Bar -->
-            <Border Grid.Row="0" Background="{StaticResource SidebarBg}" CornerRadius="10,10,0,0">
-                <Grid Margin="16,0">
+            <!-- TOP BAR -->
+            <Border Grid.Row="0" Background="{StaticResource Surface}" CornerRadius="14,14,0,0">
+                <Grid Margin="24,0">
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
+
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="Ketteh" FontSize="14" FontWeight="Bold" Foreground="{StaticResource Accent}"/>
-                        <TextBlock Text="  SS Tool" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextMain}"/>
+                        <TextBlock Text="KETTEH" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Accent}"/>
+                        <TextBlock Text="  /  SS" FontSize="14" Foreground="{StaticResource Muted}" VerticalAlignment="Center" Margin="6,0,0,0"/>
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <Button x:Name="MinBtn"   Style="{StaticResource TitleBtn}" Content="_"/>
-                        <Button x:Name="CloseBtn" Style="{StaticResource TitleBtn}" Content="X"/>
+
+                    <!-- Category pills -->
+                    <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="32,0">
+                        <StackPanel x:Name="CatPills" Orientation="Horizontal" VerticalAlignment="Center"/>
+                    </ScrollViewer>
+
+                    <Border Grid.Column="2" Background="#1A1A28" CornerRadius="20" Padding="14,6" VerticalAlignment="Center" Margin="0,0,16,0">
+                        <TextBlock x:Name="StatusBadge" Text="IDLE" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Accent2}"/>
+                    </Border>
+
+                    <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="MinBtn" Content="─" Width="36" Height="32" Background="Transparent" Foreground="{StaticResource Muted}" BorderThickness="0" Cursor="Hand" FontSize="12"/>
+                        <Button x:Name="CloseBtn" Content="✕" Width="36" Height="32" Background="Transparent" Foreground="{StaticResource Muted}" BorderThickness="0" Cursor="Hand" FontSize="12"/>
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- Body -->
-            <Grid Grid.Row="1">
+            <!-- MAIN CONTENT -->
+            <Grid Grid.Row="1" Margin="0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="210"/>
+                    <ColumnDefinition Width="200"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Sidebar -->
-                <Border Grid.Column="0" Background="{StaticResource SidebarBg}" BorderBrush="#2A3A5A" BorderThickness="0,0,1,0">
-                    <StackPanel Margin="12,16,12,16">
+                <!-- Left action rail -->
+                <Border Grid.Column="0" Background="{StaticResource Surface}" BorderBrush="{StaticResource Border}" BorderThickness="0,0,1,0">
+                    <StackPanel Margin="16,20">
+                        <TextBlock Text="QUICK" FontSize="10" FontWeight="Bold" Foreground="{StaticResource Muted}" Margin="4,0,0,12"/>
+                        
+                        <Button x:Name="OpenFolderBtn" Content="Open Folder" Height="40" Margin="0,0,0,8"
+                                Background="{StaticResource Card}" Foreground="{StaticResource Text}" BorderThickness="0"
+                                Cursor="Hand" FontSize="12" HorizontalContentAlignment="Left" Padding="16,0"/>
+                        <Button x:Name="ClearCacheBtn" Content="Clear Cache" Height="40" Margin="0,0,0,8"
+                                Background="{StaticResource Card}" Foreground="{StaticResource Text}" BorderThickness="0"
+                                Cursor="Hand" FontSize="12" HorizontalContentAlignment="Left" Padding="16,0"/>
+                        <Button x:Name="OpenPsBtn" Content="PowerShell" Height="40" Margin="0,0,0,8"
+                                Background="{StaticResource Card}" Foreground="{StaticResource Text}" BorderThickness="0"
+                                Cursor="Hand" FontSize="12" HorizontalContentAlignment="Left" Padding="16,0"/>
 
-                        <Border Background="#0E0E18" CornerRadius="8" Margin="0,0,0,16" Padding="0,14">
-                            <TextBlock Text="Ketteh" FontSize="22" FontWeight="Bold"
-                                       Foreground="{StaticResource Accent}"
-                                       HorizontalAlignment="Center"/>
-                        </Border>
-
-                        <TextBlock Text="ACTIONS" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMuted}" Margin="4,0,0,8"/>
-                        <Button x:Name="OpenFolderBtn" Content="  Open Install Folder"      Style="{StaticResource SideBtn}"/>
-                        <Button x:Name="ClearCacheBtn" Content="  Clear Downloaded Files"   Style="{StaticResource SideBtn}"/>
-                        <Button x:Name="OpenCmdBtn"    Content="  Open PowerShell"          Style="{StaticResource SideBtn}"/>
-
-                        <Separator Background="#2A3A5A" Margin="0,14,0,14"/>
-
-                        <TextBlock x:Name="InstPathBlock" Text="" FontSize="9" Foreground="#4A5A7A" TextWrapping="Wrap" Margin="4,0"/>
+                        <TextBlock Text="STATUS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource Muted}" Margin="4,24,0,8"/>
+                        <TextBlock x:Name="StatusTitle" Text="Ready" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource Text}" Margin="4,0,0,4"/>
+                        <TextBlock x:Name="StatusSub" Text="Pick a tool" FontSize="11" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="4,0,0,0"/>
                     </StackPanel>
                 </Border>
 
-                <!-- Main Panel -->
-                <Grid Grid.Column="1" Margin="16,14,16,14">
+                <!-- Cards area -->
+                <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="{StaticResource Bg}">
+                    <WrapPanel x:Name="CardPanel" Margin="20" ItemWidth="230" ItemHeight="120"/>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- BOTTOM CONSOLE -->
+            <Border Grid.Row="2" Background="#05050A" CornerRadius="0,0,14,14" BorderBrush="{StaticResource Border}" BorderThickness="0,1,0,0">
+                <Grid Margin="20,12">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="10"/>
                         <RowDefinition Height="*"/>
-                        <RowDefinition Height="10"/>
-                        <RowDefinition Height="150"/>
                     </Grid.RowDefinitions>
-
-                    <!-- Status card -->
-                    <Border Grid.Row="0" Background="{StaticResource CardBg}" CornerRadius="8" Padding="18,12">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel>
-                                <TextBlock x:Name="StatusTitle" Text="Ready" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource TextMain}"/>
-                                <TextBlock x:Name="StatusSub"   Text="Select a tool to launch or download it." FontSize="12" Foreground="{StaticResource TextMuted}"/>
-                            </StackPanel>
-                            <Border Grid.Column="1" Background="#0A2A2A" CornerRadius="6" Padding="12,5" VerticalAlignment="Center">
-                                <TextBlock x:Name="StatusBadge" Text="IDLE" FontSize="12" FontWeight="Bold" Foreground="{StaticResource Accent}"/>
-                            </Border>
-                        </Grid>
-                    </Border>
-
-                    <!-- Tab control -->
-                    <Border Grid.Row="2" Background="{StaticResource CardBg}" CornerRadius="8">
-                        <TabControl x:Name="ToolsTab" Background="Transparent" BorderThickness="0" Padding="0">
-                            <TabControl.Resources>
-                                <Style TargetType="TabItem">
-                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-                                    <Setter Property="FontSize" Value="11"/>
-                                    <Setter Property="Padding" Value="12,6"/>
-                                    <Setter Property="Cursor" Value="Hand"/>
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="TabItem">
-                                                <Border x:Name="TabBorder" Background="Transparent" CornerRadius="6" Margin="3,4,3,0" Padding="12,5">
-                                                    <ContentPresenter ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsSelected" Value="True">
-                                                        <Setter TargetName="TabBorder" Property="Background" Value="{StaticResource Accent}"/>
-                                                        <Setter Property="Foreground" Value="#0A0A12"/>
-                                                    </Trigger>
-                                                    <MultiTrigger>
-                                                        <MultiTrigger.Conditions>
-                                                            <Condition Property="IsMouseOver" Value="True"/>
-                                                            <Condition Property="IsSelected" Value="False"/>
-                                                        </MultiTrigger.Conditions>
-                                                        <Setter TargetName="TabBorder" Property="Background" Value="#1E2A40"/>
-                                                        <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
-                                                    </MultiTrigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </TabControl.Resources>
-                        </TabControl>
-                    </Border>
-
-                    <!-- Console -->
-                    <Border Grid.Row="4" Background="{StaticResource ConsoleBg}" CornerRadius="8" Padding="14,10">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-                            <TextBlock Text="ACTIVITY" FontSize="9" FontWeight="Bold" Foreground="#4A5A7A" FontFamily="Consolas" Margin="0,0,0,6"/>
-                            <TextBox x:Name="LogBox"
-                                Grid.Row="1"
-                                Background="Transparent"
-                                Foreground="{StaticResource Accent}"
-                                BorderThickness="0"
-                                FontFamily="Consolas"
-                                FontSize="11"
-                                IsReadOnly="True"
-                                VerticalScrollBarVisibility="Auto"
-                                TextWrapping="Wrap"/>
-                        </Grid>
-                    </Border>
+                    <TextBlock Text="CONSOLE" FontSize="10" FontWeight="Bold" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
+                    <TextBox x:Name="LogBox" Grid.Row="1"
+                             Background="Transparent" Foreground="{StaticResource Accent2}"
+                             BorderThickness="0" FontFamily="Consolas" FontSize="12"
+                             IsReadOnly="True" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap"/>
                 </Grid>
-            </Grid>
+            </Border>
         </Grid>
     </Border>
 </Window>
 "@
 
 # =============================================================================
-# DISCLAIMER
+# DISCLAIMER (simple)
 # =============================================================================
-[xml]$disclaimerXaml = @"
-<Window
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="KettehSSTool"
-    Width="540" Height="420"
-    WindowStartupLocation="CenterScreen"
-    ResizeMode="NoResize"
-    WindowStyle="None"
-    AllowsTransparency="True"
-    Background="Transparent"
-    FontFamily="Segoe UI">
-    <Border Background="#0A0A12" BorderBrush="#2A3A5A" BorderThickness="1" CornerRadius="10" Padding="28">
+[xml]$discXaml = @"
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Ketteh" Width="480" Height="320"
+        WindowStartupLocation="CenterScreen" WindowStyle="None"
+        AllowsTransparency="True" Background="Transparent" FontFamily="Segoe UI">
+    <Border Background="#0F0F18" CornerRadius="12" BorderBrush="#252538" BorderThickness="1" Padding="28">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="56"/>
+                <RowDefinition Height="52"/>
             </Grid.RowDefinitions>
-            <StackPanel Grid.Row="0">
-                <TextBlock Text="KettehSSTool" FontSize="22" FontWeight="Bold" Foreground="#5CE1FF" Margin="0,0,0,16"/>
-                <TextBlock TextWrapping="Wrap" Foreground="#E8F4FF" FontSize="13" Margin="0,0,0,12"
-                           Text="Tools are downloaded from their official sources and stored locally. Nothing is collected or modified on your system beyond what the individual tools themselves do."/>
-                <TextBlock TextWrapping="Wrap" Foreground="#E8F4FF" FontSize="13" Margin="0,0,0,16"
+            <StackPanel>
+                <TextBlock Text="Ketteh" FontSize="22" FontWeight="Bold" Foreground="#FF3CAC" Margin="0,0,0,14"/>
+                <TextBlock TextWrapping="Wrap" Foreground="#F0F0F8" FontSize="13" Margin="0,0,0,10"
+                           Text="Tools are downloaded from official sources and stored locally. Nothing is collected."/>
+                <TextBlock TextWrapping="Wrap" Foreground="#F0F0F8" FontSize="13" Margin="0,0,0,10"
                            Text="Each tool is maintained by its own author. Use at your own risk."/>
-                <TextBlock TextWrapping="Wrap" Foreground="#E8F4FF" FontSize="13" FontWeight="SemiBold"
-                           Text="Click Accept to continue."/>
+                <TextBlock TextWrapping="Wrap" Foreground="#6B6B85" FontSize="12" Text="Click Accept to continue."/>
             </StackPanel>
-            <Grid Grid.Row="1" VerticalAlignment="Bottom">
+            <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="12"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Button x:Name="CancelBtn" Grid.Column="0" Content="Cancel" Height="40"
-                        Background="Transparent" Foreground="#E8F4FF" BorderBrush="#2A3A5A" BorderThickness="1"
-                        Cursor="Hand" FontSize="13"/>
-                <Button x:Name="AcceptBtn" Grid.Column="2" Content="Accept &amp; Continue" Height="40"
-                        Background="#1A1A28" Foreground="#5CE1FF" BorderBrush="#5CE1FF" BorderThickness="1"
-                        Cursor="Hand" FontSize="13" FontWeight="SemiBold"/>
+                        Background="Transparent" Foreground="#F0F0F8" BorderBrush="#252538" BorderThickness="1" Cursor="Hand"/>
+                <Button x:Name="AcceptBtn" Grid.Column="2" Content="Accept" Height="40"
+                        Background="#161622" Foreground="#FF3CAC" BorderBrush="#FF3CAC" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold"/>
             </Grid>
         </Grid>
     </Border>
 </Window>
 "@
 
-$disclaimerReader = New-Object System.Xml.XmlNodeReader $disclaimerXaml
-$disclaimerWindow = [Windows.Markup.XamlReader]::Load($disclaimerReader)
-$disclaimerWindow.Add_MouseLeftButtonDown({ try { $disclaimerWindow.DragMove() } catch {} })
-
-$CancelBtn = $disclaimerWindow.FindName("CancelBtn")
-$AcceptBtn = $disclaimerWindow.FindName("AcceptBtn")
-$script:disclaimerAccepted = $false
-
-$AcceptBtn.Add_Click({ $script:disclaimerAccepted = $true; $disclaimerWindow.Close() })
-$CancelBtn.Add_Click({ $script:disclaimerAccepted = $false; $disclaimerWindow.Close() })
-
-$disclaimerWindow.ShowDialog() | Out-Null
-if (-not $script:disclaimerAccepted) { exit }
+$discReader = New-Object System.Xml.XmlNodeReader $discXaml
+$discWin = [Windows.Markup.XamlReader]::Load($discReader)
+$discWin.Add_MouseLeftButtonDown({ try { $discWin.DragMove() } catch {} })
+$script:ok = $false
+$discWin.FindName("AcceptBtn").Add_Click({ $script:ok = $true; $discWin.Close() })
+$discWin.FindName("CancelBtn").Add_Click({ $script:ok = $false; $discWin.Close() })
+$discWin.ShowDialog() | Out-Null
+if (-not $script:ok) { exit }
 
 # =============================================================================
-# LOAD MAIN WINDOW
+# LOAD WINDOW
 # =============================================================================
 $reader = New-Object System.Xml.XmlNodeReader $xaml
 $window = [Windows.Markup.XamlReader]::Load($reader)
@@ -402,22 +278,20 @@ $StatusTitle   = $window.FindName("StatusTitle")
 $StatusSub     = $window.FindName("StatusSub")
 $StatusBadge   = $window.FindName("StatusBadge")
 $LogBox        = $window.FindName("LogBox")
-$ToolsTab      = $window.FindName("ToolsTab")
+$CardPanel     = $window.FindName("CardPanel")
+$CatPills      = $window.FindName("CatPills")
 $OpenFolderBtn = $window.FindName("OpenFolderBtn")
 $ClearCacheBtn = $window.FindName("ClearCacheBtn")
-$OpenCmdBtn    = $window.FindName("OpenCmdBtn")
-$InstPathBlock = $window.FindName("InstPathBlock")
-
-$InstPathBlock.Text = "Install path:`n$installDir"
+$OpenPsBtn     = $window.FindName("OpenPsBtn")
 
 # =============================================================================
 # HELPERS
 # =============================================================================
 function Write-Log {
     param([string]$msg)
-    $time = Get-Date -Format "HH:mm:ss"
+    $t = Get-Date -Format "HH:mm:ss"
     $LogBox.Dispatcher.Invoke([Action]{
-        $LogBox.AppendText("[$time] $msg`r`n")
+        $LogBox.AppendText("[$t] $msg`r`n")
         $LogBox.ScrollToEnd()
     })
 }
@@ -431,496 +305,295 @@ function Set-Status {
     })
 }
 
-function Start-AppOrScript {
-    param([string]$Path, [string]$WorkingDirectory)
-    if (-not $WorkingDirectory) { $WorkingDirectory = Split-Path -Parent $Path }
-    $extension = [System.IO.Path]::GetExtension($Path).ToLowerInvariant()
-    $quotedPath = '"' + $Path + '"'
-    switch ($extension) {
-        ".cmd" { Start-Process -FilePath "cmd.exe" -ArgumentList "/k", $quotedPath -WorkingDirectory $WorkingDirectory }
-        ".bat" { Start-Process -FilePath "cmd.exe" -ArgumentList "/k", $quotedPath -WorkingDirectory $WorkingDirectory }
-        default { Start-Process -FilePath $Path -WorkingDirectory $WorkingDirectory }
-    }
-}
-
-function Start-DownloadedTool {
-    param([string]$Directory, [string]$PreferredFile)
-    if ($PreferredFile -and (Test-Path -LiteralPath $PreferredFile) -and ($PreferredFile -notmatch "\.zip$")) {
-        Write-Log "Launching $(Split-Path -Leaf $PreferredFile)"
-        Start-AppOrScript -Path $PreferredFile -WorkingDirectory (Split-Path -Parent $PreferredFile)
-        return $true
-    }
-    $launchable = Get-ChildItem -Path $Directory -Recurse -File -ErrorAction SilentlyContinue |
-        Where-Object { $_.Extension -match "^\.(exe|cmd|bat)$" } |
-        Sort-Object @{ Expression = { if ($_.Extension -eq ".exe") { 0 } else { 1 } } }, FullName |
-        Select-Object -First 1
-    if ($launchable) {
-        Write-Log "Launching $($launchable.Name)"
-        Start-AppOrScript -Path $launchable.FullName -WorkingDirectory $launchable.DirectoryName
-        return $true
-    }
-    Write-Log "No executable found - opening folder."
-    Start-Process explorer.exe "`"$Directory`""
-    return $false
-}
-
-function Save-UrlToFile {
-    param([string]$Uri, [string]$OutFile)
-    $tempFile = "$OutFile.download"
-    if (Test-Path -LiteralPath $tempFile) { Remove-Item -LiteralPath $tempFile -Force -ErrorAction SilentlyContinue }
-    $client = New-Object System.Net.WebClient
-    $client.Headers.Add("User-Agent", "KettehSSTool")
-    try {
-        $client.DownloadFile($Uri, $tempFile)
-        if (Test-Path -LiteralPath $OutFile) { Remove-Item -LiteralPath $OutFile -Force -ErrorAction Stop }
-        Move-Item -LiteralPath $tempFile -Destination $OutFile -Force
-    } finally {
-        $client.Dispose()
-        if (Test-Path -LiteralPath $tempFile) { Remove-Item -LiteralPath $tempFile -Force -ErrorAction SilentlyContinue }
-    }
-}
-
 # =============================================================================
-# BUILTIN: Ketteh Mod Analyzer (your full scanner)
+# MOD ANALYZER (embedded)
 # =============================================================================
 function Start-KettehModAnalyzer {
-    $analyzerScript = @'
+    $script = @'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-$OutputEncoding = [System.Text.Encoding]::UTF8
-chcp 65001 | Out-Null
 Clear-Host
-
 Write-Host @"
-╔═══════════════════════════════════════════════════════════════════════════╗
-║                                                                           ║
-║   ██╗  ██╗███████╗████████╗████████╗███████╗██╗  ██╗                     ║
-║   ██║ ██╔╝██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██║  ██║                     ║
-║   █████╔╝ █████╗     ██║      ██║   █████╗  ███████║                     ║
-║   ██╔═██╗ ██╔══╝     ██║      ██║   ██╔══╝  ██╔══██║                     ║
-║   ██║  ██╗███████╗   ██║      ██║   ███████╗██║  ██║                     ║
-║   ╚═╝  ╚═╝╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝                     ║
-║                                                                           ║
-║              M O D   A N A L Y Z E R                                      ║
-╚═══════════════════════════════════════════════════════════════════════════╝
-"@ -ForegroundColor Cyan
-
+  KETTEH  MOD  ANALYZER
+"@ -ForegroundColor Magenta
 Write-Host ""
-Write-Host "  Enter path to the mods folder (press Enter for default):" -ForegroundColor White
-Write-Host "  ────▶ " -ForegroundColor Cyan -NoNewline
-$modsPath = Read-Host
-
-if ([string]::IsNullOrWhiteSpace($modsPath)) {
-    $modsPath = "$env:APPDATA\.minecraft\mods"
-    Write-Host "  Using default: $modsPath" -ForegroundColor Yellow
-}
-
-if (-not (Test-Path $modsPath -PathType Container)) {
-    Write-Host "  Invalid path!" -ForegroundColor Red
-    Write-Host "  Press any key to exit..."
+Write-Host "  Enter mods folder path (Enter = default):" -ForegroundColor White
+Write-Host "  > " -ForegroundColor Cyan -NoNewline
+$path = Read-Host
+if ([string]::IsNullOrWhiteSpace($path)) { $path = "$env:APPDATA\.minecraft\mods" }
+if (-not (Test-Path $path -PathType Container)) {
+    Write-Host "  Invalid path." -ForegroundColor Red
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
     exit
 }
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-
-$cheatPatterns = @(
+$patterns = @(
     "wurst","meteor","impact","liquidbounce","aristois","future","sigma","vape",
     "dqrkis","grim","prestige","asteria","catlean","vengeance","exhibition",
     "rusherhack","novoline","ghostclient","kamiblue","salhack","clickcrystals",
     "baritone","doomsday","kuro","rise","flux","zero","astolfo","xenon",
-    "autocrystal","crystalaura","anchoraura","bedaura","autocrystalaura",
-    "autodoublehand","autohitcrystal","crystaloptimizer","anchoroptimizer",
-    "killaura","aimassist","reach","hitbox","triggerbot","bowaimbot",
-    "antiknockback","velocity","criticals","autoclicker",
-    "nofall","bhop","flight","phase","blink","freecam","scaffold",
-    "elytrafly","speedmine","jumpreset","longjump",
-    "xray","esp","nametags","chams","tracers","radar",
-    "cheststealer","nuker","autoarmor","autopot","autototem",
-    "inventorytotem","pingspoof","selfdestruct","fastplace","fastbreak",
-    "meteordevelopment","cc/novoline","com/alan/clients","club/maxstats",
-    "wtf/moonlight","me/zeroeightsix/kami","net/ccbluex",
-    "xyz/greaj","com/cheatbreaker","com/moonsworth","phantom-refmap.json",
-    "sessionstealer","tokenlogger","tokengrabber","discordtoken",
-    "remoteaccess","reverseshell","c2server","backdoor"
+    "autocrystal","crystalaura","anchoraura","bedaura","killaura","aimassist",
+    "reach","hitbox","triggerbot","nofall","bhop","flight","phase","blink",
+    "freecam","scaffold","xray","esp","nametags","chams","tracers",
+    "sessionstealer","tokenlogger","tokengrabber","discordtoken","backdoor"
 )
 
-function Get-FileSHA1 { param([string]$Path) (Get-FileHash -Path $Path -Algorithm SHA1).Hash }
-
-function Query-Modrinth {
-    param([string]$Hash)
+function Get-SHA1($p){ (Get-FileHash $p -Algorithm SHA1).Hash }
+function Query-Modrinth($h){
     try {
-        $ver = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/version_file/$Hash" -Method Get -UseBasicParsing -ErrorAction Stop
-        if ($ver.project_id) {
-            $proj = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/project/$($ver.project_id)" -Method Get -UseBasicParsing -ErrorAction Stop
-            return @{ Name = $proj.title; Slug = $proj.slug }
+        $v = Invoke-RestMethod "https://api.modrinth.com/v2/version_file/$h" -ErrorAction Stop
+        if($v.project_id){
+            $p = Invoke-RestMethod "https://api.modrinth.com/v2/project/$($v.project_id)" -ErrorAction Stop
+            return @{Name=$p.title;Slug=$p.slug}
         }
-    } catch {}
-    return @{ Name = ""; Spug = ""; Slug = "" }
+    }catch{}
+    return @{Name="";Slug=""}
 }
-
-function Invoke-ScanJar {
-    param([string]$FilePath)
-    $found = [System.Collections.Generic.HashSet[string]]::new()
-    $isCheatClient = $false
+function Scan-Jar($fp){
+    $hits = [System.Collections.Generic.HashSet[string]]::new()
+    $client = $false
     try {
-        $archive = [System.IO.Compression.ZipFile]::OpenRead($FilePath)
-        foreach ($entry in $archive.Entries) {
-            $name = $entry.FullName.ToLower()
-            foreach ($cheat in $cheatPatterns) {
-                if ($name -match [regex]::Escape($cheat)) {
-                    $found.Add($cheat) | Out-Null
-                    if ($cheat -match "wurst|meteor|impact|sigma|vengeance|dqrkis|grim|prestige|exhibition|rusherhack|novoline") {
-                        $isCheatClient = $true
-                    }
-                }
+        $z = [IO.Compression.ZipFile]::OpenRead($fp)
+        foreach($e in $z.Entries){
+            $n = $e.FullName.ToLower()
+            foreach($p in $patterns){
+                if($n -match [regex]::Escape($p)){ $hits.Add($p)|Out-Null; if($p -match "wurst|meteor|impact|sigma|vengeance|dqrkis|grim|prestige|exhibition|rusherhack|novoline"){$client=$true} }
             }
-            if ($name -match '\.class$') {
-                try {
-                    $st = $entry.Open(); $ms = New-Object System.IO.MemoryStream
-                    $st.CopyTo($ms); $st.Close()
-                    $bytes = $ms.ToArray(); $ms.Dispose()
-                    $text = [System.Text.Encoding]::ASCII.GetString($bytes).ToLower()
-                    foreach ($cheat in $cheatPatterns) {
-                        if ($cheat.Length -gt 4 -and $text -match [regex]::Escape($cheat)) {
-                            $found.Add($cheat) | Out-Null
-                            if ($cheat -match "wurst|meteor|impact|sigma|vengeance|dqrkis|grim|prestige|exhibition|rusherhack|novoline") {
-                                $isCheatClient = $true
-                            }
-                        }
-                    }
-                } catch {}
+            if($n -match '\.class$'){
+                try{
+                    $s=$e.Open(); $m=New-Object IO.MemoryStream; $s.CopyTo($m); $s.Close()
+                    $t=[Text.Encoding]::ASCII.GetString($m.ToArray()).ToLower(); $m.Dispose()
+                    foreach($p in $patterns){ if($p.Length -gt 4 -and $t -match [regex]::Escape($p)){ $hits.Add($p)|Out-Null; if($p -match "wurst|meteor|impact|sigma|vengeance|dqrkis|grim|prestige|exhibition|rusherhack|novoline"){$client=$true} } }
+                }catch{}
             }
         }
-        $archive.Dispose()
-    } catch {}
-    return @{ Hits = $found; IsCheatClient = $isCheatClient; HitCount = $found.Count }
+        $z.Dispose()
+    }catch{}
+    return @{Hits=$hits;IsClient=$client;Count=$hits.Count}
 }
 
-function Invoke-DeepScan {
-    param([string]$FilePath)
-    $flags = [System.Collections.Generic.List[string]]::new()
-    try {
-        $zip = [System.IO.Compression.ZipFile]::OpenRead($FilePath)
-        $hasRuntimeExec = $false; $hasHttpDownload = $false; $hasHttpExfil = $false; $hasObfuscation = $false
-        foreach ($entry in $zip.Entries) {
-            if ($entry.FullName -match '\.class$') {
-                try {
-                    $st = $entry.Open(); $ms = New-Object System.IO.MemoryStream
-                    $st.CopyTo($ms); $st.Close()
-                    $bytes = $ms.ToArray(); $ms.Dispose()
-                    $text = [System.Text.Encoding]::ASCII.GetString($bytes)
-                    if ($text -match "java/lang/Runtime" -and $text -match "exec") { $hasRuntimeExec = $true }
-                    if ($text -match "HttpURLConnection" -and $text -match "FileOutputStream") { $hasHttpDownload = $true }
-                    if ($text -match "setDoOutput" -and $text -match "getOutputStream") { $hasHttpExfil = $true }
-                    if ($text -match "ProGuard|Allatori|ZKM|Stringer|Radon|Paramorphism") { $hasObfuscation = $true }
-                } catch {}
-            }
-        }
-        $zip.Dispose()
-        if ($hasRuntimeExec)  { $flags.Add("RUNTIME.EXEC — Can execute OS commands") }
-        if ($hasHttpDownload) { $flags.Add("HTTP DOWNLOAD — Fetches files from remote") }
-        if ($hasHttpExfil)    { $flags.Add("DATA EXFIL — Sends data to external server") }
-        if ($hasObfuscation)  { $flags.Add("OBFUSCATION — Uses known obfuscators") }
-    } catch {}
-    return $flags
+$jars = Get-ChildItem $path -Filter *.jar -File -EA SilentlyContinue
+Write-Host "  Found $($jars.Count) jars`n" -ForegroundColor Green
+$v=@(); $u=@(); $c=@(); $s=@()
+$i=0
+foreach($j in $jars){
+    $i++
+    Write-Host "`r  [$i/$($jars.Count)] $($j.Name)" -NoNewline -ForegroundColor Cyan
+    $h = Get-SHA1 $j.FullName
+    $m = Query-Modrinth $h
+    if($m.Slug){ $v += [pscustomobject]@{File=$j.Name;Name=$m.Name}; continue }
+    $r = Scan-Jar $j.FullName
+    if($r.IsClient){ $c += [pscustomobject]@{File=$j.Name;Hits=$r.Hits} }
+    elseif($r.Count -gt 0){ $s += [pscustomobject]@{File=$j.Name;Hits=$r.Hits} }
+    else{ $u += [pscustomobject]@{File=$j.Name} }
 }
-
-$jarFiles = Get-ChildItem -Path $modsPath -Filter *.jar -File -ErrorAction SilentlyContinue
-$total = $jarFiles.Count
-Write-Host ""
-Write-Host "  Found $total JAR files" -ForegroundColor Green
-Write-Host ""
-
-$verifiedMods = @(); $unknownMods = @(); $cheatMods = @(); $suspiciousMods = @(); $dangerousMods = @()
-$idx = 0
-
-foreach ($jar in $jarFiles) {
-    $idx++
-    Write-Host "`r  Scanning $idx/$total — $($jar.Name)" -ForegroundColor Cyan -NoNewline
-
-    $hash = Get-FileSHA1 -Path $jar.FullName
-    $modrinthData = Query-Modrinth -Hash $hash
-    if ($modrinthData.Slug) {
-        $verifiedMods += [PSCustomObject]@{ FileName = $jar.Name; ModName = $modrinthData.Name }
-        continue
-    }
-
-    $scanResult = Invoke-ScanJar -FilePath $jar.FullName
-    if ($scanResult.IsCheatClient) {
-        $cheatMods += [PSCustomObject]@{ FileName = $jar.Name; Hits = $scanResult.Hits; HitCount = $scanResult.HitCount }
-        $flags = Invoke-DeepScan -FilePath $jar.FullName
-        if ($flags.Count -gt 0) {
-            $dangerousMods += [PSCustomObject]@{ FileName = $jar.Name; Flags = $flags }
-        }
-    } elseif ($scanResult.HitCount -gt 0) {
-        $suspiciousMods += [PSCustomObject]@{ FileName = $jar.Name; Hits = $scanResult.Hits; HitCount = $scanResult.HitCount }
-    } else {
-        $unknownMods += [PSCustomObject]@{ FileName = $jar.Name }
-    }
-}
-
-Write-Host "`r" + (" " * 80) + "`r" -NoNewline
-Write-Host ""
-Write-Host "  ══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-Write-Host "  RESULTS" -ForegroundColor Cyan
-Write-Host "  ══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "  Verified: $($verifiedMods.Count)   Unknown: $($unknownMods.Count)   Suspicious: $($suspiciousMods.Count)   Cheats: $($cheatMods.Count)   Dangerous: $($dangerousMods.Count)" -ForegroundColor White
-Write-Host ""
-
-if ($cheatMods.Count -gt 0) {
-    Write-Host "  ── CHEATS DETECTED ──" -ForegroundColor Red
-    foreach ($mod in $cheatMods) {
-        Write-Host "  $($mod.FileName)" -ForegroundColor Red
-        Write-Host "    Hits: $($mod.Hits -join ', ')" -ForegroundColor Yellow
-    }
-    Write-Host ""
-}
-
-if ($dangerousMods.Count -gt 0) {
-    Write-Host "  ── DANGEROUS ──" -ForegroundColor DarkRed
-    foreach ($mod in $dangerousMods) {
-        Write-Host "  $($mod.FileName)" -ForegroundColor DarkRed
-        foreach ($f in $mod.Flags) { Write-Host "    $f" -ForegroundColor Red }
-    }
-    Write-Host ""
-}
-
-if ($suspiciousMods.Count -gt 0) {
-    Write-Host "  ── SUSPICIOUS ──" -ForegroundColor Yellow
-    foreach ($mod in $suspiciousMods) {
-        Write-Host "  $($mod.FileName)  →  $($mod.Hits -join ', ')" -ForegroundColor Yellow
-    }
-    Write-Host ""
-}
-
+Write-Host "`r" + (" "*80) + "`r"
+Write-Host "`n  Verified: $($v.Count)  Unknown: $($u.Count)  Suspicious: $($s.Count)  Cheats: $($c.Count)`n" -ForegroundColor White
+if($c.Count){ Write-Host "  CHEATS" -ForegroundColor Red; $c | %{ Write-Host "  $($_.File)  →  $($_.Hits -join ', ')" -ForegroundColor Red }; Write-Host "" }
+if($s.Count){ Write-Host "  SUSPICIOUS" -ForegroundColor Yellow; $s | %{ Write-Host "  $($_.File)  →  $($_.Hits -join ', ')" -ForegroundColor Yellow }; Write-Host "" }
 Write-Host "  Press any key to exit..." -ForegroundColor DarkGray
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 '@
-
-    $tempFile = [System.IO.Path]::Combine($env:TEMP, "KettehModAnalyzer_$([guid]::NewGuid().ToString('N').Substring(0,8)).ps1")
-    Set-Content -LiteralPath $tempFile -Value $analyzerScript -Encoding UTF8 -Force
-    Start-Process powershell.exe -ArgumentList "-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$tempFile`""
-    Write-Log "Launched Ketteh Mod Analyzer"
-    Set-Status "Ready" "Mod Analyzer launched in new window." "IDLE"
+    $tmp = Join-Path $env:TEMP "KettehMA_$([guid]::NewGuid().ToString('N').Substring(0,8)).ps1"
+    Set-Content $tmp $script -Encoding UTF8
+    Start-Process powershell -ArgumentList "-NoExit","-NoProfile","-ExecutionPolicy","Bypass","-File","`"$tmp`""
+    Write-Log "Launched Mod Analyzer"
+    Set-Status "Ready" "Mod Analyzer running" "IDLE"
 }
 
 # =============================================================================
-# BUILD TABS + CARDS
+# BUILD CATEGORY PILLS + CARDS
 # =============================================================================
-$Categories = @("Ketteh","Orbdiff","Spokwn","Tonynoh","Praiselily","RedLotus","Zimmerman","NirSoft","Dependencies","Others")
+$script:ActiveCat = "All"
+$Categories = @("All","Ketteh","Orbdiff","Spokwn","Tonynoh","Praiselily","RedLotus","Zimmerman","NirSoft","Others","Dependencies")
 
-foreach ($cat in $Categories) {
-    $tab = New-Object System.Windows.Controls.TabItem
-    $tab.Header = $cat
+function New-Pill($text, $active) {
+    $b = New-Object System.Windows.Controls.Button
+    $b.Content = $text
+    $b.Height = 30
+    $b.Margin = "0,0,8,0"
+    $b.Padding = "14,0"
+    $b.FontSize = 12
+    $b.Cursor = "Hand"
+    $b.BorderThickness = 0
+    if ($active) {
+        $b.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#FF3CAC")
+        $b.Foreground = [Windows.Media.Brushes]::White
+    } else {
+        $b.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#161622")
+        $b.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom("#6B6B85")
+    }
+    $b.Template = [Windows.Markup.XamlReader]::Parse(
+        "<ControlTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' TargetType='Button'>" +
+        "<Border Background='{TemplateBinding Background}' CornerRadius='15' Padding='{TemplateBinding Padding}'>" +
+        "<ContentPresenter HorizontalAlignment='Center' VerticalAlignment='Center'/></Border></ControlTemplate>"
+    )
+    return $b
+}
 
-    $scroll = New-Object System.Windows.Controls.ScrollViewer
-    $scroll.VerticalScrollBarVisibility = "Auto"
-    $scroll.HorizontalScrollBarVisibility = "Disabled"
+function Refresh-Cards {
+    $CardPanel.Children.Clear()
+    $list = if ($script:ActiveCat -eq "All") { $ToolData } else { $ToolData | Where-Object { $_.Category -eq $script:ActiveCat } }
 
-    $wrap = New-Object System.Windows.Controls.WrapPanel
-    $wrap.Margin = "10"
-
-    $catTools = $ToolData | Where-Object { $_.Category -eq $cat }
-
-    foreach ($tool in $catTools) {
+    foreach ($tool in $list) {
         $t = $tool
+        $card = New-Object System.Windows.Controls.Border
+        $card.Width = 220
+        $card.Height = 108
+        $card.Margin = "8"
+        $card.CornerRadius = 12
+        $card.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#161622")
+        $card.BorderBrush = [Windows.Media.BrushConverter]::new().ConvertFrom("#252538")
+        $card.BorderThickness = 1
+        $card.Cursor = "Hand"
+        $card.Padding = "16,14"
 
-        $btn = New-Object System.Windows.Controls.Button
-        $btn.Width = 210
-        $btn.Height = 82
-        $btn.Margin = "6"
-        $btn.Cursor = "Hand"
-        $btn.Foreground = "#E8F4FF"
+        $stack = New-Object System.Windows.Controls.StackPanel
+        $name = New-Object System.Windows.Controls.TextBlock
+        $name.Text = $t.Name
+        $name.FontSize = 13
+        $name.FontWeight = "SemiBold"
+        $name.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom("#F0F0F8")
+        $name.TextWrapping = "Wrap"
 
-        $btnStack = New-Object System.Windows.Controls.StackPanel
-        $btnStack.Margin = "12,10"
-        $nameBlock = New-Object System.Windows.Controls.TextBlock
-        $nameBlock.Text = $t.Name
-        $nameBlock.FontSize = 12
-        $nameBlock.FontWeight = "SemiBold"
-        $nameBlock.TextWrapping = "Wrap"
-        $descBlock = New-Object System.Windows.Controls.TextBlock
-        $descBlock.Text = $t.Desc
-        $descBlock.FontSize = 10
-        $descBlock.Opacity = 0.55
-        $descBlock.TextWrapping = "Wrap"
-        $descBlock.Margin = "0,4,0,0"
-        $btnStack.Children.Add($nameBlock) | Out-Null
-        $btnStack.Children.Add($descBlock) | Out-Null
-        $btn.Content = $btnStack
+        $desc = New-Object System.Windows.Controls.TextBlock
+        $desc.Text = $t.Desc
+        $desc.FontSize = 11
+        $desc.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom("#6B6B85")
+        $desc.TextWrapping = "Wrap"
+        $desc.Margin = "0,6,0,0"
 
-        $btnBg = [Windows.Media.SolidColorBrush]::new([Windows.Media.Color]::FromRgb(0x1A, 0x1A, 0x28))
-        $btnScale = [Windows.Media.ScaleTransform]::new(1.0, 1.0)
+        $stack.Children.Add($name) | Out-Null
+        $stack.Children.Add($desc) | Out-Null
+        $card.Child = $stack
 
-        $btn.Template = [Windows.Markup.XamlReader]::Parse(
-            "<ControlTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' TargetType='Button'>" +
-            "  <Border CornerRadius='8' BorderThickness='1' RenderTransformOrigin='0.5,0.5'" +
-            "          Background='{TemplateBinding Background}'" +
-            "          RenderTransform='{TemplateBinding Tag}'" +
-            "          BorderBrush='#335CE1FF'>" +
-            "    <ContentPresenter HorizontalAlignment='Center' VerticalAlignment='Center'/>" +
-            "  </Border>" +
-            "</ControlTemplate>"
-        )
-        $btn.Background = $btnBg
-        $btn.Tag = $btnScale
-
-        $btn.Add_MouseEnter({
-            $b = $_.Source
-            $bg = $b.Background
-            $sc = $b.Tag
-            if (-not $bg -or -not $sc) { return }
-            $d = [Windows.Duration]::new([TimeSpan]::FromMilliseconds(120))
-            $a = [Windows.Media.Animation.ColorAnimation]::new([Windows.Media.Color]::FromRgb(0x5C,0xE1,0xFF), $d)
-            $bg.BeginAnimation([Windows.Media.SolidColorBrush]::ColorProperty, $a)
-            $ax = [Windows.Media.Animation.DoubleAnimation]::new(1.04, $d)
-            $sc.BeginAnimation([Windows.Media.ScaleTransform]::ScaleXProperty, $ax)
-            $ay = [Windows.Media.Animation.DoubleAnimation]::new(1.04, $d)
-            $sc.BeginAnimation([Windows.Media.ScaleTransform]::ScaleYProperty, $ay)
-            $b.Foreground = [Windows.Media.Brushes]::Black
+        $card.Add_MouseEnter({
+            $_.Source.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#1E1E2E")
+            $_.Source.BorderBrush = [Windows.Media.BrushConverter]::new().ConvertFrom("#FF3CAC")
+        })
+        $card.Add_MouseLeave({
+            $_.Source.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#161622")
+            $_.Source.BorderBrush = [Windows.Media.BrushConverter]::new().ConvertFrom("#252538")
         })
 
-        $btn.Add_MouseLeave({
-            $b = $_.Source
-            $bg = $b.Background
-            $sc = $b.Tag
-            if (-not $bg -or -not $sc) { return }
-            $d = [Windows.Duration]::new([TimeSpan]::FromMilliseconds(160))
-            $a = [Windows.Media.Animation.ColorAnimation]::new([Windows.Media.Color]::FromRgb(0x1A,0x1A,0x28), $d)
-            $bg.BeginAnimation([Windows.Media.SolidColorBrush]::ColorProperty, $a)
-            $ax = [Windows.Media.Animation.DoubleAnimation]::new(1.0, $d)
-            $sc.BeginAnimation([Windows.Media.ScaleTransform]::ScaleXProperty, $ax)
-            $ay = [Windows.Media.Animation.DoubleAnimation]::new(1.0, $d)
-            $sc.BeginAnimation([Windows.Media.ScaleTransform]::ScaleYProperty, $ay)
-            $b.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom("#E8F4FF")
-        })
+        $card.Add_MouseLeftButtonUp({
+            $nameText = ($_.Source.Child.Children[0]).Text
+            $td = $ToolData | Where-Object { $_.Name -eq $nameText } | Select-Object -First 1
+            if (-not $td) { return }
 
-        $btn.Add_Click({
-            $clickedBtn = $_.Source
-            $tName = ($clickedBtn.Content.Children[0]).Text
-            $tData = $ToolData | Where-Object { $_.Name -eq $tName } | Select-Object -First 1
-            $clickedBtn.IsEnabled = $false
-
-            if ($tData.Type -eq "Builtin" -and $tData.Command -eq "ModAnalyzer") {
+            if ($td.Type -eq "Builtin") {
                 Start-KettehModAnalyzer
-                $clickedBtn.IsEnabled = $true
+                return
+            }
+            if ($td.Type -eq "Link") {
+                Start-Process $td.URL
+                Set-Status "Ready" "Opened browser" "IDLE"
+                return
+            }
+            if ($td.Type -eq "Cmd") {
+                Set-Status "Running" $td.Name "BUSY"
+                Write-Log "Launching $($td.Name)"
+                Start-Process powershell -ArgumentList "-NoExit","-NoProfile","-ExecutionPolicy","Bypass","-Command",$td.Command
+                Set-Status "Ready" "Launched" "IDLE"
                 return
             }
 
-            if ($tData.Type -eq "Link") {
-                Start-Process $tData.URL
-                Set-Status "Ready" "Opened $tName in browser." "IDLE"
-                $clickedBtn.IsEnabled = $true
-                return
-            }
+            # Download
+            Set-Status "Downloading" $td.Name "BUSY"
+            Write-Log "Downloading $($td.Name)..."
 
-            if ($tData.Type -eq "Cmd") {
-                Set-Status "Running" "Launching $tName..." "BUSY"
-                Write-Log "Starting: $tName"
-                Start-Process powershell.exe -ArgumentList "-NoExit","-NoProfile","-ExecutionPolicy","Bypass","-Command",$tData.Command
-                Set-Status "Ready" "$tName launched." "IDLE"
-                $clickedBtn.IsEnabled = $true
-                return
-            }
+            $rs = [runspacefactory]::CreateRunspace(); $rs.Open()
+            $rs.SessionStateProxy.SetVariable("td",$td)
+            $rs.SessionStateProxy.SetVariable("installDir",$installDir)
+            $rs.SessionStateProxy.SetVariable("dispatcher",$window.Dispatcher)
+            $rs.SessionStateProxy.SetVariable("StatusTitle",$StatusTitle)
+            $rs.SessionStateProxy.SetVariable("StatusSub",$StatusSub)
+            $rs.SessionStateProxy.SetVariable("StatusBadge",$StatusBadge)
+            $rs.SessionStateProxy.SetVariable("LogBox",$LogBox)
 
-            # Download tools (GitHub / Web)
-            Set-Status "Downloading" "Fetching $tName..." "BUSY"
-            Write-Log "Starting download: $tName"
-
-            $rs = [runspacefactory]::CreateRunspace()
-            $rs.ApartmentState = "STA"
-            $rs.ThreadOptions = "ReuseThread"
-            $rs.Open()
-
-            $rs.SessionStateProxy.SetVariable("tData", $tData)
-            $rs.SessionStateProxy.SetVariable("installDir", $installDir)
-            $rs.SessionStateProxy.SetVariable("dispatcher", $clickedBtn.Dispatcher)
-            $rs.SessionStateProxy.SetVariable("btn", $clickedBtn)
-            $rs.SessionStateProxy.SetVariable("StatusTitle", $StatusTitle)
-            $rs.SessionStateProxy.SetVariable("StatusSub", $StatusSub)
-            $rs.SessionStateProxy.SetVariable("StatusBadge", $StatusBadge)
-            $rs.SessionStateProxy.SetVariable("LogBox", $LogBox)
-
-            $ps = [powershell]::Create()
-            $ps.Runspace = $rs
-
+            $ps = [powershell]::Create(); $ps.Runspace = $rs
             $null = $ps.AddScript({
-                function Set-StatusBg { param($t,$s,$b)
-                    $dispatcher.Invoke([Action]{ $StatusTitle.Text=$t; $StatusSub.Text=$s; $StatusBadge.Text=$b })
-                }
-                function Write-LogBg { param($m)
-                    $dispatcher.Invoke([Action]{ $LogBox.AppendText("[$(Get-Date -f 'HH:mm:ss')] $m`n"); $LogBox.ScrollToEnd() })
-                }
-
-                $name = $tData.Name
-                $url  = $tData.URL
-                $cat  = $tData.Category
-                $type = $tData.Type
-
+                function L($m){ $dispatcher.Invoke([Action]{ $LogBox.AppendText("[$(Get-Date -f HH:mm:ss)] $m`n"); $LogBox.ScrollToEnd() }) }
+                function S($t,$s,$b){ $dispatcher.Invoke([Action]{ $StatusTitle.Text=$t; $StatusSub.Text=$s; $StatusBadge.Text=$b }) }
                 try {
                     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-                    $destDir = "$installDir\$cat\$name"
-                    if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
+                    $dir = "$installDir\$($td.Category)\$($td.Name)"
+                    if (-not (Test-Path $dir)) { New-Item $dir -ItemType Directory -Force | Out-Null }
 
-                    if ($type -eq "GitHub") {
-                        $urlParts = $url -replace "https://github.com/", "" -split "/"
-                        $owner = $urlParts[0]; $repo = $urlParts[1]
-                        $apiUrl = "https://api.github.com/repos/$owner/$repo/releases/latest"
-                        $release = Invoke-RestMethod -Uri $apiUrl -Headers @{ "User-Agent" = "KettehSSTool" } -ErrorAction Stop
-                        $asset = $release.assets | Where-Object { $_.name -match "\.(zip|exe)$" } | Select-Object -First 1
-                        if (-not $asset) { throw "No downloadable asset found." }
-                        $dlUrl = $asset.browser_download_url
-                        $fileName = $asset.name
-                        $destFile = "$destDir\$fileName"
+                    if ($td.Type -eq "GitHub") {
+                        $parts = $td.URL -replace "https://github.com/","" -split "/"
+                        $api = "https://api.github.com/repos/$($parts[0])/$($parts[1])/releases/latest"
+                        $rel = Invoke-RestMethod $api -Headers @{ "User-Agent"="Ketteh" }
+                        $asset = $rel.assets | Where-Object { $_.name -match "\.(zip|exe)$" } | Select-Object -First 1
+                        if (-not $asset) { throw "No asset" }
+                        $url = $asset.browser_download_url
+                        $fn = $asset.name
                     } else {
-                        $dlUrl = $url
-                        $fileName = ($url -split "/")[-1]
-                        $destFile = "$destDir\$fileName"
+                        $url = $td.URL
+                        $fn = ($url -split "/")[-1]
                     }
+                    $out = "$dir\$fn"
+                    if (-not (Test-Path $out)) {
+                        L "Downloading $fn..."
+                        (New-Object Net.WebClient).DownloadFile($url, $out)
+                    } else { L "Cached $fn" }
 
-                    if (Test-Path $destFile) {
-                        Write-LogBg "Cached: $fileName"
+                    if ($fn -match "\.zip$") {
+                        Expand-Archive $out $dir -Force
+                        $exe = Get-ChildItem $dir -Filter *.exe -Recurse | Select-Object -First 1
+                        if ($exe) { Start-Process $exe.FullName; L "Launched $($exe.Name)" }
+                        else { Start-Process explorer $dir }
                     } else {
-                        Write-LogBg "Downloading $fileName..."
-                        $wc = New-Object System.Net.WebClient
-                        $wc.DownloadFile($dlUrl, $destFile)
-                        Write-LogBg "Download complete"
+                        Start-Process $out
+                        L "Launched $fn"
                     }
-
-                    if ($fileName -match "\.zip$") {
-                        Expand-Archive -Path $destFile -DestinationPath $destDir -Force -ErrorAction Stop
-                        $exe = Get-ChildItem -Path $destDir -Filter "*.exe" -Recurse | Select-Object -First 1
-                        if ($exe) {
-                            Write-LogBg "Launching $($exe.Name)"
-                            Start-Process $exe.FullName
-                        } else {
-                            $dispatcher.Invoke([Action]{ Start-Process explorer.exe "`"$destDir`"" })
-                        }
-                    } else {
-                        Write-LogBg "Launching $fileName"
-                        Start-Process $destFile
-                    }
-
-                    Set-StatusBg "Ready" "$name launched." "IDLE"
+                    S "Ready" "Done" "IDLE"
                 } catch {
-                    Write-LogBg "Error: $_"
-                    Set-StatusBg "Error" "Failed: $name" "ERR"
+                    L "Error: $_"
+                    S "Error" "Failed" "ERR"
                 }
-
-                $dispatcher.Invoke([Action]{ $btn.IsEnabled = $true })
             })
-
             $null = $ps.BeginInvoke()
-        })
+        }.GetNewClosure())
 
-        $wrap.Children.Add($btn) | Out-Null
+        $CardPanel.Children.Add($card) | Out-Null
     }
-
-    $scroll.Content = $wrap
-    $tab.Content = $scroll
-    $ToolsTab.Items.Add($tab) | Out-Null
 }
+
+# Build pills
+foreach ($cat in $Categories) {
+    $pill = New-Pill $cat ($cat -eq "All")
+    $pill.Add_Click({
+        $script:ActiveCat = $this.Content
+        $CatPills.Children.Clear()
+        foreach ($c in $Categories) {
+            $p = New-Pill $c ($c -eq $script:ActiveCat)
+            $p.Add_Click($pill.Add_Click)  # re-bind later properly
+            $CatPills.Children.Add($p) | Out-Null
+        }
+        # simpler rebuild
+        $CatPills.Children.Clear()
+        foreach ($c in $Categories) {
+            $np = New-Pill $c ($c -eq $script:ActiveCat)
+            $np.Add_Click({
+                $script:ActiveCat = $this.Content
+                # rebuild pills
+                $CatPills.Children.Clear()
+                foreach ($cc in $Categories) {
+                    $pp = New-Pill $cc ($cc -eq $script:ActiveCat)
+                    $pp.Add_Click($np.Add_Click)
+                    $CatPills.Children.Add($pp) | Out-Null
+                }
+                Refresh-Cards
+            }.GetNewClosure())
+            $CatPills.Children.Add($np) | Out-Null
+        }
+        Refresh-Cards
+    }.GetNewClosure())
+    $CatPills.Children.Add($pill) | Out-Null
+}
+
+Refresh-Cards
 
 # =============================================================================
 # EVENTS
@@ -930,30 +603,24 @@ $CloseBtn.Add_Click({ $window.Close() })
 $MinBtn.Add_Click({ $window.WindowState = "Minimized" })
 
 $OpenFolderBtn.Add_Click({
-    if (-not (Test-Path $installDir)) { New-Item -ItemType Directory -Path $installDir -Force | Out-Null }
-    Start-Process explorer.exe $installDir
-    Write-Log "Opened install folder"
+    if (-not (Test-Path $installDir)) { New-Item $installDir -ItemType Directory -Force | Out-Null }
+    Start-Process explorer $installDir
+    Write-Log "Opened folder"
 })
-
 $ClearCacheBtn.Add_Click({
     if (Test-Path $installDir) {
-        $items = Get-ChildItem -Path $installDir -Force -ErrorAction SilentlyContinue
-        $count = @($items).Count
-        $items | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-        Write-Log "Cleared $count item(s)"
-        Set-Status "Clean" "Removed downloaded files." "IDLE"
-    } else {
-        Write-Log "Nothing to clear"
+        $n = @(Get-ChildItem $installDir -Force).Count
+        Get-ChildItem $installDir -Force | Remove-Item -Recurse -Force -EA SilentlyContinue
+        Write-Log "Cleared $n items"
+        Set-Status "Ready" "Cache cleared" "IDLE"
     }
 })
-
-$OpenCmdBtn.Add_Click({
-    Start-Process powershell.exe
+$OpenPsBtn.Add_Click({
+    Start-Process powershell
     Write-Log "Opened PowerShell"
 })
 
-Write-Log "KettehSSTool ready"
-Write-Log "Install path: $installDir"
-Set-Status "Ready" "Select a tool to launch or download it." "IDLE"
+Write-Log "Ketteh ready"
+Set-Status "Ready" "Select a tool" "IDLE"
 
 $window.ShowDialog() | Out-Null
