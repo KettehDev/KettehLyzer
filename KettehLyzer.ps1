@@ -143,7 +143,7 @@ $CheatSignatures = @(
 # ─── CHEAT CLIENT NAMES ───────────────────────────────────────
 $CheatClientNames = @(
     'wurst','meteor','impact','liquidbounce','aristois','future',
-    'sigma','vape','entropy','dqrkis','ketteh','eventplugin',
+    'sigma','vape','entropy','dqrkis',
     'crystalaura','autocrystal','anchoraura','bedaura',
     'rusherhack','novoline','ghostclient','kamiblue','salhack','clickcrystals',
     'baritone','vengeance','exhibition','kuro','rise','flux',
