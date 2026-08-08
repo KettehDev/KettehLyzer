@@ -5,8 +5,8 @@
 #  ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██║██║    ██║
 #  ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║███████╗██║
 #  ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝╚═╝
-#              KETTEH MOD ANALYZER v4.0 - TERMINAL
-#           DETECT CHEATS · VERIFY MODS · SERVE JUSTICE 🔥
+#              KETTEH MOD ANALYZER v5.0
+#           CHEAT STRING DETECTION ENGINE 🔥
 # ============================================================
 
 Clear-Host
@@ -35,20 +35,20 @@ Write-Host @"
 ║      ██║  ██╗███████╗   ██║      ██║   ███████╗██║  ██║     ║
 ║      ╚═╝  ╚═╝╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝     ║
 ║                                                               ║
-║           ⚡ KETTEH MOD ANALYZER v4.0 ⚡                   ║
-║      VERIFY · DETECT · ELIMINATE                          ║
+║           ⚡ KETTEH MOD ANALYZER v5.0 ⚡                   ║
+║        CHEAT STRING DETECTION ENGINE                     ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
 "@ -ForegroundColor Magenta
 
 Write-Host ""
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host "  ⚡  MOD ANALYZER ENGINE  ⚡" -ForegroundColor Cyan
+Write-Host "  ⚡  CHEAT STRING DETECTION ENGINE  ⚡" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
-Write-Host "  [SYSTEM] Initializing cheat detection engine..." -ForegroundColor Yellow
-Write-Host "  [SYSTEM] Loading signature database..." -ForegroundColor Yellow
-Write-Host "  [SYSTEM] Connecting to Modrinth API..." -ForegroundColor Yellow
+Write-Host "  [SYSTEM] Loading cheat string database..." -ForegroundColor Yellow
+Write-Host "  [SYSTEM] Initializing detection engine..." -ForegroundColor Yellow
+Write-Host "  [SYSTEM] Ready to catch cheaters." -ForegroundColor Yellow
 Write-Host ""
 
 # ─── LOADING BAR ──────────────────────────────────────────────
@@ -58,7 +58,7 @@ for ($i = 0; $i -le 100; $i += 5) {
     $bar += ("█" * $filled).PadRight(20, "░")
     $bar += "]"
     Write-Host "`r  $bar $i% " -ForegroundColor Cyan -NoNewline
-    Start-Sleep -Milliseconds 10
+    Start-Sleep -Milliseconds 8
 }
 Write-Host "`r  [████████████████████] 100% " -ForegroundColor Green
 Write-Host "  [SYSTEM] Engine ready." -ForegroundColor Green
@@ -96,18 +96,42 @@ Write-Host ""
 # ─── DEPENDENCIES ─────────────────────────────────────────────
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-# ─── MINECRAFT PROCESS ────────────────────────────────────────
-$process = Get-Process javaw -ErrorAction SilentlyContinue
-if (-not $process) { $process = Get-Process java -ErrorAction SilentlyContinue }
-if ($process) {
-    try { $elapsed = (Get-Date) - $process.StartTime } catch {}
-    Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-    Write-Host "  🖥️  MINECRAFT PROCESS" -ForegroundColor Cyan
-    Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-    Write-Host "  Process     : $($process.Name)" -ForegroundColor White
-    Write-Host "  PID         : $($process.Id)" -ForegroundColor White
-    Write-Host "  Uptime      : $($elapsed.Hours)h $($elapsed.Minutes)m $($elapsed.Seconds)s" -ForegroundColor White
-    Write-Host ""
+# ─── CHEAT STRINGS DATABASE ───────────────────────────────────
+$CheatStrings = @(
+    'KillAura', 'AimAssist', 'Reach', 'HitBox', 'Aura', 'BowAimbot', 'Velocity', 'AntiKnockback',
+    'Criticals', 'AutoClicker', 'Flight', 'BHop', 'SpeedMine', 'NoFall', 'Phase', 'Blink',
+    'Freecam', 'NoSlow', 'Scaffold', 'ElytraFly', 'XRay', 'ESP', 'Nametags', 'Chams',
+    'Tracers', 'Radar', 'ChestStealer', 'Nuker', 'AutoCrystal', 'AutoAnchor', 'AutoPot',
+    'AutoTotem', 'AutoArmor', 'CrystalAura', 'PingSpoof', 'SelfDestruct', 'FastPlace',
+    'FastBreak', 'ClickGUI', 'AltManager', 'Meteor', 'Wurst', 'Impact', 'Aristois',
+    'LiquidBounce', 'Future', 'RusherHack', 'Sigma', 'Novoline', 'GhostClient'
+)
+
+# ─── CHEAT CLIENT NAMES ───────────────────────────────────────
+$CheatClientNames = @(
+    'wurst','meteor','impact','liquidbounce','aristois','future',
+    'sigma','vape','entropy','dqrkis','ketteh','eventplugin',
+    'crystalaura','autocrystal','anchoraura','bedaura',
+    'rusherhack','novoline','ghostclient','kamiblue','salhack','clickcrystals',
+    'baritone','vengeance','exhibition','kuro','rise','flux',
+    'zero','raven','astolfo','dortware','xenon','tenacity'
+)
+
+# ─── LEGIT MODS ─────────────────────────────────────────────────
+$LegitMods = @{
+    'fabric' = $true; 'forge' = $true; 'fabric-api' = $true
+    'sodium' = $true; 'lithium' = $true; 'phosphor' = $true; 'iris' = $true
+    'modmenu' = $true; 'worldedit' = $true; 'jei' = $true; 'rei' = $true
+    'emi' = $true; 'xaero' = $true; 'journeymap' = $true
+    'anchoroptimizer' = $true; 'crystaloptimizer' = $true
+    'crossbowoptimizer' = $true; 'consumableoptimizer' = $true
+    'optimizer' = $true; 'glow' = $true; 'polytone' = $true
+    'sodium-extra' = $true; 'placeholder-api' = $true
+    'walksylib' = $true; 'yetanotherconfiglib' = $true; 'collective' = $true
+    'essential' = $true; 'borderlessfullscreen' = $true; 'autoreconnect' = $true
+    'fullbrightnesstoggle' = $true; 'naturalmotionblur' = $true
+    'shieldfixes' = $true; 'shieldstatus' = $true
+    'ambience' = $true; 'crosshairaddons' = $true
 }
 
 # ─── HELPERS ──────────────────────────────────────────────────
@@ -123,24 +147,6 @@ function Get-ZoneIdentifier {
     return $null
 }
 
-# ─── MODRINTH API ─────────────────────────────────────────────
-$modrinthCache = @{}
-function Fetch-Modrinth {
-    param([string]$Sha1)
-    if ($modrinthCache.ContainsKey($Sha1)) { return $modrinthCache[$Sha1] }
-    $result = @{ Name = ""; Slug = "" }
-    try {
-        $ver = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/version_file/$Sha1" -Method Get -ErrorAction Stop
-        if ($ver.project_id) {
-            $proj = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/project/$($ver.project_id)" -Method Get -ErrorAction Stop
-            $result = @{ Name = $proj.title; Slug = $proj.slug }
-        }
-    } catch {}
-    $modrinthCache[$Sha1] = $result
-    return $result
-}
-
-# ─── EXTRACTOR ─────────────────────────────────────────────────
 function Expand-JarLimited {
     param([string]$JarPath, [string]$DestDir)
     try {
@@ -158,63 +164,15 @@ function Expand-JarLimited {
     }
 }
 
-# ─── ENHANCED CHEAT DETECTION ────────────────────────────────
-
-# CHEAT CLIENT NAMES
-$CheatClientNames = @(
-    'wurst','meteor','impact','liquidbounce','aristois','future',
-    'sigma','vape','entropy','dqrkis','ketteh','eventplugin',
-    'crystalaura','autocrystal','anchoraura','bedaura',
-    'rusherhack','novoline','ghostclient','kamiblue','salhack','clickcrystals',
-    'baritone','vengeance','exhibition','kuro','rise','flux',
-    'zero','raven','astolfo','dortware','xenon','tenacity',
-    'crystalfight','crystalia','client-mod','cheat-client','hack-client'
-)
-
-# CHEAT FEATURES
-$CheatStrings = @(
-    'KillAura','AimAssist','Reach','HitBox','Aura','BowAimbot','Velocity','AntiKnockback',
-    'Criticals','AutoClicker','Flight','BHop','SpeedMine','NoFall','Phase','Blink',
-    'Freecam','NoSlow','Scaffold','ElytraFly','XRay','ESP','Nametags','Chams',
-    'Tracers','Radar','ChestStealer','Nuker','AutoCrystal','AutoAnchor','AutoPot',
-    'AutoTotem','AutoArmor','CrystalAura','PingSpoof','SelfDestruct','FastPlace',
-    'FastBreak','ClickGUI','AltManager','Meteor','Wurst','Impact','Aristois',
-    'LiquidBounce','Future','RusherHack','Sigma','Novoline','GhostClient'
-)
-
-# LEGIT MODS - SAFE
-$LegitMods = @{
-    'fabric' = $true; 'forge' = $true; 'fabric-api' = $true
-    'sodium' = $true; 'lithium' = $true; 'phosphor' = $true; 'iris' = $true
-    'indium' = $true; 'continuity' = $true; 'cullleaves' = $true
-    'entityculling' = $true; 'ferritecore' = $true; 'krypton' = $true
-    'lazy-dfu' = $true; 'memoryleakfix' = $true; 'modernfix' = $true
-    'spark' = $true; 'starlight' = $true; 'viafabric' = $true
-    'modmenu' = $true; 'worldedit' = $true; 'jei' = $true; 'rei' = $true
-    'emi' = $true; 'xaero' = $true; 'journeymap' = $true
-    'polytone' = $true; 'sodium-extra' = $true; 'placeholder-api' = $true
-    'walksylib' = $true; 'yetanotherconfiglib' = $true; 'collective' = $true
-    'essential' = $true; 'borderlessfullscreen' = $true; 'autoreconnect' = $true
-    'fullbrightnesstoggle' = $true; 'naturalmotionblur' = $true
-    'shieldfixes' = $true; 'shieldstatus' = $true
-    'ambience' = $true; 'crosshairaddons' = $true
-    'anchoroptimizer' = $true; 'crystaloptimizer' = $true
-    'crossbowoptimizer' = $true; 'consumableoptimizer' = $true
-    'optimizer' = $true; 'glow' = $true
-}
-
 function Get-NameHit {
     param([string]$FileName)
     $lower = $FileName.ToLower()
-    
     foreach ($legit in $LegitMods.Keys) {
         if ($lower -match [regex]::Escape($legit)) { return $null }
     }
-    
     foreach ($cheat in $CheatClientNames) {
         if ($lower -match [regex]::Escape($cheat)) { return $cheat }
     }
-    
     return $null
 }
 
@@ -258,26 +216,33 @@ try {
         $pct = [math]::Round(100 * $counter / $total)
         Write-Host "`r  [>>] Scanning $counter/$total ($pct%)...$(' ' * 30)" -ForegroundColor Cyan -NoNewline
 
+        # 1. NAME CHECK
         $nameHit = Get-NameHit -FileName $file.Name
         if ($nameHit) {
             $cheatMods += [pscustomobject]@{ 
                 FileName = $file.Name
                 Reason = "BLATANT CHEAT: $nameHit"
                 Type = "CLIENT"
+                Hits = @()
             }
             continue
         }
 
+        # 2. HASH CHECK
         $sha1 = Get-JarHash -Path $file.FullName -Algo SHA1
-        $known = Fetch-Modrinth -Sha1 $sha1
-        if ($known.Slug) {
-            $verifiedMods += [pscustomobject]@{ 
-                ModName = $known.Name
-                FileName = $file.Name
+        try {
+            $ver = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/version_file/$sha1" -Method Get -ErrorAction Stop
+            if ($ver.project_id) {
+                $proj = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/project/$($ver.project_id)" -Method Get -ErrorAction Stop
+                $verifiedMods += [pscustomobject]@{ 
+                    ModName = $proj.title
+                    FileName = $file.Name
+                }
+                continue
             }
-            continue
-        }
+        } catch {}
 
+        # 3. DEEP SCAN - CHEAT STRING DETECTION
         $extractDir = Join-Path $tempRoot ([System.IO.Path]::GetFileNameWithoutExtension($file.Name))
         New-Item -ItemType Directory -Path $extractDir -Force | Out-Null
         
@@ -287,8 +252,9 @@ try {
         if ($hits.Count -gt 0) {
             $cheatMods += [pscustomobject]@{ 
                 FileName = $file.Name
-                Reason = "CHEAT FEATURES: $($hits[0..3] -join ', ')"
+                Reason = "CHEAT STRINGS FOUND"
                 Type = "FEATURE"
+                Hits = $hits
             }
         } else {
             $zone = Get-ZoneIdentifier -Path $file.FullName
@@ -351,16 +317,24 @@ if ($unknownMods.Count -gt 0) {
 # ─── CHEATS DETECTED ──────────────────────────────────────────
 if ($cheatMods.Count -gt 0) {
     Write-Host "  🚨 CHEATS DETECTED!" -ForegroundColor Red
-    Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkRed
     foreach ($mod in $cheatMods) {
         if ($mod.Type -eq "CLIENT") {
+            Write-Host ""
             Write-Host "  ⚡ $($mod.FileName)" -ForegroundColor Red -NoNewline
             Write-Host "  — $($mod.Reason)" -ForegroundColor DarkRed
+            Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
         } else {
+            Write-Host ""
             Write-Host "  ⚡ $($mod.FileName)" -ForegroundColor Red -NoNewline
             Write-Host "  — $($mod.Reason)" -ForegroundColor DarkMagenta
+            Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+            Write-Host "  🎯 Cheat Strings Found:" -ForegroundColor Yellow
+            foreach ($hit in $mod.Hits) {
+                Write-Host "     🔸 $hit" -ForegroundColor Red
+            }
+            Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
         }
-        Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
     }
     Write-Host ""
 }
@@ -375,6 +349,7 @@ if ($cheatMods.Count -gt 0) {
     Write-Host "  ⚠️  STATUS: CHEATS DETECTED!" -ForegroundColor Red
     Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
     Write-Host "  ▸ ${cheatMods.Count} cheat clients/features found" -ForegroundColor Red
+    Write-Host "  ▸ Cheat strings detected in the mods above" -ForegroundColor Red
     Write-Host "  ▸ ACTION REQUIRED: REMOVE IMMEDIATELY" -ForegroundColor DarkRed
 } elseif ($unknownMods.Count -gt 3) {
     Write-Host "  ⚠️  STATUS: CAUTION" -ForegroundColor Yellow
@@ -402,14 +377,41 @@ Write-Host "  Cheats Caught   : $($cheatMods.Count)" -ForegroundColor Red
 Write-Host "  Scan Completed  : $((Get-Date).ToString('HH:mm:ss'))" -ForegroundColor White
 Write-Host ""
 
+# ─── CHEAT STRING DATABASE DISPLAY ──────────────────────────
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
+Write-Host "  📋  CHEAT STRING DATABASE" -ForegroundColor Cyan
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
+Write-Host ""
+Write-Host "  Loaded $($CheatStrings.Count) cheat signatures:" -ForegroundColor Yellow
+Write-Host ""
+
+$cols = 4
+$colWidth = 25
+$row = 0
+$output = "  "
+foreach ($sig in $CheatStrings) {
+    $output += $sig.PadRight($colWidth)
+    $row++
+    if ($row -ge $cols) {
+        Write-Host $output -ForegroundColor DarkGray
+        $output = "  "
+        $row = 0
+    }
+}
+if ($output -ne "  ") { Write-Host $output -ForegroundColor DarkGray }
+
+Write-Host ""
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
+
 # ─── FOOTER ────────────────────────────────────────────────────
+Write-Host ""
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host "  ⚡  SCAN COMPLETE  ⚡" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
 Write-Host "  🔥  Justice served. Cheaters caught." -ForegroundColor Magenta
 Write-Host ""
-Write-Host "  [SYSTEM] Ketteh Mod Analyzer v4.0 — Done." -ForegroundColor Green
+Write-Host "  [SYSTEM] Ketteh Mod Analyzer v5.0 — Done." -ForegroundColor Green
 Write-Host ""
 
 # ─── KITTY ─────────────────────────────────────────────────────
