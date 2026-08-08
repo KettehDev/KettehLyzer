@@ -5,72 +5,25 @@
 #  ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██║██║    ██║
 #  ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║███████╗██║
 #  ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝╚═╝
-#                    v7  ::  OMEGA MOD SCANNER
+#                 CHEATER CATCHER v8  ::  NO BS, JUST RESULTS
 # ============================================================
 
 Clear-Host
 
-# ─── GLOBAL VARIABLES ─────────────────────────────────────────
-$Global:spinner = @('◢', '◣', '◤', '◥')
-$Global:progressChars = @('█', '▓', '▒', '░')
+# ─── COLOR SCHEME ─────────────────────────────────────────────
+$Cyan = "Cyan"
+$Magenta = "Magenta"
+$Green = "Green"
+$Yellow = "Yellow"
+$Red = "Red"
+$White = "White"
+$Gray = "Gray"
+$DarkGray = "DarkGray"
+$DarkMagenta = "DarkMagenta"
+$DarkCyan = "DarkCyan"
 
-# ─── COLOR DEFINITIONS ────────────────────────────────────────
-$colors = @{
-    primary   = 'Cyan'
-    secondary = 'Magenta'
-    success   = 'Green'
-    warning   = 'Yellow'
-    danger    = 'Red'
-    info      = 'DarkCyan'
-    accent    = 'DarkMagenta'
-    dim       = 'DarkGray'
-    white     = 'White'
-    bright    = 'Gray'
-    gold      = 'Yellow'
-}
-
-# ─── ANIMATED ASCII KITTY ────────────────────────────────────
-$Global:kittyFrames = @(
-    @"
-        /\_/\
-       ( o.o )
-        > ^ <
-       /|   |\
-      (_|   |_)
-"@,
-    @"
-        /\_/\
-       ( o.o )
-        > ^ <
-       /|   |\
-      (_|   |_)
-        |   |
-       _|   |_
-"@,
-    @"
-        /\_/\
-       ( o.o )
-        > ^ <
-       /|   |\
-      (_|   |_)
-        |   |
-       _|   |_
-      (___|___)
-"@,
-    @"
-        /\_/\
-       ( O.o )
-        > ^ <
-       /|   |\
-      (_|   |_)
-        |   |
-       _|   |_
-      (___|___)
-"@
-)
-
-# ─── ASCII ART ────────────────────────────────────────────────
-$ascii = @"
+# ─── ASCII BANNER ─────────────────────────────────────────────
+Write-Host @"
 ╔═══════════════════════════════════════════════════════════════╗
 ║                                                               ║
 ║      ██╗  ██╗███████╗████████╗████████╗███████╗██╗  ██╗     ║
@@ -80,53 +33,82 @@ $ascii = @"
 ║      ██║  ██╗███████╗   ██║      ██║   ███████╗██║  ██║     ║
 ║      ╚═╝  ╚═╝╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝     ║
 ║                                                               ║
-║           ⚡ OMEGA MOD SCANNER v7 ⚡                       ║
-║      ████████████████████████████████████████████████████   ║
-║      ██  OMEGA SCAN  ██  DEEP DETECTION  ██  TURBO       ██ ║
-║      ████████████████████████████████████████████████████   ║
+║           ⚡ ULTIMATE CHEATER CATCHER ⚡                    ║
+║                   DETECTS RATS & CHEATS                     ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
-"@
+"@ -ForegroundColor Magenta
 
-# ─── FUNCTIONS ─────────────────────────────────────────────────
-function Show-AnimatedHeader {
-    param([string]$Text, [string]$Color = 'Cyan')
+Write-Host ""
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
+Write-Host "  ⚡  CHEATER DETECTION ENGINE v8  ⚡" -ForegroundColor Cyan
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
+Write-Host ""
+Write-Host "  [LOADING] Initializing cheat detection..." -ForegroundColor Yellow
+Write-Host "  [LOADING] Loading signature database..." -ForegroundColor Yellow
+Write-Host "  [LOADING] Connecting to Modrinth API..." -ForegroundColor Yellow
+Write-Host ""
+
+# ─── LOADING BAR ──────────────────────────────────────────────
+for ($i = 0; $i -le 100; $i += 5) {
+    $bar = "["
+    $filled = [math]::Floor($i / 5)
+    $bar += ("█" * $filled).PadRight(20, "░")
+    $bar += "]"
+    Write-Host "`r  $bar $i% " -ForegroundColor Cyan -NoNewline
+    Start-Sleep -Milliseconds 20
+}
+Write-Host "`r  [████████████████████] 100% " -ForegroundColor Green
+Write-Host "  [SYSTEM] Ready to catch cheaters." -ForegroundColor Green
+Write-Host ""
+
+# ─── PATH INPUT ───────────────────────────────────────────────
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
+Write-Host "  📂  TARGET DIRECTORY" -ForegroundColor Cyan
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
+Write-Host ""
+Write-Host "  Enter path to the mods folder:" -ForegroundColor White
+Write-Host "  (press Enter to use default)" -ForegroundColor DarkGray
+Write-Host ""
+Write-Host "  ────▶ " -ForegroundColor Cyan -NoNewline
+$mods = Read-Host
+Write-Host ""
+
+if (-not $mods) {
+    $mods = Join-Path $env:APPDATA ".minecraft\mods"
+    Write-Host "  [SYSTEM] Using default path:" -ForegroundColor Yellow -NoNewline
+    Write-Host " $mods" -ForegroundColor White
     Write-Host ""
+}
+
+if (-not (Test-Path $mods -PathType Container)) {
+    Write-Host ""
+    Write-Host "  ⚠️  ERROR: Invalid path!" -ForegroundColor Red
+    Write-Host "  [SYSTEM] Terminating scan." -ForegroundColor Red
+    exit 1
+}
+
+Write-Host "  [SYSTEM] Target locked." -ForegroundColor Green
+Write-Host ""
+
+# ─── DEPENDENCIES ─────────────────────────────────────────────
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+# ─── MINECRAFT PROCESS ────────────────────────────────────────
+$process = Get-Process javaw -ErrorAction SilentlyContinue
+if (-not $process) { $process = Get-Process java -ErrorAction SilentlyContinue }
+if ($process) {
+    try { $elapsed = (Get-Date) - $process.StartTime } catch {}
     Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-    Write-Host "  $Text" -ForegroundColor $Color
+    Write-Host "  🖥️  MINECRAFT PROCESS" -ForegroundColor Cyan
     Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
+    Write-Host "  Process     : $($process.Name)" -ForegroundColor White
+    Write-Host "  PID         : $($process.Id)" -ForegroundColor White
+    Write-Host "  Uptime      : $($elapsed.Hours)h $($elapsed.Minutes)m $($elapsed.Seconds)s" -ForegroundColor White
     Write-Host ""
 }
 
-function Show-AnimatedBar {
-    param(
-        [string]$Message,
-        [int]$Duration = 30,
-        [string]$Color = 'Cyan'
-    )
-    for ($i = 0; $i -lt 20; $i++) {
-        $percent = [math]::Floor(($i / 20) * 100)
-        $bar = ($Global:progressChars[$i % 4] * $i).PadRight(20, '░')
-        Write-Host "`r  [$bar] $percent% $Message" -ForegroundColor $Color -NoNewline
-        Start-Sleep -Milliseconds ($Duration * 2)
-    }
-    Write-Host "`r  [████████████████████] 100% $Message" -ForegroundColor Green
-}
-
-function Write-Glitch {
-    param([string]$Text, [string]$Color = 'Red')
-    $chars = $Text.ToCharArray()
-    $output = ""
-    foreach ($c in $chars) {
-        if ((Get-Random -Minimum 1 -Maximum 15) -gt 12) {
-            $output += [char](Get-Random -Minimum 33 -Maximum 126)
-        } else {
-            $output += $c
-        }
-    }
-    Write-Host "  ⚡ $output" -ForegroundColor $Color
-}
-
+# ─── HELPERS ──────────────────────────────────────────────────
 function Get-JarHash {
     param([string]$Path, [string]$Algo = 'SHA1')
     return (Get-FileHash -Path $Path -Algorithm $Algo).Hash
@@ -139,18 +121,11 @@ function Get-ZoneIdentifier {
     return $null
 }
 
-# ─── INTELLIGENT CACHE ────────────────────────────────────────
-$script:cache = @{
-    Modrinth = @{}
-    Hash = @{}
-    Name = @{}
-}
-
-function Fetch-ModrinthCached {
+# ─── MODRINTH API ─────────────────────────────────────────────
+$modrinthCache = @{}
+function Fetch-Modrinth {
     param([string]$Sha1)
-    if ($script:cache.Modrinth.ContainsKey($Sha1)) { 
-        return $script:cache.Modrinth[$Sha1] 
-    }
+    if ($modrinthCache.ContainsKey($Sha1)) { return $modrinthCache[$Sha1] }
     $result = @{ Name = ""; Slug = "" }
     try {
         $ver = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/version_file/$Sha1" -Method Get -ErrorAction Stop
@@ -159,105 +134,56 @@ function Fetch-ModrinthCached {
             $result = @{ Name = $proj.title; Slug = $proj.slug }
         }
     } catch {}
-    $script:cache.Modrinth[$Sha1] = $result
+    $modrinthCache[$Sha1] = $result
     return $result
 }
 
-function Expand-JarSmart {
-    param([string]$JarPath, [string]$DestDir, [int]$MaxDepth = 2)
-    $queue = [System.Collections.Queue]::new()
-    $queue.Enqueue(@{ Path = $JarPath; Dest = $DestDir; Depth = 0 })
-    $processed = 0
-    
-    while ($queue.Count -gt 0 -and $processed -lt 10) {
-        $item = $queue.Dequeue()
-        if ($item.Depth -gt $MaxDepth) { continue }
-        
+# ─── EXTRACTOR ─────────────────────────────────────────────────
+function Expand-JarLimited {
+    param([string]$JarPath, [string]$DestDir)
+    try {
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($JarPath, $DestDir)
+    } catch {
+        return
+    }
+    # Check for nested jars but don't recurse too deep
+    $nested = Get-ChildItem -Path $DestDir -Recurse -Filter *.jar -File -ErrorAction SilentlyContinue
+    foreach ($n in $nested) {
+        $sub = Join-Path $n.DirectoryName ("_extract_" + [System.IO.Path]::GetFileNameWithoutExtension($n.Name))
+        New-Item -ItemType Directory -Path $sub -Force | Out-Null
         try {
-            [System.IO.Compression.ZipFile]::ExtractToDirectory($item.Path, $item.Dest)
-        } catch {
-            continue
-        }
-        
-        if ($item.Depth -lt $MaxDepth) {
-            $nested = Get-ChildItem -Path $item.Dest -Recurse -Filter *.jar -File -ErrorAction SilentlyContinue
-            foreach ($n in $nested) {
-                if ($processed -gt 10) { break }
-                $sub = Join-Path $n.DirectoryName ("_extract_" + [System.IO.Path]::GetFileNameWithoutExtension($n.Name))
-                New-Item -ItemType Directory -Path $sub -Force | Out-Null
-                $queue.Enqueue(@{ Path = $n.FullName; Dest = $sub; Depth = ($item.Depth + 1) })
-                $processed++
-            }
-        }
+            [System.IO.Compression.ZipFile]::ExtractToDirectory($n.FullName, $sub)
+        } catch {}
     }
 }
 
-function Get-CheatStringHitsFast {
-    param([string]$ExtractedDir)
-    $hits = [System.Collections.Generic.HashSet[string]]::new()
-    $files = Get-ChildItem -Path $ExtractedDir -Recurse -File -Include *.class -ErrorAction SilentlyContinue
-    
-    foreach ($f in $files) {
-        try {
-            $bytes = [System.IO.File]::ReadAllBytes($f.FullName)
-            if ($bytes.Length -gt 1048576) {
-                $bytes = $bytes[0..1048575]
-            }
-            $text = [System.Text.Encoding]::ASCII.GetString($bytes)
-        } catch { continue }
-        
-        foreach ($sig in $CheatStrings) {
-            if ($text -match [regex]::Escape($sig)) { 
-                $hits.Add($sig) | Out-Null 
-            }
-        }
-        
-        if ($hits.Count -gt 5) { break }
-    }
-    return $hits
-}
-
-# ─── MEGA CHEAT SIGNATURES ────────────────────────────────────
+# ─── CHEAT DETECTION ──────────────────────────────────────────
 $CheatClientNames = @(
     'wurst','meteorclient','impact','liquidbounce','aristois','future','lambdaclient',
     'rusherhack','sigmaclient','novoline','ghostclient','kamiblue','salhack','clickcrystals',
     'baritone','vengeance','immediatelyfast','sigma','jello','exhibition','vape','entropy',
-    'kuro','rise','flux','zero','raven','astolfo','exhibition','dortware','xenon',
-    'novoline','skilled','vanilla','tenacity','gamesense','skeet','primordial',
-    'azura','recode','fdp','fdpclient','crystal','aero','exhi','trident','skid','skidded'
+    'kuro','rise','flux','zero','raven','astolfo','exhibition','dortware','xenon'
 )
 
 $CheatStrings = @(
-    # Combat
     'AimAssist','KillAura','Reach','HitBox','Aura','BowAimbot','Velocity','AntiKnockback',
-    'Criticals','AutoClicker','HitSelect','MultiAura','TriggerBot','AxeSpam','ShieldBreaker',
-    # Movement
-    'Flight','BHop','SpeedMine','NoFall','Phase','Blink','Freecam','NoSlow','Scaffold',
-    'ElytraFly','JumpReset','LongJump','Strafe','Sprint','Fly','Glide','Step',
-    # World
-    'XRay','ESP','Nametags','Chams','Tracers','Radar','ChestStealer','Nuker',
-    'AutoCrystal','AutoAnchor','AutoDoubleHand','AutoHitCrystal','AutoPot','AutoTotem',
-    'AutoArmor','InventoryTotem','CrystalAura','AnchorMacro','HoleFiller','AutoBlockPlace',
-    # Utility
-    'PingSpoof','SelfDestruct','WebMacro','FastPlace','FastBreak','AutoGapple','AutoEat',
-    'AutoFish','AutoPearl','AutoSoup','AutoSwitch','AutoTrap','AutoMine','AutoBed',
-    # Client Specific
-    'Meteor','Wurst','Impact','Aristois','LiquidBounce','Future','RusherHack',
-    'Sigma','Novoline','GhostClient','KamiBlue','SalHack','ClickCrystals',
-    'Baritone','Vengeance','ImmediatelyFast','Exhibition','Vape','Entropy'
+    'Criticals','AutoClicker','Flight','BHop','SpeedMine','NoFall','Phase','Blink',
+    'Freecam','NoSlow','Scaffold','ElytraFly','XRay','ESP','Nametags','Chams',
+    'Tracers','Radar','ChestStealer','Nuker','AutoCrystal','AutoAnchor','AutoPot',
+    'AutoTotem','AutoArmor','CrystalAura','PingSpoof','SelfDestruct','FastPlace',
+    'FastBreak','ClickGUI','AltManager','Meteor','Wurst','Impact','Aristois',
+    'LiquidBounce','Future','RusherHack','Sigma','Novoline','GhostClient'
 )
 
 $LegitMods = @{
     'fabric' = $true; 'forge' = $true; 'optifine' = $true; 'sodium' = $true
     'lithium' = $true; 'phosphor' = $true; 'iris' = $true; 'indium' = $true
-    'continuity' = $true; 'cullleaves' = $true; 'distant-horizons' = $true
-    'entityculling' = $true; 'ferritecore' = $true; 'immediatelyfast' = $true
-    'krypton' = $true; 'lazy-dfu' = $true; 'memoryleakfix' = $true
-    'modernfix' = $true; 'spark' = $true; 'starlight' = $true
-    'viafabric' = $true; 'fabric-api' = $true; 'modmenu' = $true
-    'notenoughcrashes' = $true; 'light-overlay' = $true; 'worldedit' = $true
-    'jei' = $true; 'rei' = $true; 'emi' = $true; 'xaero' = $true
-    'journeymap' = $true; 'betterfps' = $true
+    'continuity' = $true; 'cullleaves' = $true; 'entityculling' = $true
+    'ferritecore' = $true; 'krypton' = $true; 'lazy-dfu' = $true
+    'memoryleakfix' = $true; 'modernfix' = $true; 'spark' = $true
+    'starlight' = $true; 'viafabric' = $true; 'fabric-api' = $true
+    'modmenu' = $true; 'worldedit' = $true; 'jei' = $true; 'rei' = $true
+    'emi' = $true; 'xaero' = $true; 'journeymap' = $true
 }
 
 function Get-NameHit {
@@ -269,218 +195,200 @@ function Get-NameHit {
     return ($CheatClientNames | Where-Object { $lower -match [regex]::Escape($_) } | Select-Object -First 1)
 }
 
-# ─── MAIN EXECUTION ───────────────────────────────────────────
-# Display header
-Write-Host $ascii -ForegroundColor Magenta
-Show-AnimatedHeader -Text "⚡ INITIALIZING OMEGA FORENSICS ENGINE ⚡" -Color 'Cyan'
-
-# Loading animation
-Show-AnimatedBar -Message "Loading omega signatures..." -Duration 15 -Color 'Cyan'
-Show-AnimatedBar -Message "Connecting to Modrinth API..." -Duration 20 -Color 'Magenta'
-Show-AnimatedBar -Message "Initializing turbo scan engine..." -Duration 12 -Color 'Green'
-
-Write-Host ""
-Write-Host "  [ SYSTEM ] All systems nominal." -ForegroundColor Green
-Write-Host "  [ SYSTEM ] Omega scan engine ready." -ForegroundColor Green
-Write-Host ""
-
-# Path input
-Show-AnimatedHeader -Text "📂 TARGET DIRECTORY" -Color 'Cyan'
-Write-Host ""
-Write-Host "  Enter path to the mods folder:" -ForegroundColor White
-Write-Host "  (press Enter to use default)" -ForegroundColor DarkGray
-Write-Host ""
-Write-Host "  ────▶ " -ForegroundColor Cyan -NoNewline
-$mods = Read-Host
-Write-Host ""
-
-if (-not $mods) {
-    $mods = Join-Path $env:APPDATA ".minecraft\mods"
-    Write-Host "  [ SYSTEM ] Using default path:" -ForegroundColor Yellow -NoNewline
-    Write-Host " $mods" -ForegroundColor White
-    Write-Host ""
-}
-
-if (-not (Test-Path $mods -PathType Container)) {
-    Write-Host ""
-    Write-Host "  ⚠️  ERROR: Invalid path!" -ForegroundColor Red
-    Write-Host "  [ SYSTEM ] Terminating scan." -ForegroundColor Red
-    exit 1
-}
-
-Write-Host "  [ SYSTEM ] Target locked." -ForegroundColor Green
-Write-Host ""
-
-# Minecraft process check
-Add-Type -AssemblyName System.IO.Compression.FileSystem
-$process = Get-Process javaw -ErrorAction SilentlyContinue
-if (-not $process) { $process = Get-Process java -ErrorAction SilentlyContinue }
-if ($process) {
-    try { $elapsed = (Get-Date) - $process.StartTime } catch {}
-    Show-AnimatedHeader -Text "🖥️ MINECRAFT PROCESS" -Color 'Cyan'
-    Write-Host "  Process     : $($process.Name)" -ForegroundColor White
-    Write-Host "  PID         : $($process.Id)" -ForegroundColor White
-    Write-Host "  Uptime      : $($elapsed.Hours)h $($elapsed.Minutes)m $($elapsed.Seconds)s" -ForegroundColor White
-    Write-Host ""
+function Get-CheatHits {
+    param([string]$ExtractedDir)
+    $hits = @()
+    $files = Get-ChildItem -Path $ExtractedDir -Recurse -File -Include *.class -ErrorAction SilentlyContinue
+    foreach ($f in $files) {
+        try {
+            $bytes = [System.IO.File]::ReadAllBytes($f.FullName)
+            if ($bytes.Length -gt 524288) { $bytes = $bytes[0..524287] }
+            $text = [System.Text.Encoding]::ASCII.GetString($bytes)
+        } catch { continue }
+        foreach ($sig in $CheatStrings) {
+            if ($text -match [regex]::Escape($sig)) { $hits += $sig }
+        }
+        if ($hits.Count -gt 10) { break }
+    }
+    return $hits | Select-Object -Unique
 }
 
 # ─── SCAN ──────────────────────────────────────────────────────
-Show-AnimatedHeader -Text "🔍 OMEGA SCANNING MODS" -Color 'Cyan'
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
+Write-Host "  🔍  SCANNING FOR CHEATERS" -ForegroundColor Cyan
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
 
 $verifiedMods = @()
-$unknownMods  = @()
-$cheatMods    = @()
+$unknownMods = @()
+$cheatMods = @()
 
 $jarFiles = Get-ChildItem -Path $mods -Filter *.jar -File
-$total    = $jarFiles.Count
-$counter  = 0
+$total = $jarFiles.Count
+$counter = 0
 $tempRoot = Join-Path $env:TEMP ("kettehlyzer_" + [guid]::NewGuid().ToString('N').Substring(0,8))
 New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
 
-# ─── ANIMATED SCAN ─────────────────────────────────────────────
 try {
     foreach ($file in $jarFiles) {
         $counter++
         $pct = [math]::Round(100 * $counter / $total)
-        
-        # Display kitty and progress
-        $kittyFrame = $Global:kittyFrames[$counter % $Global:kittyFrames.Length]
-        $spinnerChar = $Global:spinner[$counter % $Global:spinner.Length]
-        
-        Write-Host "`r$kittyFrame" -ForegroundColor Magenta -NoNewline
-        Write-Host "`r  [$spinnerChar] OMEGA SCAN: $counter/$total ($pct%)...$(' ' * 20)" -ForegroundColor Cyan -NoNewline
-        
-        # Name check
+        Write-Host "`r  [>>] Scanning $counter/$total ($pct%)...$(' ' * 30)" -ForegroundColor Cyan -NoNewline
+
+        # 1. NAME CHECK
         $nameHit = Get-NameHit -FileName $file.Name
         if ($nameHit) {
-            $cheatMods += [pscustomobject]@{ FileName = $file.Name; Reason = "name match: $nameHit" }
+            $cheatMods += [pscustomobject]@{ 
+                FileName = $file.Name
+                Reason = "NAME MATCH: $nameHit"
+                Type = "CLIENT"
+            }
             continue
         }
 
-        # Hash check
+        # 2. HASH CHECK
         $sha1 = Get-JarHash -Path $file.FullName -Algo SHA1
-        $known = Fetch-ModrinthCached -Sha1 $sha1
+        $known = Fetch-Modrinth -Sha1 $sha1
         if ($known.Slug) {
-            $verifiedMods += [pscustomobject]@{ ModName = $known.Name; FileName = $file.Name }
+            $verifiedMods += [pscustomobject]@{ 
+                ModName = $known.Name
+                FileName = $file.Name
+            }
             continue
         }
 
-        # Deep scan
+        # 3. DEEP SCAN
         $extractDir = Join-Path $tempRoot ([System.IO.Path]::GetFileNameWithoutExtension($file.Name))
         New-Item -ItemType Directory -Path $extractDir -Force | Out-Null
         
-        try {
-            Expand-JarSmart -JarPath $file.FullName -DestDir $extractDir -MaxDepth 2
-        } catch {
-            Remove-Item -Recurse -Force $extractDir -ErrorAction SilentlyContinue
-            continue
-        }
+        Expand-JarLimited -JarPath $file.FullName -DestDir $extractDir
 
-        $hits = Get-CheatStringHitsFast -ExtractedDir $extractDir
+        $hits = Get-CheatHits -ExtractedDir $extractDir
         if ($hits.Count -gt 0) {
-            $cheatMods += [pscustomobject]@{ FileName = $file.Name; Reason = "strings: $($hits -join ', ')" }
+            $cheatMods += [pscustomobject]@{ 
+                FileName = $file.Name
+                Reason = "STRING MATCH: $($hits[0..5] -join ', ')"
+                Type = "CHEAT"
+            }
         } else {
             $zone = Get-ZoneIdentifier -Path $file.FullName
-            $unknownMods += [pscustomobject]@{ FileName = $file.Name; ZoneId = $zone }
+            $unknownMods += [pscustomobject]@{ 
+                FileName = $file.Name
+                ZoneId = $zone
+            }
         }
         
         Remove-Item -Recurse -Force $extractDir -ErrorAction SilentlyContinue
     }
 } finally {
-    Write-Host "`r$(' ' * 80)`r" -NoNewline
+    Write-Host "`r$(' ' * 60)`r" -NoNewline
     Remove-Item -Recurse -Force $tempRoot -ErrorAction SilentlyContinue
 }
 
 # ─── RESULTS ──────────────────────────────────────────────────
 Write-Host ""
-Show-AnimatedHeader -Text "📊 OMEGA ANALYSIS COMPLETE" -Color 'Cyan'
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
+Write-Host "  📊  RESULTS" -ForegroundColor Cyan
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
+Write-Host ""
 
-# Summary
+# ─── SUMMARY ──────────────────────────────────────────────────
 Write-Host "  ┌─────────────────────────────────────────────────────────────────────┐" -ForegroundColor DarkMagenta
-Write-Host "  │  ✅ VERIFIED  │  ❓ UNKNOWN  │  🚨 FLAGGED  │  ⚡ TOTAL  │        " -ForegroundColor White
+Write-Host "  │  ✅ VERIFIED  │  ❓ UNKNOWN  │  🚨 CHEATERS  │  📦 TOTAL  │        " -ForegroundColor White
 Write-Host "  │  $($verifiedMods.Count.ToString().PadLeft(4))           │  $($unknownMods.Count.ToString().PadLeft(4))          │  $($cheatMods.Count.ToString().PadLeft(4))           │  $($total.ToString().PadLeft(4))        │        " -ForegroundColor White
 Write-Host "  └─────────────────────────────────────────────────────────────────────┘" -ForegroundColor DarkMagenta
 Write-Host ""
 
-# Verified
+# ─── VERIFIED ──────────────────────────────────────────────────
 if ($verifiedMods.Count -gt 0) {
-    Write-Host "  ═══ ✅ VERIFIED MODS ═══" -ForegroundColor Green
-    Write-Host ""
+    Write-Host "  ✅ VERIFIED MODS" -ForegroundColor Green
+    Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
     foreach ($mod in $verifiedMods) {
-        Write-Host "  ▸ " -NoNewline -ForegroundColor Green
-        Write-Host "$($mod.ModName)" -ForegroundColor Green -NoNewline
+        Write-Host "  ▸ $($mod.ModName)" -ForegroundColor Green -NoNewline
         Write-Host "  [$($mod.FileName)]" -ForegroundColor DarkGray
     }
     Write-Host ""
 }
 
-# Unknown
+# ─── UNKNOWN ──────────────────────────────────────────────────
 if ($unknownMods.Count -gt 0) {
-    Write-Host "  ═══ ❓ UNKNOWN MODS ═══" -ForegroundColor Yellow
-    Write-Host ""
+    Write-Host "  ❓ UNKNOWN MODS" -ForegroundColor Yellow
+    Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
     foreach ($mod in $unknownMods) {
         if ($mod.ZoneId) {
-            Write-Host "  ▸ " -NoNewline -ForegroundColor Yellow
-            Write-Host "$($mod.FileName)" -ForegroundColor Yellow -NoNewline
-            Write-Host "  [source: $($mod.ZoneId)]" -ForegroundColor DarkGray
+            Write-Host "  ▸ $($mod.FileName)" -ForegroundColor Yellow -NoNewline
+            Write-Host "  [downloaded from: $($mod.ZoneId)]" -ForegroundColor DarkGray
         } else {
-            Write-Host "  ▸ " -NoNewline -ForegroundColor Yellow
-            Write-Host "$($mod.FileName)" -ForegroundColor Yellow
+            Write-Host "  ▸ $($mod.FileName)" -ForegroundColor Yellow
         }
     }
     Write-Host ""
 }
 
-# Flagged
+# ─── CHEATERS ──────────────────────────────────────────────────
 if ($cheatMods.Count -gt 0) {
-    Write-Host "  ═══ 🚨 FLAGGED MODS ⚡ ═══" -ForegroundColor Red
-    Write-Host ""
+    Write-Host "  🚨 CHEATERS DETECTED!" -ForegroundColor Red
+    Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
     foreach ($mod in $cheatMods) {
-        Write-Glitch -Text "$($mod.FileName) — $($mod.Reason)" -Color 'Red'
+        Write-Host "  ⚡ $($mod.FileName)" -ForegroundColor Red -NoNewline
+        Write-Host "  — $($mod.Reason)" -ForegroundColor DarkMagenta
+        Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
     }
     Write-Host ""
 }
 
-# Stats
+# ─── SECURITY ASSESSMENT ──────────────────────────────────────
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host "  📊  OMEGA SCAN STATISTICS" -ForegroundColor Cyan
+Write-Host "  🛡️  SECURITY ASSESSMENT" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
-Write-Host "  Total Mods      : $total" -ForegroundColor White
+
+if ($cheatMods.Count -gt 0) {
+    Write-Host "  ⚠️  STATUS: COMPROMISED" -ForegroundColor Red
+    Write-Host "  ${cheatMods.Count} cheat clients/mods detected!" -ForegroundColor Red
+    Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "  ▸ These mods contain known cheat signatures" -ForegroundColor Yellow
+    Write-Host "  ▸ Remove them immediately to ensure fair play" -ForegroundColor Yellow
+} elseif ($unknownMods.Count -gt 3) {
+    Write-Host "  ⚠️  STATUS: CAUTION" -ForegroundColor Yellow
+    Write-Host "  $($unknownMods.Count) unknown mods found." -ForegroundColor Yellow
+    Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "  ▸ These mods couldn't be verified" -ForegroundColor Yellow
+    Write-Host "  ▸ Manual inspection recommended" -ForegroundColor Yellow
+} else {
+    Write-Host "  ✅ STATUS: CLEAN" -ForegroundColor Green
+    Write-Host "  No suspicious mods detected!" -ForegroundColor Green
+    Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "  ▸ All mods verified or safe" -ForegroundColor Green
+    Write-Host "  ▸ You're good to go!" -ForegroundColor Green
+}
+
+Write-Host ""
+
+# ─── STATS ─────────────────────────────────────────────────────
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
+Write-Host "  📊  SCAN STATISTICS" -ForegroundColor Cyan
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
+Write-Host ""
+Write-Host "  Total Scanned   : $total" -ForegroundColor White
 Write-Host "  Verified        : $($verifiedMods.Count)" -ForegroundColor Green
 Write-Host "  Unknown         : $($unknownMods.Count)" -ForegroundColor Yellow
-Write-Host "  Flagged         : $($cheatMods.Count)" -ForegroundColor Red
-Write-Host "  Scan Time       : $((Get-Date).ToString('HH:mm:ss'))" -ForegroundColor White
-Write-Host "  Omega Mode      : ACTIVE" -ForegroundColor Cyan
+Write-Host "  Cheaters Found  : $($cheatMods.Count)" -ForegroundColor Red
+Write-Host "  Scan Completed  : $((Get-Date).ToString('HH:mm:ss'))" -ForegroundColor White
 Write-Host ""
 
-# Security level
-if ($cheatMods.Count -gt 0) {
-    Write-Host "  ⚠️  SECURITY LEVEL: COMPROMISED" -ForegroundColor Red
-    Write-Host "  ${cheatMods.Count} potential cheat clients detected!" -ForegroundColor Red
-} elseif ($unknownMods.Count -gt 5) {
-    Write-Host "  ⚠️  SECURITY LEVEL: CAUTION" -ForegroundColor Yellow
-    Write-Host "  $($unknownMods.Count) unknown mods found!" -ForegroundColor Yellow
-} else {
-    Write-Host "  ✅ SECURITY LEVEL: CLEAN" -ForegroundColor Green
-    Write-Host "  No suspicious mods detected!" -ForegroundColor Green
-}
-Write-Host ""
-
-# Footer
+# ─── FOOTER ────────────────────────────────────────────────────
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host "  ⚡ OMEGA SCAN COMPLETE ⚡" -ForegroundColor Cyan
+Write-Host "  ⚡  SCAN COMPLETE  ⚡" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
-Write-Host "  Flagged/unknown entries deserve a manual look." -ForegroundColor Yellow
 Write-Host "  Stay safe, stay vigilant. 🔥" -ForegroundColor Magenta
 Write-Host ""
-Write-Host "  [ SYSTEM ] Ketteh's Omega Mod Analyzer v7 — Done." -ForegroundColor Green
+Write-Host "  [SYSTEM] Ketteh's Cheater Catcher v8 — Done." -ForegroundColor Green
 Write-Host ""
 
-# Kitty
-$finalKitty = @"
+# ─── KITTY ─────────────────────────────────────────────────────
+$kitty = @"
         /\_/\
        ( ^.^ )
         > ^ <
@@ -489,11 +397,7 @@ $finalKitty = @"
         |   |
        _|   |_
       (___|___)
-     🚀  OMEGA SCAN COMPLETE  🔥
 "@
-Write-Host $finalKitty -ForegroundColor Magenta
-Write-Host ""
-Write-Host "  ██████████████████████████████████████████████████████████████████" -ForegroundColor DarkMagenta
-Write-Host "  ██  POWERED BY KETTEH'S OMEGA MOD ANALYZER v7  ██" -ForegroundColor Magenta
-Write-Host "  ██████████████████████████████████████████████████████████████████" -ForegroundColor DarkMagenta
+Write-Host $kitty -ForegroundColor Magenta
+Write-Host "  🔥  Catching cheaters since 2024" -ForegroundColor Magenta
 Write-Host ""
