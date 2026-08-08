@@ -114,7 +114,7 @@ $CheatClientNames = @(
     'crystalaura','autocrystal','anchoraura','bedaura',
     'rusherhack','novoline','ghostclient','kamiblue','salhack','clickcrystals',
     'baritone','vengeance','exhibition','kuro','rise','flux',
-    'zero','raven','astolfo','dortware','xenon','tenacity'
+    'zero','astolfo','dortware','xenon','tenacity'
 )
 
 # ─── LEGIT MODS ─────────────────────────────────────────────────
