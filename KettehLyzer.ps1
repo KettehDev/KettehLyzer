@@ -1,699 +1,477 @@
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Net.Http;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+# ============================================================
+#  ██╗  ██╗███████╗████████╗████████╗███████╗██╗  ██╗██╗  ██╗
+#  ██║ ██╔╝██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██║  ██║██║  ╚██╗
+#  █████╔╝ █████╗     ██║      ██║   █████╗  ███████║██║   ╚██╗
+#  ██╔═██╗ ██╔══╝     ██║      ██║   ██╔══╝  ██╔══██║██║    ██║
+#  ██║  ██╗███████╗   ██║      ██║   ███████╗██║  ██║███████╗██║
+#  ╚═╝  ╚═╝╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝╚═╝
+#              KETTEH TOOLS GUI v1.0
+#           MULTI-TOOL JUSTICE SUITE 🔥
+# ============================================================
 
-namespace KettehTools
-{
-    public class KettehToolsApp : Form
-    {
-        // ===== COLORS =====
-        private readonly Color DarkBg = Color.FromArgb(10, 10, 20);
-        private readonly Color DarkCard = Color.FromArgb(20, 20, 40);
-        private readonly Color NeonPink = Color.FromArgb(255, 45, 155);
-        private readonly Color NeonCyan = Color.FromArgb(0, 212, 255);
-        private readonly Color NeonPurple = Color.FromArgb(180, 77, 255);
-        private readonly Color TextColor = Color.FromArgb(240, 240, 255);
-        private readonly Color TextMuted = Color.FromArgb(136, 136, 187);
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
+Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-        // ===== CONTROLS =====
-        private TabControl mainTabs;
-        private RichTextBox outputBox;
-        private TextBox modPathBox;
-        private Button scanButton, browseButton, hashButton, processButton;
-        private Label statusLabel, modCountLabel;
-        private ProgressBar progressBar;
-        private ListView resultListView;
+# ─── COLOR SCHEME ─────────────────────────────────────────────
+$DarkBg = [System.Drawing.Color]::FromArgb(10, 10, 20)
+$DarkCard = [System.Drawing.Color]::FromArgb(20, 20, 40)
+$NeonPink = [System.Drawing.Color]::FromArgb(255, 45, 155)
+$NeonCyan = [System.Drawing.Color]::FromArgb(0, 212, 255)
+$NeonPurple = [System.Drawing.Color]::FromArgb(180, 77, 255)
+$TextColor = [System.Drawing.Color]::FromArgb(240, 240, 255)
+$TextMuted = [System.Drawing.Color]::FromArgb(136, 136, 187)
 
-        public KettehToolsApp()
-        {
-            this.Text = "⚡ KETTEH TOOLS ⚡";
-            this.Size = new Size(1100, 750);
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.BackColor = DarkBg;
-            this.FormBorderStyle = FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
+# ─── MAIN FORM ─────────────────────────────────────────────────
+$form = New-Object System.Windows.Forms.Form
+$form.Text = "⚡ KETTEH TOOLS ⚡"
+$form.Size = New-Object System.Drawing.Size(1100, 750)
+$form.StartPosition = "CenterScreen"
+$form.BackColor = $DarkBg
+$form.FormBorderStyle = "FixedSingle"
+$form.MaximizeBox = $false
+$form.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon((Get-Command powershell).Path)
 
-            // Set icon
-            this.Icon = SystemIcons.Shield;
+# ─── HEADER ────────────────────────────────────────────────────
+$header = New-Object System.Windows.Forms.Label
+$header.Text = "⚡ KETTEH TOOLS ⚡"
+$header.Font = New-Object System.Drawing.Font("Consolas", 18, [System.Drawing.FontStyle]::Bold)
+$header.ForeColor = $NeonPink
+$header.BackColor = $DarkBg
+$header.Dock = "Top"
+$header.Height = 50
+$header.TextAlign = "MiddleCenter"
+$form.Controls.Add($header)
 
-            InitializeUI();
-            ApplyTheme();
+# ─── TAB CONTROL ──────────────────────────────────────────────
+$tabControl = New-Object System.Windows.Forms.TabControl
+$tabControl.Dock = "Fill"
+$tabControl.BackColor = $DarkBg
+$tabControl.ForeColor = $TextColor
+$tabControl.Font = New-Object System.Drawing.Font("Segoe UI", 10)
+$tabControl.Padding = New-Object System.Drawing.Point(10, 5)
+$tabControl.Top = 50
+$form.Controls.Add($tabControl)
+
+# ============================================================
+#  TAB 1: MOD SCANNER
+# ============================================================
+$tabModScanner = New-Object System.Windows.Forms.TabPage
+$tabModScanner.Text = "🔍 Mod Scanner"
+$tabModScanner.BackColor = $DarkBg
+$tabControl.TabPages.Add($tabModScanner)
+
+# Path input
+$pathLabel = New-Object System.Windows.Forms.Label
+$pathLabel.Text = "📂 Mods Folder:"
+$pathLabel.ForeColor = $TextColor
+$pathLabel.Location = New-Object System.Drawing.Point(20, 20)
+$pathLabel.Size = New-Object System.Drawing.Size(100, 25)
+$pathLabel.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
+$tabModScanner.Controls.Add($pathLabel)
+
+$modPathBox = New-Object System.Windows.Forms.TextBox
+$modPathBox.Location = New-Object System.Drawing.Point(130, 20)
+$modPathBox.Size = New-Object System.Drawing.Size(600, 25)
+$modPathBox.BackColor = $DarkCard
+$modPathBox.ForeColor = $TextColor
+$modPathBox.BorderStyle = "FixedSingle"
+$modPathBox.Font = New-Object System.Drawing.Font("Segoe UI", 10)
+$modPathBox.Text = Join-Path $env:APPDATA ".minecraft\mods"
+$tabModScanner.Controls.Add($modPathBox)
+
+# Browse button
+$browseBtn = New-Object System.Windows.Forms.Button
+$browseBtn.Text = "📁 Browse"
+$browseBtn.Location = New-Object System.Drawing.Point(740, 18)
+$browseBtn.Size = New-Object System.Drawing.Size(100, 30)
+$browseBtn.BackColor = $DarkCard
+$browseBtn.ForeColor = $NeonCyan
+$browseBtn.FlatStyle = "Flat"
+$browseBtn.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
+$browseBtn.FlatAppearance.BorderColor = $NeonCyan
+$browseBtn.FlatAppearance.BorderSize = 1
+$browseBtn.Add_Click({
+    $folderBrowser = New-Object System.Windows.Forms.FolderBrowserDialog
+    $folderBrowser.Description = "Select your Minecraft mods folder"
+    $folderBrowser.SelectedPath = $modPathBox.Text
+    if ($folderBrowser.ShowDialog() -eq "OK") {
+        $modPathBox.Text = $folderBrowser.SelectedPath
+    }
+})
+$tabModScanner.Controls.Add($browseBtn)
+
+# Scan button
+$scanBtn = New-Object System.Windows.Forms.Button
+$scanBtn.Text = "🚀 SCAN"
+$scanBtn.Location = New-Object System.Drawing.Point(850, 18)
+$scanBtn.Size = New-Object System.Drawing.Size(120, 30)
+$scanBtn.BackColor = $NeonPink
+$scanBtn.ForeColor = [System.Drawing.Color]::White
+$scanBtn.FlatStyle = "Flat"
+$scanBtn.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
+$scanBtn.FlatAppearance.BorderSize = 0
+$tabModScanner.Controls.Add($scanBtn)
+
+# Status labels
+$statusLabel = New-Object System.Windows.Forms.Label
+$statusLabel.Text = "Ready"
+$statusLabel.ForeColor = $TextMuted
+$statusLabel.Location = New-Object System.Drawing.Point(20, 60)
+$statusLabel.Size = New-Object System.Drawing.Size(300, 20)
+$statusLabel.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$tabModScanner.Controls.Add($statusLabel)
+
+$modCountLabel = New-Object System.Windows.Forms.Label
+$modCountLabel.Text = "Mods: 0"
+$modCountLabel.ForeColor = $TextMuted
+$modCountLabel.Location = New-Object System.Drawing.Point(350, 60)
+$modCountLabel.Size = New-Object System.Drawing.Size(200, 20)
+$modCountLabel.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$tabModScanner.Controls.Add($modCountLabel)
+
+# Progress bar
+$progressBar = New-Object System.Windows.Forms.ProgressBar
+$progressBar.Location = New-Object System.Drawing.Point(20, 85)
+$progressBar.Size = New-Object System.Drawing.Size(950, 20)
+$progressBar.Style = "Continuous"
+$progressBar.ForeColor = $NeonPink
+$progressBar.BackColor = $DarkCard
+$tabModScanner.Controls.Add($progressBar)
+
+# Results ListView
+$resultListView = New-Object System.Windows.Forms.ListView
+$resultListView.Location = New-Object System.Drawing.Point(20, 115)
+$resultListView.Size = New-Object System.Drawing.Size(950, 300)
+$resultListView.BackColor = $DarkCard
+$resultListView.ForeColor = $TextColor
+$resultListView.Font = New-Object System.Drawing.Font("Consolas", 9)
+$resultListView.BorderStyle = "FixedSingle"
+$resultListView.FullRowSelect = $true
+$resultListView.GridLines = $true
+$resultListView.View = "Details"
+$resultListView.Columns.Add("Mod Name", 300)
+$resultListView.Columns.Add("Status", 150)
+$resultListView.Columns.Add("Reason", 450)
+$tabModScanner.Controls.Add($resultListView)
+
+# Output box
+$outputBox = New-Object System.Windows.Forms.RichTextBox
+$outputBox.Location = New-Object System.Drawing.Point(20, 425)
+$outputBox.Size = New-Object System.Drawing.Size(950, 180)
+$outputBox.BackColor = $DarkCard
+$outputBox.ForeColor = $TextColor
+$outputBox.Font = New-Object System.Drawing.Font("Consolas", 9)
+$outputBox.BorderStyle = "FixedSingle"
+$outputBox.ReadOnly = $true
+$outputBox.WordWrap = $true
+$tabModScanner.Controls.Add($outputBox)
+
+# ─── SCAN FUNCTION ─────────────────────────────────────────────
+$scanBtn.Add_Click({
+    $modsPath = $modPathBox.Text
+    
+    if (-not (Test-Path $modsPath)) {
+        [System.Windows.Forms.MessageBox]::Show("Invalid mods folder path!", "Error", "OK", "Error")
+        return
+    }
+    
+    $scanBtn.Enabled = $false
+    $progressBar.Value = 0
+    $resultListView.Items.Clear()
+    $outputBox.Clear()
+    $statusLabel.Text = "🔍 Scanning..."
+    
+    $jarFiles = Get-ChildItem -Path $modsPath -Filter *.jar -File
+    $modCountLabel.Text = "Mods: $($jarFiles.Count)"
+    
+    $cheatMods = @()
+    $verifiedMods = @()
+    $unknownMods = @()
+    
+    $total = $jarFiles.Count
+    $counter = 0
+    
+    $cheatNames = @(
+        'wurst','meteor','impact','liquidbounce','aristois','future',
+        'sigma','vape','entropy','dqrkis','ketteh','eventplugin',
+        'crystalaura','autocrystal','anchoraura','bedaura',
+        'client','hack','cheat','module'
+    )
+    
+    $legitMods = @(
+        'fabric','forge','sodium','lithium','phosphor','iris',
+        'modmenu','worldedit','jei','anchoroptimizer','crystaloptimizer',
+        'crossbowoptimizer','consumableoptimizer','optimizer','glow'
+    )
+    
+    foreach ($file in $jarFiles) {
+        $counter++
+        $pct = [math]::Round(100 * $counter / $total)
+        $progressBar.Value = $pct
+        $statusLabel.Text = "🔍 Scanning $($file.Name) ($counter/$total)"
+        
+        $isCheat = $false
+        $reason = ""
+        $fileName = $file.Name.ToLower()
+        
+        # Check if legit
+        $isLegit = $false
+        foreach ($legit in $legitMods) {
+            if ($fileName -match $legit) { $isLegit = $true; break }
         }
-
-        private void InitializeUI()
-        {
-            // ─── TOP HEADER ──────────────────────────────────────────
-            Label header = new Label
-            {
-                Text = "⚡ KETTEH TOOLS ⚡",
-                Font = new Font("Consolas", 18, FontStyle.Bold),
-                ForeColor = NeonPink,
-                BackColor = DarkBg,
-                Dock = DockStyle.Top,
-                Height = 50,
-                TextAlign = ContentAlignment.MiddleCenter
-            };
-            this.Controls.Add(header);
-
-            // ─── MAIN TAB CONTROL ──────────────────────────────────
-            mainTabs = new TabControl
-            {
-                Dock = DockStyle.Fill,
-                BackColor = DarkBg,
-                ForeColor = TextColor,
-                Font = new Font("Segoe UI", 10, FontStyle.Regular),
-                Padding = new Point(10, 5),
-                Top = 50,
-                Height = this.ClientSize.Height - 50
-            };
-            this.Controls.Add(mainTabs);
-
-            // ─── TAB 1: MOD SCANNER ───────────────────────────────
-            TabPage modScannerTab = new TabPage("🔍 Mod Scanner");
-            modScannerTab.BackColor = DarkBg;
-            mainTabs.TabPages.Add(modScannerTab);
-
-            // Path input
-            Label pathLabel = new Label
-            {
-                Text = "📂 Mods Folder:",
-                ForeColor = TextColor,
-                Location = new Point(20, 20),
-                Size = new Size(100, 25),
-                Font = new Font("Segoe UI", 10, FontStyle.Bold)
-            };
-            modScannerTab.Controls.Add(pathLabel);
-
-            modPathBox = new TextBox
-            {
-                Location = new Point(130, 20),
-                Size = new Size(600, 25),
-                BackColor = DarkCard,
-                ForeColor = TextColor,
-                BorderStyle = BorderStyle.FixedSingle,
-                Font = new Font("Segoe UI", 10),
-                Text = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".minecraft", "mods")
-            };
-            modScannerTab.Controls.Add(modPathBox);
-
-            browseButton = new Button
-            {
-                Text = "📁 Browse",
-                Location = new Point(740, 18),
-                Size = new Size(100, 30),
-                BackColor = DarkCard,
-                ForeColor = NeonCyan,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold)
-            };
-            browseButton.FlatAppearance.BorderColor = NeonCyan;
-            browseButton.FlatAppearance.BorderSize = 1;
-            browseButton.Click += BrowseButton_Click;
-            modScannerTab.Controls.Add(browseButton);
-
-            scanButton = new Button
-            {
-                Text = "🚀 SCAN",
-                Location = new Point(850, 18),
-                Size = new Size(120, 30),
-                BackColor = NeonPink,
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold)
-            };
-            scanButton.FlatAppearance.BorderSize = 0;
-            scanButton.Click += ScanButton_Click;
-            modScannerTab.Controls.Add(scanButton);
-
-            // Status
-            statusLabel = new Label
-            {
-                Text = "Ready",
-                ForeColor = TextMuted,
-                Location = new Point(20, 60),
-                Size = new Size(300, 20),
-                Font = new Font("Segoe UI", 9)
-            };
-            modScannerTab.Controls.Add(statusLabel);
-
-            modCountLabel = new Label
-            {
-                Text = "Mods: 0",
-                ForeColor = TextMuted,
-                Location = new Point(350, 60),
-                Size = new Size(200, 20),
-                Font = new Font("Segoe UI", 9)
-            };
-            modScannerTab.Controls.Add(modCountLabel);
-
-            // Progress Bar
-            progressBar = new ProgressBar
-            {
-                Location = new Point(20, 85),
-                Size = new Size(950, 20),
-                Style = ProgressBarStyle.Continuous,
-                ForeColor = NeonPink,
-                BackColor = DarkCard
-            };
-            modScannerTab.Controls.Add(progressBar);
-
-            // Results List
-            resultListView = new ListView
-            {
-                Location = new Point(20, 115),
-                Size = new Size(950, 300),
-                BackColor = DarkCard,
-                ForeColor = TextColor,
-                Font = new Font("Consolas", 9),
-                BorderStyle = BorderStyle.FixedSingle,
-                FullRowSelect = true,
-                GridLines = true,
-                View = View.Details
-            };
-            resultListView.Columns.Add("Mod Name", 300);
-            resultListView.Columns.Add("Status", 150);
-            resultListView.Columns.Add("Reason", 450);
-            resultListView.Columns.Add("Type", 150);
-            modScannerTab.Controls.Add(resultListView);
-
-            // Output Box
-            outputBox = new RichTextBox
-            {
-                Location = new Point(20, 425),
-                Size = new Size(950, 180),
-                BackColor = DarkCard,
-                ForeColor = TextColor,
-                Font = new Font("Consolas", 9),
-                BorderStyle = BorderStyle.FixedSingle,
-                ReadOnly = true,
-                WordWrap = true
-            };
-            modScannerTab.Controls.Add(outputBox);
-
-            // ─── TAB 2: TOOLS ───────────────────────────────────────
-            TabPage toolsTab = new TabPage("🛠 Tools");
-            toolsTab.BackColor = DarkBg;
-            mainTabs.TabPages.Add(toolsTab);
-
-            // ─── TAB 3: ABOUT ──────────────────────────────────────
-            TabPage aboutTab = new TabPage("ℹ About");
-            aboutTab.BackColor = DarkBg;
-            mainTabs.TabPages.Add(aboutTab);
-
-            Label aboutLabel = new Label
-            {
-                Text = "⚡ KETTEH TOOLS v2.0 ⚡\n\n" +
-                       "🔍 Mod Scanner - Detect cheats in your mods folder\n" +
-                       "🔒 File Hasher - Get SHA1/MD5 of any file\n" +
-                       "🖥️ Process Scanner - Scan running processes\n\n" +
-                       "🔥 Made by Ketteh - Justice Served",
-                ForeColor = TextColor,
-                Location = new Point(50, 50),
-                Size = new Size(800, 300),
-                Font = new Font("Segoe UI", 12),
-                TextAlign = ContentAlignment.MiddleCenter
-            };
-            aboutTab.Controls.Add(aboutLabel);
-
-            // ─── TOOLS TAB CONTROLS ─────────────────────────────────
-            int toolsY = 20;
-
-            // File Hasher
-            Label hashLabel = new Label
-            {
-                Text = "🔒 File Hasher:",
-                ForeColor = TextColor,
-                Location = new Point(20, toolsY),
-                Size = new Size(100, 25),
-                Font = new Font("Segoe UI", 10, FontStyle.Bold)
-            };
-            toolsTab.Controls.Add(hashLabel);
-
-            TextBox hashPathBox = new TextBox
-            {
-                Location = new Point(130, toolsY),
-                Size = new Size(600, 25),
-                BackColor = DarkCard,
-                ForeColor = TextColor,
-                BorderStyle = BorderStyle.FixedSingle,
-                Font = new Font("Segoe UI", 10),
-                Name = "hashPathBox"
-            };
-            toolsTab.Controls.Add(hashPathBox);
-
-            Button hashBrowseBtn = new Button
-            {
-                Text = "📁 Browse",
-                Location = new Point(740, toolsY - 2),
-                Size = new Size(100, 30),
-                BackColor = DarkCard,
-                ForeColor = NeonCyan,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold)
-            };
-            hashBrowseBtn.FlatAppearance.BorderColor = NeonCyan;
-            hashBrowseBtn.FlatAppearance.BorderSize = 1;
-            hashBrowseBtn.Click += (s, e) => {
-                using (OpenFileDialog ofd = new OpenFileDialog())
-                {
-                    if (ofd.ShowDialog() == DialogResult.OK)
-                    {
-                        hashPathBox.Text = ofd.FileName;
-                        HashFile(ofd.FileName);
-                    }
-                }
-            };
-            toolsTab.Controls.Add(hashBrowseBtn);
-
-            hashButton = new Button
-            {
-                Text = "🔐 Hash It!",
-                Location = new Point(850, toolsY - 2),
-                Size = new Size(100, 30),
-                BackColor = NeonPurple,
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold)
-            };
-            hashButton.FlatAppearance.BorderSize = 0;
-            hashButton.Click += (s, e) => {
-                if (!string.IsNullOrEmpty(hashPathBox.Text) && File.Exists(hashPathBox.Text))
-                {
-                    HashFile(hashPathBox.Text);
-                }
-                else
-                {
-                    MessageBox.Show("Please select a valid file!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
-            };
-            toolsTab.Controls.Add(hashButton);
-
-            toolsY += 50;
-
-            // Process Scanner
-            Label procLabel = new Label
-            {
-                Text = "🖥️ Process Scanner:",
-                ForeColor = TextColor,
-                Location = new Point(20, toolsY),
-                Size = new Size(120, 25),
-                Font = new Font("Segoe UI", 10, FontStyle.Bold)
-            };
-            toolsTab.Controls.Add(procLabel);
-
-            processButton = new Button
-            {
-                Text = "🔍 Scan Processes",
-                Location = new Point(150, toolsY - 2),
-                Size = new Size(150, 30),
-                BackColor = NeonCyan,
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold)
-            };
-            processButton.FlatAppearance.BorderSize = 0;
-            processButton.Click += ProcessButton_Click;
-            toolsTab.Controls.Add(processButton);
-
-            RichTextBox procOutput = new RichTextBox
-            {
-                Location = new Point(20, toolsY + 40),
-                Size = new Size(960, 350),
-                BackColor = DarkCard,
-                ForeColor = TextColor,
-                Font = new Font("Consolas", 9),
-                BorderStyle = BorderStyle.FixedSingle,
-                ReadOnly = true,
-                Name = "procOutput"
-            };
-            toolsTab.Controls.Add(procOutput);
-        }
-
-        private void ApplyTheme()
-        {
-            foreach (Control ctrl in this.Controls)
-            {
-                ApplyThemeToControl(ctrl);
-            }
-        }
-
-        private void ApplyThemeToControl(Control ctrl)
-        {
-            if (ctrl is Button btn)
-            {
-                btn.FlatStyle = FlatStyle.Flat;
-                btn.FlatAppearance.BorderSize = 1;
-                btn.FlatAppearance.BorderColor = NeonPink;
-                btn.BackColor = DarkCard;
-                btn.ForeColor = TextColor;
-                btn.Font = new Font("Segoe UI", 9, FontStyle.Bold);
-            }
-            else if (ctrl is TextBox txt)
-            {
-                txt.BackColor = DarkCard;
-                txt.ForeColor = TextColor;
-                txt.BorderStyle = BorderStyle.FixedSingle;
-            }
-            else if (ctrl is RichTextBox rtb)
-            {
-                rtb.BackColor = DarkCard;
-                rtb.ForeColor = TextColor;
-                rtb.BorderStyle = BorderStyle.FixedSingle;
-            }
-            else if (ctrl is ListView lv)
-            {
-                lv.BackColor = DarkCard;
-                lv.ForeColor = TextColor;
-                lv.GridLines = true;
-            }
-
-            foreach (Control child in ctrl.Controls)
-            {
-                ApplyThemeToControl(child);
-            }
-        }
-
-        // ─── BROWSE BUTTON ──────────────────────────────────────────
-        private void BrowseButton_Click(object sender, EventArgs e)
-        {
-            using (FolderBrowserDialog fbd = new FolderBrowserDialog())
-            {
-                fbd.Description = "Select your Minecraft mods folder";
-                fbd.SelectedPath = modPathBox.Text;
-                if (fbd.ShowDialog() == DialogResult.OK)
-                {
-                    modPathBox.Text = fbd.SelectedPath;
+        
+        if (-not $isLegit) {
+            foreach ($cheat in $cheatNames) {
+                if ($fileName -match $cheat) {
+                    $isCheat = $true
+                    $reason = "BLATANT CHEAT: $cheat"
+                    break
                 }
             }
         }
-
-        // ─── SCAN BUTTON ────────────────────────────────────────────
-        private async void ScanButton_Click(object sender, EventArgs e)
-        {
-            string modsPath = modPathBox.Text;
-
-            if (!Directory.Exists(modsPath))
-            {
-                MessageBox.Show("Invalid mods folder path!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            scanButton.Enabled = false;
-            progressBar.Value = 0;
-            resultListView.Items.Clear();
-            outputBox.Clear();
-            statusLabel.Text = "🔍 Scanning...";
-
-            var jarFiles = Directory.GetFiles(modsPath, "*.jar");
-            modCountLabel.Text = $"Mods: {jarFiles.Length}";
-
-            var cheats = new List<string>();
-            var verified = new List<string>();
-            var unknown = new List<string>();
-
-            int total = jarFiles.Length;
-            int processed = 0;
-
-            await Task.Run(() =>
-            {
-                foreach (string file in jarFiles)
-                {
-                    string fileName = Path.GetFileName(file);
-                    processed++;
-
-                    this.Invoke((MethodInvoker)delegate
-                    {
-                        int percent = (processed * 100) / total;
-                        progressBar.Value = Math.Min(percent, 100);
-                        statusLabel.Text = $"🔍 Scanning {fileName} ({processed}/{total})";
-                    });
-
-                    // Check if it's a cheat by name
-                    string lowerName = fileName.ToLower();
-                    bool isCheat = false;
-                    string reason = "";
-
-                    string[] cheatNames = {
-                        "wurst", "meteor", "impact", "liquidbounce", "aristois", "future",
-                        "sigma", "vape", "entropy", "dqrkis", "ketteh", "eventplugin",
-                        "crystalaura", "autocrystal", "anchoraura", "bedaura",
-                        "client", "hack", "cheat", "module"
-                    };
-
-                    foreach (string cheat in cheatNames)
-                    {
-                        if (lowerName.Contains(cheat))
-                        {
-                            isCheat = true;
-                            reason = $"BLATANT CHEAT: {cheat}";
-                            break;
-                        }
-                    }
-
-                    if (isCheat)
-                    {
-                        cheats.Add($"🚨 {fileName} — {reason}");
-                        this.Invoke((MethodInvoker)delegate
-                        {
-                            var item = new ListViewItem(fileName);
-                            item.SubItems.Add("🚨 CHEAT");
-                            item.SubItems.Add(reason);
-                            item.SubItems.Add("CLIENT");
-                            item.BackColor = Color.FromArgb(40, 0, 0);
-                            item.ForeColor = Color.Red;
-                            resultListView.Items.Add(item);
-                        });
-                        continue;
-                    }
-
-                    // Check hash against Modrinth
-                    try
-                    {
-                        string sha1 = GetFileHash(file, "SHA1");
-                        bool isVerified = CheckModrinth(sha1).Result;
-
-                        if (isVerified)
-                        {
-                            verified.Add($"✅ {fileName} — Verified");
-                            this.Invoke((MethodInvoker)delegate
-                            {
-                                var item = new ListViewItem(fileName);
-                                item.SubItems.Add("✅ VERIFIED");
-                                item.SubItems.Add("Verified by Modrinth");
-                                item.SubItems.Add("SAFE");
-                                item.BackColor = Color.FromArgb(0, 40, 0);
-                                item.ForeColor = Color.Green;
-                                resultListView.Items.Add(item);
-                            });
-                        }
-                        else
-                        {
-                            unknown.Add($"❓ {fileName} — Unknown");
-                            this.Invoke((MethodInvoker)delegate
-                            {
-                                var item = new ListViewItem(fileName);
-                                item.SubItems.Add("❓ UNKNOWN");
-                                item.SubItems.Add("Not verified by Modrinth");
-                                item.SubItems.Add("UNKNOWN");
-                                item.BackColor = Color.FromArgb(40, 40, 0);
-                                item.ForeColor = Color.Yellow;
-                                resultListView.Items.Add(item);
-                            });
-                        }
-                    }
-                    catch
-                    {
-                        unknown.Add($"❓ {fileName} — Error scanning");
-                    }
-                }
-            });
-
-            statusLabel.Text = "✅ Scan Complete!";
-            progressBar.Value = 100;
-            scanButton.Enabled = true;
-
-            // Output summary
-            outputBox.AppendText("═══════════════════════════════════════════════════════════════════\n");
-            outputBox.AppendText($"📊 SCAN RESULTS\n");
-            outputBox.AppendText($"═══════════════════════════════════════════════════════════════════\n\n");
-            outputBox.AppendText($"🚨 Cheats Found: {cheats.Count}\n", Color.Red);
-            outputBox.AppendText($"✅ Verified: {verified.Count}\n", Color.Green);
-            outputBox.AppendText($"❓ Unknown: {unknown.Count}\n", Color.Yellow);
-            outputBox.AppendText($"📦 Total: {total}\n", Color.White);
-            outputBox.AppendText($"\n═══════════════════════════════════════════════════════════════════\n");
-
-            if (cheats.Count > 0)
-            {
-                outputBox.AppendText($"\n🚨 CHEATS DETECTED:\n", Color.Red);
-                foreach (string cheat in cheats)
-                {
-                    outputBox.AppendText($"  {cheat}\n", Color.Red);
-                }
-            }
-
-            if (verified.Count > 0)
-            {
-                outputBox.AppendText($"\n✅ VERIFIED MODS:\n", Color.Green);
-                foreach (string v in verified.Take(10))
-                {
-                    outputBox.AppendText($"  {v}\n", Color.Green);
-                }
-                if (verified.Count > 10) outputBox.AppendText($"  ... and {verified.Count - 10} more\n", Color.Gray);
-            }
-
-            if (unknown.Count > 0)
-            {
-                outputBox.AppendText($"\n❓ UNKNOWN MODS:\n", Color.Yellow);
-                foreach (string u in unknown.Take(10))
-                {
-                    outputBox.AppendText($"  {u}\n", Color.Yellow);
-                }
-                if (unknown.Count > 10) outputBox.AppendText($"  ... and {unknown.Count - 10} more\n", Color.Gray);
-            }
-        }
-
-        // ─── HELPERS ────────────────────────────────────────────────
-        private string GetFileHash(string filePath, string algorithm)
-        {
-            using (var stream = File.OpenRead(filePath))
-            {
-                HashAlgorithm algo = algorithm == "SHA1" ? SHA1.Create() : MD5.Create();
-                byte[] hash = algo.ComputeHash(stream);
-                return BitConverter.ToString(hash).Replace("-", "").ToLower();
-            }
-        }
-
-        private async Task<bool> CheckModrinth(string sha1)
-        {
-            try
-            {
-                using (var client = new HttpClient())
-                {
-                    client.Timeout = TimeSpan.FromSeconds(5);
-                    var response = await client.GetAsync($"https://api.modrinth.com/v2/version_file/{sha1}");
-                    return response.IsSuccessStatusCode;
-                }
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private void HashFile(string filePath)
-        {
-            try
-            {
-                string sha1 = GetFileHash(filePath, "SHA1");
-                string md5 = GetFileHash(filePath, "MD5");
-                string output = $"═══════════════════════════════════════════════════════════════════\n";
-                output += $"🔐 FILE HASH RESULTS\n";
-                output += $"═══════════════════════════════════════════════════════════════════\n\n";
-                output += $"📁 File: {Path.GetFileName(filePath)}\n";
-                output += $"📂 Path: {filePath}\n";
-                output += $"📦 Size: {new FileInfo(filePath).Length:N0} bytes\n\n";
-                output += $"🔑 SHA1: {sha1}\n";
-                output += $"🔑 MD5:  {md5}\n";
-                output += $"\n═══════════════════════════════════════════════════════════════════\n";
-
-                // Find output box in tools tab
-                var procOutput = mainTabs.TabPages[1].Controls.Find("procOutput", true).FirstOrDefault() as RichTextBox;
-                if (procOutput != null)
-                {
-                    procOutput.Text = output;
-                    procOutput.AppendText("\n✅ Hash calculation complete!", Color.Green);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error hashing file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void ProcessButton_Click(object sender, EventArgs e)
-        {
-            var procOutput = mainTabs.TabPages[1].Controls.Find("procOutput", true).FirstOrDefault() as RichTextBox;
-            if (procOutput == null) return;
-
-            procOutput.Clear();
-            procOutput.AppendText("═══════════════════════════════════════════════════════════════════\n");
-            procOutput.AppendText("🖥️ RUNNING PROCESSES\n");
-            procOutput.AppendText("═══════════════════════════════════════════════════════════════════\n\n");
-
-            var processes = System.Diagnostics.Process.GetProcesses();
-
-            // Check for Minecraft
-            var mcProcesses = processes.Where(p => p.ProcessName.ToLower().Contains("java") || p.ProcessName.ToLower().Contains("javaw"));
-            var otherProcesses = processes.Where(p => !p.ProcessName.ToLower().Contains("java") && !p.ProcessName.ToLower().Contains("javaw"));
-
-            procOutput.AppendText("🎮 MINECRAFT PROCESSES:\n", Color.Cyan);
-            if (mcProcesses.Any())
-            {
-                foreach (var p in mcProcesses)
-                {
-                    try
-                    {
-                        procOutput.AppendText($"  ▶ {p.ProcessName}.exe (PID: {p.Id}) — Running\n", Color.Green);
-                    }
-                    catch { }
-                }
-            }
-            else
-            {
-                procOutput.AppendText("  ❌ No Minecraft processes found\n", Color.Red);
-            }
-
-            procOutput.AppendText("\n📊 OTHER PROCESSES: (Top 20)\n", Color.Cyan);
-            int count = 0;
-            foreach (var p in otherProcesses.OrderBy(p => p.ProcessName))
-            {
-                if (count++ > 20) break;
-                try
-                {
-                    string mem = (p.WorkingSet64 / 1024 / 1024).ToString() + " MB";
-                    procOutput.AppendText($"  ▸ {p.ProcessName}.exe (PID: {p.Id}) — {mem}\n", Color.Gray);
-                }
-                catch { }
-            }
-
-            procOutput.AppendText("\n═══════════════════════════════════════════════════════════════════\n");
-            procOutput.AppendText($"✅ Total Processes: {processes.Length}\n", Color.Green);
-            procOutput.AppendText($"✅ Minecraft Processes: {mcProcesses.Count()}\n", Color.Green);
-            procOutput.AppendText("═══════════════════════════════════════════════════════════════════\n");
+        
+        if ($isCheat) {
+            $item = New-Object System.Windows.Forms.ListViewItem($file.Name)
+            $item.SubItems.Add("🚨 CHEAT")
+            $item.SubItems.Add($reason)
+            $item.BackColor = [System.Drawing.Color]::FromArgb(40, 0, 0)
+            $item.ForeColor = [System.Drawing.Color]::Red
+            $resultListView.Items.Add($item)
+            $cheatMods += $file.Name
+        } elseif ($isLegit) {
+            $item = New-Object System.Windows.Forms.ListViewItem($file.Name)
+            $item.SubItems.Add("✅ SAFE")
+            $item.SubItems.Add("Legit optimization mod")
+            $item.BackColor = [System.Drawing.Color]::FromArgb(0, 40, 0)
+            $item.ForeColor = [System.Drawing.Color]::Green
+            $resultListView.Items.Add($item)
+            $verifiedMods += $file.Name
+        } else {
+            $item = New-Object System.Windows.Forms.ListViewItem($file.Name)
+            $item.SubItems.Add("❓ UNKNOWN")
+            $item.SubItems.Add("Manual review recommended")
+            $item.BackColor = [System.Drawing.Color]::FromArgb(40, 40, 0)
+            $item.ForeColor = [System.Drawing.Color]::Yellow
+            $resultListView.Items.Add($item)
+            $unknownMods += $file.Name
         }
     }
-
-    // ─── EXTENSION METHODS ──────────────────────────────────────
-    public static class RichTextBoxExtensions
-    {
-        public static void AppendText(this RichTextBox box, string text, Color color)
-        {
-            box.SelectionStart = box.TextLength;
-            box.SelectionLength = 0;
-            box.SelectionColor = color;
-            box.AppendText(text);
-            box.SelectionColor = box.ForeColor;
+    
+    $statusLabel.Text = "✅ Scan Complete!"
+    $progressBar.Value = 100
+    $scanBtn.Enabled = $true
+    
+    $outputBox.AppendText("═══════════════════════════════════════════════════════════════════`n")
+    $outputBox.AppendText("📊 SCAN RESULTS`n")
+    $outputBox.AppendText("═══════════════════════════════════════════════════════════════════`n`n")
+    $outputBox.AppendText("🚨 Cheats Found: $($cheatMods.Count)`n", [System.Drawing.Color]::Red)
+    $outputBox.AppendText("✅ Verified Safe: $($verifiedMods.Count)`n", [System.Drawing.Color]::Green)
+    $outputBox.AppendText("❓ Unknown: $($unknownMods.Count)`n", [System.Drawing.Color]::Yellow)
+    $outputBox.AppendText("📦 Total: $($total)`n`n")
+    
+    if ($cheatMods.Count -gt 0) {
+        $outputBox.AppendText("🚨 CHEATS DETECTED:`n", [System.Drawing.Color]::Red)
+        foreach ($cheat in $cheatMods) {
+            $outputBox.AppendText("  ⚡ $cheat`n", [System.Drawing.Color]::Red)
         }
     }
+})
 
-    // ─── PROGRAM ENTRY ──────────────────────────────────────────
-    public static class Program
-    {
-        [STAThread]
-        public static void Main()
-        {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new KettehToolsApp());
+# ============================================================
+#  TAB 2: FILE TOOLS
+# ============================================================
+$tabFileTools = New-Object System.Windows.Forms.TabPage
+$tabFileTools.Text = "🛠 File Tools"
+$tabFileTools.BackColor = $DarkBg
+$tabControl.TabPages.Add($tabFileTools)
+
+# File Hasher
+$hashLabel = New-Object System.Windows.Forms.Label
+$hashLabel.Text = "🔒 File Hasher:"
+$hashLabel.ForeColor = $TextColor
+$hashLabel.Location = New-Object System.Drawing.Point(20, 20)
+$hashLabel.Size = New-Object System.Drawing.Size(100, 25)
+$hashLabel.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
+$tabFileTools.Controls.Add($hashLabel)
+
+$hashPathBox = New-Object System.Windows.Forms.TextBox
+$hashPathBox.Location = New-Object System.Drawing.Point(130, 20)
+$hashPathBox.Size = New-Object System.Drawing.Size(600, 25)
+$hashPathBox.BackColor = $DarkCard
+$hashPathBox.ForeColor = $TextColor
+$hashPathBox.BorderStyle = "FixedSingle"
+$hashPathBox.Font = New-Object System.Drawing.Font("Segoe UI", 10)
+$tabFileTools.Controls.Add($hashPathBox)
+
+$hashBrowseBtn = New-Object System.Windows.Forms.Button
+$hashBrowseBtn.Text = "📁 Browse"
+$hashBrowseBtn.Location = New-Object System.Drawing.Point(740, 18)
+$hashBrowseBtn.Size = New-Object System.Drawing.Size(100, 30)
+$hashBrowseBtn.BackColor = $DarkCard
+$hashBrowseBtn.ForeColor = $NeonCyan
+$hashBrowseBtn.FlatStyle = "Flat"
+$hashBrowseBtn.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
+$hashBrowseBtn.FlatAppearance.BorderColor = $NeonCyan
+$hashBrowseBtn.FlatAppearance.BorderSize = 1
+$hashBrowseBtn.Add_Click({
+    $openFile = New-Object System.Windows.Forms.OpenFileDialog
+    if ($openFile.ShowDialog() -eq "OK") {
+        $hashPathBox.Text = $openFile.FileName
+        $hashOutputBox.Clear()
+        $hashOutputBox.AppendText("═══════════════════════════════════════════════════════════════════`n")
+        $hashOutputBox.AppendText("🔐 FILE HASH RESULTS`n")
+        $hashOutputBox.AppendText("═══════════════════════════════════════════════════════════════════`n`n")
+        $hashOutputBox.AppendText("📁 File: $(Split-Path $openFile.FileName -Leaf)`n")
+        $hashOutputBox.AppendText("📂 Path: $($openFile.FileName)`n")
+        $hashOutputBox.AppendText("📦 Size: $((Get-Item $openFile.FileName).Length) bytes`n`n")
+        
+        try {
+            $sha1 = Get-FileHash -Path $openFile.FileName -Algorithm SHA1
+            $md5 = Get-FileHash -Path $openFile.FileName -Algorithm MD5
+            $hashOutputBox.AppendText("🔑 SHA1: $($sha1.Hash)`n")
+            $hashOutputBox.AppendText("🔑 MD5:  $($md5.Hash)`n")
+        } catch {
+            $hashOutputBox.AppendText("❌ Error hashing file!`n")
         }
     }
-}
+})
+$tabFileTools.Controls.Add($hashBrowseBtn)
+
+$hashBtn = New-Object System.Windows.Forms.Button
+$hashBtn.Text = "🔐 Hash It!"
+$hashBtn.Location = New-Object System.Drawing.Point(850, 18)
+$hashBtn.Size = New-Object System.Drawing.Size(100, 30)
+$hashBtn.BackColor = $NeonPurple
+$hashBtn.ForeColor = [System.Drawing.Color]::White
+$hashBtn.FlatStyle = "Flat"
+$hashBtn.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
+$hashBtn.FlatAppearance.BorderSize = 0
+$hashBtn.Add_Click({
+    if ($hashPathBox.Text -and (Test-Path $hashPathBox.Text)) {
+        $hashOutputBox.Clear()
+        $hashOutputBox.AppendText("═══════════════════════════════════════════════════════════════════`n")
+        $hashOutputBox.AppendText("🔐 FILE HASH RESULTS`n")
+        $hashOutputBox.AppendText("═══════════════════════════════════════════════════════════════════`n`n")
+        $hashOutputBox.AppendText("📁 File: $(Split-Path $hashPathBox.Text -Leaf)`n")
+        $hashOutputBox.AppendText("📂 Path: $($hashPathBox.Text)`n")
+        $hashOutputBox.AppendText("📦 Size: $((Get-Item $hashPathBox.Text).Length) bytes`n`n")
+        
+        try {
+            $sha1 = Get-FileHash -Path $hashPathBox.Text -Algorithm SHA1
+            $md5 = Get-FileHash -Path $hashPathBox.Text -Algorithm MD5
+            $hashOutputBox.AppendText("🔑 SHA1: $($sha1.Hash)`n")
+            $hashOutputBox.AppendText("🔑 MD5:  $($md5.Hash)`n")
+        } catch {
+            $hashOutputBox.AppendText("❌ Error hashing file!`n")
+        }
+    } else {
+        [System.Windows.Forms.MessageBox]::Show("Please select a valid file!", "Error", "OK", "Error")
+    }
+})
+$tabFileTools.Controls.Add($hashBtn)
+
+$hashOutputBox = New-Object System.Windows.Forms.RichTextBox
+$hashOutputBox.Location = New-Object System.Drawing.Point(20, 65)
+$hashOutputBox.Size = New-Object System.Drawing.Size(930, 350)
+$hashOutputBox.BackColor = $DarkCard
+$hashOutputBox.ForeColor = $TextColor
+$hashOutputBox.Font = New-Object System.Drawing.Font("Consolas", 9)
+$hashOutputBox.BorderStyle = "FixedSingle"
+$hashOutputBox.ReadOnly = $true
+$hashOutputBox.WordWrap = $true
+$tabFileTools.Controls.Add($hashOutputBox)
+
+# ============================================================
+#  TAB 3: PROCESS SCANNER
+# ============================================================
+$tabProcess = New-Object System.Windows.Forms.TabPage
+$tabProcess.Text = "🖥️ Process Scanner"
+$tabProcess.BackColor = $DarkBg
+$tabControl.TabPages.Add($tabProcess)
+
+$procScanBtn = New-Object System.Windows.Forms.Button
+$procScanBtn.Text = "🔍 Scan Processes"
+$procScanBtn.Location = New-Object System.Drawing.Point(20, 20)
+$procScanBtn.Size = New-Object System.Drawing.Size(150, 35)
+$procScanBtn.BackColor = $NeonCyan
+$procScanBtn.ForeColor = [System.Drawing.Color]::White
+$procScanBtn.FlatStyle = "Flat"
+$procScanBtn.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
+$procScanBtn.FlatAppearance.BorderSize = 0
+$procScanBtn.Add_Click({
+    $procOutputBox.Clear()
+    $procOutputBox.AppendText("═══════════════════════════════════════════════════════════════════`n")
+    $procOutputBox.AppendText("🖥️ RUNNING PROCESSES`n")
+    $procOutputBox.AppendText("═══════════════════════════════════════════════════════════════════`n`n")
+    
+    $processes = Get-Process
+    $mcProcesses = $processes | Where-Object { $_.ProcessName -match "java|javaw" }
+    $otherProcesses = $processes | Where-Object { $_.ProcessName -notmatch "java|javaw" }
+    
+    $procOutputBox.AppendText("🎮 MINECRAFT PROCESSES:`n", [System.Drawing.Color]::Cyan)
+    if ($mcProcesses) {
+        foreach ($p in $mcProcesses) {
+            try {
+                $procOutputBox.AppendText("  ▶ $($p.ProcessName).exe (PID: $($p.Id)) — Running`n", [System.Drawing.Color]::Green)
+            } catch {}
+        }
+    } else {
+        $procOutputBox.AppendText("  ❌ No Minecraft processes found`n", [System.Drawing.Color]::Red)
+    }
+    
+    $procOutputBox.AppendText("`n📊 OTHER PROCESSES (Top 20):`n", [System.Drawing.Color]::Cyan)
+    $count = 0
+    foreach ($p in $otherProcesses | Sort-Object ProcessName) {
+        if ($count++ -gt 20) { break }
+        try {
+            $mem = [math]::Round($p.WorkingSet64 / 1MB, 1)
+            $procOutputBox.AppendText("  ▸ $($p.ProcessName).exe (PID: $($p.Id)) — ${mem}MB`n", [System.Drawing.Color]::Gray)
+        } catch {}
+    }
+    
+    $procOutputBox.AppendText("`n═══════════════════════════════════════════════════════════════════`n")
+    $procOutputBox.AppendText("✅ Total Processes: $($processes.Count)`n", [System.Drawing.Color]::Green)
+    $procOutputBox.AppendText("✅ Minecraft Processes: $($mcProcesses.Count)`n", [System.Drawing.Color]::Green)
+})
+$tabProcess.Controls.Add($procScanBtn)
+
+$procOutputBox = New-Object System.Windows.Forms.RichTextBox
+$procOutputBox.Location = New-Object System.Drawing.Point(20, 70)
+$procOutputBox.Size = New-Object System.Drawing.Size(930, 380)
+$procOutputBox.BackColor = $DarkCard
+$procOutputBox.ForeColor = $TextColor
+$procOutputBox.Font = New-Object System.Drawing.Font("Consolas", 9)
+$procOutputBox.BorderStyle = "FixedSingle"
+$procOutputBox.ReadOnly = $true
+$procOutputBox.WordWrap = $true
+$tabProcess.Controls.Add($procOutputBox)
+
+# ============================================================
+#  TAB 4: ABOUT
+# ============================================================
+$tabAbout = New-Object System.Windows.Forms.TabPage
+$tabAbout.Text = "ℹ About"
+$tabAbout.BackColor = $DarkBg
+$tabControl.TabPages.Add($tabAbout)
+
+$aboutLabel = New-Object System.Windows.Forms.Label
+$aboutLabel.Text = @"
+⚡ KETTEH TOOLS v1.0 ⚡
+
+🔍 Mod Scanner - Detect cheats in your mods folder
+🔒 File Hasher - Get SHA1/MD5 of any file
+🖥️ Process Scanner - Scan running processes
+
+🔥 Made by Ketteh - Justice Served
+"@
+$aboutLabel.ForeColor = $TextColor
+$aboutLabel.Location = New-Object System.Drawing.Point(50, 50)
+$aboutLabel.Size = New-Object System.Drawing.Size(800, 250)
+$aboutLabel.Font = New-Object System.Drawing.Font("Segoe UI", 12)
+$aboutLabel.TextAlign = "MiddleCenter"
+$tabAbout.Controls.Add($aboutLabel)
+
+# ─── RUN THE FORM ─────────────────────────────────────────────
+$form.Add_Shown({ $form.Activate() })
+[System.Windows.Forms.Application]::Run($form)
