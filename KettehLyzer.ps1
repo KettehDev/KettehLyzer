@@ -1,11 +1,24 @@
 Clear-Host
 Write-Host @"
-   /\_/\        KettehLyzer v2
-  ( o.o )        --------------------------------
-   > ^ <         mod verification + cheat detection
+                 /\_/\
+                ( o.o )
+                 > ^ <
+                /|   |\
+               (_|   |_)
+                 |   |
+                _|   |_
+               (___|___)
 "@ -ForegroundColor Magenta
-Write-Host "Concept inspired by HadronCollision's Habibi Mod Analyzer — rebuilt for KettehTools" -ForegroundColor DarkGray
-Write-Host "Reads your mods folder + queries the public Modrinth API for known-mod verification. Nothing else leaves your machine." -ForegroundColor DarkGray
+Write-Host "  ██╗  ██╗███████╗████████╗████████╗███████╗██╗  ██╗██╗  ██╗   ██╗███████╗███████╗██████╗ " -ForegroundColor Cyan
+Write-Host "  ██║ ██╔╝██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██║  ██║██║  ╚██╗ ██╔╝██╔════╝██╔════╝██╔══██╗" -ForegroundColor Cyan
+Write-Host "  █████╔╝ █████╗     ██║      ██║   █████╗  ███████║██║   ╚████╔╝ █████╗  █████╗  ██████╔╝" -ForegroundColor Cyan
+Write-Host "  ██╔═██╗ ██╔══╝     ██║      ██║   ██╔══╝  ██╔══██║██║    ╚██╔╝  ██╔══╝  ██╔══╝  ██╔══██╗" -ForegroundColor Cyan
+Write-Host "  ██║  ██╗███████╗   ██║      ██║   ███████╗██║  ██║███████╗██║   ███████╗███████╗██║  ██║" -ForegroundColor Cyan
+Write-Host "  ╚═╝  ╚═╝╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝╚═╝   ╚══════╝╚══════╝╚═╝  ╚═╝" -ForegroundColor Cyan
+Write-Host "                          v2  ::  mod verification + cheat detection" -ForegroundColor DarkGray
+Write-Host "  ────────────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkMagenta
+Write-Host "  Reads your mods folder + queries the public Modrinth API for known-mod verification." -ForegroundColor DarkGray
+Write-Host "  Nothing else leaves your machine." -ForegroundColor DarkGray
 Write-Host
 
 # ---------------------------------------------------------------------------
