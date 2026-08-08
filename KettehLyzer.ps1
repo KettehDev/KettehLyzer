@@ -30,7 +30,7 @@ $fontCard    = New-Object System.Drawing.Font("Segoe UI Semibold", 10)
 $fontDesc    = New-Object System.Drawing.Font("Segoe UI", 8)
 
 # =============================================================================
-# DETECTION ENGINE (unchanged core logic)
+# DETECTION ENGINE
 # =============================================================================
 $CheatPatterns = @(
     "wurst","meteor","impact","liquidbounce","aristois","future","sigma","vape",
@@ -61,12 +61,12 @@ $script:ModrinthCache = @{}
 function Query-Modrinth {
     param([string]$Hash)
     if ($script:ModrinthCache.ContainsKey($Hash)) { return $script:ModrinthCache[$Hash] }
-    $r = @{ Name = ""; Spug = ""; Spug = ""; Slug = "" }
+    $r = @{ Name = ""; Slug = "" }
     try {
         $ver = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/version_file/$Hash" -Method Get -UseBasicParsing -ErrorAction Stop
         if ($ver.project_id) {
             $proj = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/project/$($ver.project_id)" -Method Get -UseBasicParsing -ErrorAction Stop
-            $r = @{ Name = $proj.title; Slug = $proj.slug }
+            $r = @{ Name = $proj.title; Spug = $proj.slug; Slug = $proj.slug }
         }
     } catch {}
     $script:ModrinthCache[$Hash] = $r
@@ -243,7 +243,6 @@ $sidebar.Dock = "Left"
 $sidebar.Width = 220
 $sidebar.BackColor = $sidebarBg
 
-# Logo area
 $logoPanel = New-Object System.Windows.Forms.Panel
 $logoPanel.Size = New-Object System.Drawing.Size(220, 110)
 $logoPanel.Location = New-Object System.Drawing.Point(0, 0)
@@ -257,7 +256,6 @@ $catLbl.Location = New-Object System.Drawing.Point(55, 18)
 $catLbl.AutoSize = $true
 $logoPanel.Controls.Add($catLbl)
 
-# Actions section
 $actLbl = New-Object System.Windows.Forms.Label
 $actLbl.Text = "ACTIONS"
 $actLbl.Font = $fontSmall
@@ -286,7 +284,6 @@ $btnOpenMC     = New-SideAction "Open .minecraft"    193
 $btnClearCache = New-SideAction "Clear Cache"        231
 $btnOpenCMD    = New-SideAction "Open PowerShell"    269
 
-# Credits
 $credLbl = New-Object System.Windows.Forms.Label
 $credLbl.Text = "CREDITS"
 $credLbl.Font = $fontSmall
@@ -314,14 +311,12 @@ $sidebar.Controls.AddRange(@(
 ))
 
 # =============================================================================
-# MAIN CONTENT AREA
+# MAIN CONTENT
 # =============================================================================
 $main = New-Object System.Windows.Forms.Panel
 $main.Dock = "Fill"
 $main.BackColor = $bg
-$main.Padding = New-Object System.Windows.Forms.Padding(0)
 
-# Top header bar
 $header = New-Object System.Windows.Forms.Panel
 $header.Dock = "Top"
 $header.Height = 78
@@ -352,7 +347,6 @@ $statusBadge.Padding = New-Object System.Windows.Forms.Padding(8, 4, 8, 4)
 
 $header.Controls.AddRange(@($titleLbl, $subLbl, $statusBadge))
 
-# Category pills
 $catBar = New-Object System.Windows.Forms.Panel
 $catBar.Dock = "Top"
 $catBar.Height = 48
@@ -384,7 +378,6 @@ foreach ($cat in $categories) {
     $xPos += 98
 }
 
-# Card grid area
 $cardHost = New-Object System.Windows.Forms.Panel
 $cardHost.Dock = "Fill"
 $cardHost.BackColor = $bg
@@ -433,7 +426,6 @@ function New-ToolCard {
     $t.Add_Click($click)
     $d.Add_Click($click)
 
-    # Hover effect
     $card.Add_MouseEnter({ $this.BackColor = $cardHover })
     $card.Add_MouseLeave({ $this.BackColor = $cardBg })
     $t.Add_MouseEnter({ $card.BackColor = $cardHover })
@@ -444,10 +436,8 @@ function New-ToolCard {
     return $card
 }
 
-# Define cards
 $cards = @()
 
-# Mods
 $cards += New-ToolCard "Full Mod Scan" "Scan mods folder against known cheat signatures + Modrinth" "Mods" {
     Show-Results "Mods"
     Start-ModScan
@@ -467,7 +457,6 @@ $cards += New-ToolCard "Open Mods Folder" "Open the current mods directory in Ex
     Write-Log "Opened mods folder" "OK"
 } 694 20
 
-# Process
 $cards += New-ToolCard "Process Modules" "List modules loaded by java/javaw + signature check" "Process" {
     Show-Results "Process"
     Start-ProcScan
@@ -481,19 +470,16 @@ $cards += New-ToolCard "Java Snapshot" "Quick overview of running Java processes
     Write-Log "Java process snapshot shown" "OK"
 } 250 150
 
-# Network
 $cards += New-ToolCard "Network Connections" "List established TCP connections from Java processes" "Network" {
     Show-Results "Network"
     Start-NetScan
 } 28 280
 
-# Persistence
 $cards += New-ToolCard "Persistence Check" "Run keys, Startup folder, recent scheduled tasks" "Persistence" {
     Show-Results "Persistence"
     Start-PersistScan
 } 28 410
 
-# Tools
 $cards += New-ToolCard "Generate Report" "Export full results to a timestamped .txt report" "Tools" {
     Generate-Report
 } 250 410
@@ -505,7 +491,6 @@ $cards += New-ToolCard "Clear Cache" "Clear Modrinth hash cache" "Tools" {
 
 foreach ($c in $cards) { $cardHost.Controls.Add($c) }
 
-# Results area (hidden by default, shown when a scan runs)
 $resultsPanel = New-Object System.Windows.Forms.Panel
 $resultsPanel.Dock = "Fill"
 $resultsPanel.BackColor = $bg
@@ -534,7 +519,6 @@ $resultsList.GridLines = $false
 
 $resultsPanel.Controls.AddRange(@($backBtn, $resultsList))
 
-# Activity console
 $consolePanel = New-Object System.Windows.Forms.Panel
 $consolePanel.Dock = "Bottom"
 $consolePanel.Height = 140
@@ -559,7 +543,6 @@ $logBox.ScrollBars = "Vertical"
 
 $consolePanel.Controls.AddRange(@($consoleLbl, $logBox))
 
-# Assemble main
 $main.Controls.Add($cardHost)
 $main.Controls.Add($resultsPanel)
 $main.Controls.Add($catBar)
@@ -570,7 +553,7 @@ $form.Controls.Add($main)
 $form.Controls.Add($sidebar)
 
 # =============================================================================
-# HELPER FUNCTIONS
+# HELPERS
 # =============================================================================
 function Set-Status {
     param([string]$Title, [string]$Sub, [string]$Badge, [System.Drawing.Color]$BadgeColor)
@@ -596,7 +579,6 @@ function Show-Cards {
 
 $backBtn.Add_Click({ Show-Cards })
 
-# Category filter
 foreach ($key in $catButtons.Keys) {
     $catButtons[$key].Add_Click({
         $script:ActiveCat = $this.Text
@@ -620,7 +602,7 @@ foreach ($key in $catButtons.Keys) {
 }
 
 # =============================================================================
-# SCAN IMPLEMENTATIONS
+# SCAN FUNCTIONS
 # =============================================================================
 function Start-ModScan {
     Set-Status "Scanning Mods..." "Checking jars against signatures + Modrinth" "RUNNING" $yellow
@@ -642,9 +624,7 @@ function Start-ModScan {
     Write-Log "Found $total jar(s)" "INFO"
 
     $v=0;$u=0;$s=0;$c=0;$d=0
-    $idx = 0
     foreach ($jar in $jars) {
-        $idx++
         [System.Windows.Forms.Application]::DoEvents()
         $hash = Get-FileSHA1 $jar.FullName
         $known = Query-Modrinth $hash
@@ -777,12 +757,21 @@ function Generate-Report {
     [void]$sb.AppendLine("KettehLyzer SS Toolkit Report")
     [void]$sb.AppendLine("Generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')")
     [void]$sb.AppendLine("")
-    [void]$sb.AppendLine($resultsList.Items.Count -gt 0 ? "--- Current Results ---" : "No results in view")
+
+    if ($resultsList.Items.Count -gt 0) {
+        [void]$sb.AppendLine("--- Current Results ---")
+    } else {
+        [void]$sb.AppendLine("No results in view")
+    }
+
     foreach ($i in $resultsList.Items) {
         $line = $i.Text
-        for ($x=1; $x -lt $i.SubItems.Count; $x++) { $line += " | " + $i.SubItems[$x].Text }
+        for ($x = 1; $x -lt $i.SubItems.Count; $x++) {
+            $line += " | " + $i.SubItems[$x].Text
+        }
         [void]$sb.AppendLine($line)
     }
+
     $save = New-Object System.Windows.Forms.SaveFileDialog
     $save.Filter = "Text (*.txt)|*.txt"
     $save.FileName = "KettehLyzer-$(Get-Date -Format 'yyyyMMdd-HHmmss').txt"
@@ -811,7 +800,6 @@ $btnOpenCMD.Add_Click({
     Write-Log "Opened PowerShell" "OK"
 })
 
-# Initial log
 Write-Log "KettehLyzer ready" "OK"
 Write-Log "Select a tool from the grid" "INFO"
 
