@@ -5,11 +5,13 @@
 #  ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██║██║    ██║
 #  ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║███████╗██║
 #  ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝╚═╝
-#           KETTEH SS BYPASS DETECTOR v7.0
+#           KETTEH SS BYPASS DETECTOR v8.0
 #         CATCHES MODS HIDING FROM SCREENSHARES 🔥
 # ============================================================
 
+# Clear and set up
 Clear-Host
+$Host.UI.RawUI.WindowTitle = "⚡ KETTEH SS BYPASS DETECTOR v8.0 ⚡"
 
 # ─── COLOR DEFINITIONS ────────────────────────────────────────
 $Cyan = "Cyan"
@@ -24,8 +26,26 @@ $DarkMagenta = "DarkMagenta"
 $DarkCyan = "DarkCyan"
 $DarkRed = "DarkRed"
 
-# ─── ASCII BANNER ─────────────────────────────────────────────
-Write-Host @"
+# ─── RAINBOW TEXT FUNCTION ────────────────────────────────────
+function Write-Rainbow {
+    param([string]$Text, [int]$Delay = 30)
+    $colors = @('Red','Yellow','Green','Cyan','Magenta','White')
+    $i = 0
+    foreach ($char in $Text.ToCharArray()) {
+        if ($char -eq ' ') { 
+            Write-Host " " -NoNewline
+            continue 
+        }
+        $color = $colors[$i % $colors.Length]
+        Write-Host $char -ForegroundColor $color -NoNewline
+        $i++
+        Start-Sleep -Milliseconds $Delay
+    }
+    Write-Host ""
+}
+
+# ─── ASCII BANNER WITH GLOW ──────────────────────────────────
+$banner = @"
 ╔═══════════════════════════════════════════════════════════════╗
 ║                                                               ║
 ║      ██╗  ██╗███████╗████████╗████████╗███████╗██╗  ██╗     ║
@@ -35,35 +55,81 @@ Write-Host @"
 ║      ██║  ██╗███████╗   ██║      ██║   ███████╗██║  ██║     ║
 ║      ╚═╝  ╚═╝╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝     ║
 ║                                                               ║
-║        ⚡ SS BYPASS & HIDE DETECTOR v7.0 ⚡               ║
+║        ⚡ SS BYPASS & HIDE DETECTOR v8.0 ⚡               ║
 ║     CATCHES MODS HIDING FROM SCREENSHARES 🔥              ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
-"@ -ForegroundColor Magenta
+"@
 
-Write-Host ""
-Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host "  ⚡  SS BYPASS DETECTION ENGINE  ⚡" -ForegroundColor Cyan
-Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host ""
-Write-Host "  [SYSTEM] Loading SS bypass signatures..." -ForegroundColor Yellow
-Write-Host "  [SYSTEM] Loading hide detection patterns..." -ForegroundColor Yellow
-Write-Host "  [SYSTEM] Loading injection detection..." -ForegroundColor Yellow
-Write-Host "  [SYSTEM] Ready to expose hidden cheats." -ForegroundColor Yellow
-Write-Host ""
-
-# ─── LOADING BAR ──────────────────────────────────────────────
-for ($i = 0; $i -le 100; $i += 5) {
-    $bar = "["
-    $filled = [math]::Floor($i / 5)
-    $bar += ("█" * $filled).PadRight(20, "░")
-    $bar += "]"
-    Write-Host "`r  $bar $i% " -ForegroundColor Cyan -NoNewline
-    Start-Sleep -Milliseconds 8
+# Write banner with rainbow effect
+$bannerLines = $banner -split "`n"
+foreach ($line in $bannerLines) {
+    if ($line -match "█" -or $line -match "╔" -or $line -match "╗" -or $line -match "║" -or $line -match "╚" -or $line -match "╝") {
+        Write-Host $line -ForegroundColor DarkMagenta
+    } elseif ($line -match "KETTEH") {
+        Write-Rainbow -Text $line -Delay 15
+    } else {
+        Write-Host $line -ForegroundColor Magenta
+    }
 }
-Write-Host "`r  [████████████████████] 100% " -ForegroundColor Green
-Write-Host "  [SYSTEM] Engine ready." -ForegroundColor Green
+
 Write-Host ""
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
+
+# ─── ANIMATED LOADING ──────────────────────────────────────────
+Write-Host "  ⚡  SS BYPASS DETECTION ENGINE" -ForegroundColor Cyan
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
+Write-Host ""
+
+$loadingTexts = @(
+    "[SYSTEM] Loading SS bypass signatures...",
+    "[SYSTEM] Loading hide detection patterns...",
+    "[SYSTEM] Loading injection detection...",
+    "[SYSTEM] Ready to expose hidden cheats."
+)
+
+foreach ($text in $loadingTexts) {
+    $dots = ""
+    for ($i = 0; $i -lt 3; $i++) {
+        $dots += "."
+        Write-Host "`r  $text$dots" -ForegroundColor Yellow -NoNewline
+        Start-Sleep -Milliseconds 300
+    }
+    Write-Host "`r  $text" -ForegroundColor Green
+    Start-Sleep -Milliseconds 200
+}
+Write-Host ""
+
+# ─── ANIMATED LOADING BAR ─────────────────────────────────────
+Write-Host "  ═══ LOADING MODULES ═══" -ForegroundColor DarkCyan
+for ($i = 0; $i -le 100; $i += 2) {
+    $bar = "["
+    $filled = [math]::Floor($i / 2)
+    $bar += ("█" * $filled).PadRight(50, "░")
+    $bar += "]"
+    $percent = $i.ToString().PadLeft(3)
+    Write-Host "`r  $bar $percent% " -ForegroundColor Cyan -NoNewline
+    Start-Sleep -Milliseconds 15
+}
+Write-Host "`r  [██████████████████████████████████████████████████] 100% " -ForegroundColor Green
+Write-Host ""
+
+# ─── MINECRAFT CHECK ──────────────────────────────────────────
+$process = Get-Process javaw -ErrorAction SilentlyContinue
+if (-not $process) { $process = Get-Process java -ErrorAction SilentlyContinue }
+if ($process) {
+    try { $elapsed = (Get-Date) - $process.StartTime } catch {}
+    Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
+    Write-Host "  🖥️  MINECRAFT PROCESS" -ForegroundColor Cyan
+    Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
+    Write-Host "  Process     : " -NoNewline
+    Write-Host "$($process.Name)" -ForegroundColor Green -NoNewline
+    Write-Host "  PID         : " -NoNewline
+    Write-Host "$($process.Id)" -ForegroundColor Green
+    Write-Host "  Uptime      : " -NoNewline
+    Write-Host "$($elapsed.Hours)h $($elapsed.Minutes)m $($elapsed.Seconds)s" -ForegroundColor Green
+    Write-Host ""
+}
 
 # ─── PATH INPUT ───────────────────────────────────────────────
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
@@ -99,48 +165,30 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 # ─── SS BYPASS SIGNATURES ─────────────────────────────────────
 $HideSignatures = @(
-    # File Hiding
-    'File', 'Hide', 'Hidden', 'Directory', 'Delete', 'Temp', 'Cache', 'Clean',
-    'DeleteOnExit', 'File.delete', 'Files.delete', 'Files.move', 'Files.copy',
-    'FileOutputStream', 'FileInputStream', 'RandomAccessFile',
-    
-    # Process Hiding
-    'Process', 'HideWindow', 'Shell', 'Execute', 'Runtime', 'ProcessBuilder',
-    'ProcessHandle', 'ProcessInfo', 'GetProcess', 'FindProcess',
-    
-    # Memory Hiding
-    'Memory', 'Heap', 'Stack', 'Unsafe', 'Direct', 'Buffer', 'Mapped',
-    'Unsafe.allocateMemory', 'Unsafe.putInt', 'Unsafe.getInt',
-    'Native', 'JNI', 'JNA', 'Invoke', 'Call',
-    
-    # Injection
-    'Inject', 'Injection', 'Injector', 'Injector', 'Load', 'Insert',
-    'ClassLoader', 'System.load', 'loadLibrary', 'DefineClass',
-    'Instrumentation', 'Agent_OnLoad', 'Agent_OnAttach', 'Transform',
-    'ClassFileTransformer', 'JVM_LoadClass', 'AttachCurrentThread',
-    
-    # Bypass
-    'Bypass', 'Disable', 'Disabler', 'Spoof', 'Spoofer', 'Bypasser',
-    'AntiCheat', 'AAC', 'NCP', 'Vulcan', 'Matrix', 'Verus', 'Spartan',
-    'Watchdog', 'Grim', 'Intave', 'Kauri', 'Negativity',
-    
-    # Ghost/Stealth
-    'Ghost', 'Stealth', 'Invisible', 'Invisible', 'Phantom', 'Shadow',
-    'Dark', 'Cloak', 'Hide', 'Secret', 'Undetectable', 'Injection'
+    'File','Hide','Hidden','Directory','Delete','Temp','Cache','Clean',
+    'DeleteOnExit','File.delete','Files.delete','Files.move','Files.copy',
+    'Process','HideWindow','Shell','Execute','Runtime','ProcessBuilder',
+    'Memory','Heap','Stack','Unsafe','Direct','Buffer','Mapped',
+    'Unsafe.allocateMemory','Unsafe.putInt','Unsafe.getInt',
+    'Native','JNI','JNA','Invoke','Call',
+    'Inject','Injection','Injector','Load','Insert',
+    'ClassLoader','System.load','loadLibrary','DefineClass',
+    'Instrumentation','Agent_OnLoad','Agent_OnAttach','Transform',
+    'ClassFileTransformer','JVM_LoadClass','AttachCurrentThread',
+    'Bypass','Disable','Disabler','Spoof','Spoofer','Bypasser',
+    'AntiCheat','AAC','NCP','Vulcan','Matrix','Verus','Spartan',
+    'Ghost','Stealth','Invisible','Phantom','Shadow','Cloak','Undetectable'
 )
 
-# ─── CHEAT SIGNATURES ──────────────────────────────────────────
 $CheatSignatures = @(
-    'KillAura', 'AimAssist', 'Reach', 'HitBox', 'Aura', 'BowAimbot', 'Velocity',
-    'AntiKnockback', 'Criticals', 'AutoClicker', 'Flight', 'BHop', 'SpeedMine',
-    'NoFall', 'Phase', 'Blink', 'Freecam', 'NoSlow', 'Scaffold', 'ElytraFly',
-    'XRay', 'ESP', 'Nametags', 'Chams', 'Tracers', 'Radar', 'ChestStealer',
-    'Nuker', 'AutoCrystal', 'CrystalAura', 'PingSpoof', 'SelfDestruct',
-    'FastPlace', 'FastBreak', 'ClickGUI', 'AltManager', 'AutoPot', 'AutoTotem',
-    'AutoArmor', 'CrystalAura', 'AnchorAura', 'BedAura'
+    'KillAura','AimAssist','Reach','HitBox','Aura','BowAimbot','Velocity',
+    'AntiKnockback','Criticals','AutoClicker','Flight','BHop','SpeedMine',
+    'NoFall','Phase','Blink','Freecam','NoSlow','Scaffold','ElytraFly',
+    'XRay','ESP','Nametags','Chams','Tracers','Radar','ChestStealer',
+    'Nuker','AutoCrystal','CrystalAura','PingSpoof','SelfDestruct',
+    'FastPlace','FastBreak','ClickGUI','AltManager'
 )
 
-# ─── CHEAT CLIENT NAMES ───────────────────────────────────────
 $CheatClientNames = @(
     'wurst','meteor','impact','liquidbounce','aristois','future',
     'sigma','vape','entropy','dqrkis',
@@ -148,10 +196,9 @@ $CheatClientNames = @(
     'rusherhack','novoline','ghostclient','kamiblue','salhack','clickcrystals',
     'baritone','vengeance','exhibition','kuro','rise','flux',
     'zero','astolfo','dortware','xenon','tenacity',
-    'injector','inject','bypass','exploit','spoofer','disabler','crasher'
+    'injector','inject','bypass','exploit','spoofer','disabler'
 )
 
-# ─── LEGIT MODS ─────────────────────────────────────────────────
 $LegitMods = @{
     'fabric' = $true; 'forge' = $true; 'fabric-api' = $true
     'sodium' = $true; 'lithium' = $true; 'phosphor' = $true; 'iris' = $true
@@ -185,16 +232,12 @@ function Expand-JarLimited {
     param([string]$JarPath, [string]$DestDir)
     try {
         [System.IO.Compression.ZipFile]::ExtractToDirectory($JarPath, $DestDir)
-    } catch {
-        return
-    }
+    } catch { return }
     $nested = Get-ChildItem -Path $DestDir -Recurse -Filter *.jar -File -ErrorAction SilentlyContinue
     foreach ($n in $nested) {
         $sub = Join-Path $n.DirectoryName ("_extract_" + [System.IO.Path]::GetFileNameWithoutExtension($n.Name))
         New-Item -ItemType Directory -Path $sub -Force | Out-Null
-        try {
-            [System.IO.Compression.ZipFile]::ExtractToDirectory($n.FullName, $sub)
-        } catch {}
+        try { [System.IO.Compression.ZipFile]::ExtractToDirectory($n.FullName, $sub) } catch {}
     }
 }
 
@@ -212,13 +255,7 @@ function Get-NameHit {
 
 function Get-SSBypassHits {
     param([string]$ExtractedDir)
-    $hits = @{
-        Hide = @()
-        Injection = @()
-        Bypass = @()
-        Cheat = @()
-    }
-    
+    $hits = @{ Hide = @(); Cheat = @() }
     $files = Get-ChildItem -Path $ExtractedDir -Recurse -File -Include *.class -ErrorAction SilentlyContinue
     foreach ($f in $files) {
         try {
@@ -226,18 +263,14 @@ function Get-SSBypassHits {
             if ($bytes.Length -gt 524288) { $bytes = $bytes[0..524287] }
             $text = [System.Text.Encoding]::ASCII.GetString($bytes)
         } catch { continue }
-        
         foreach ($sig in $HideSignatures) {
             if ($text -match [regex]::Escape($sig)) { $hits.Hide += $sig }
         }
         foreach ($sig in $CheatSignatures) {
             if ($text -match [regex]::Escape($sig)) { $hits.Cheat += $sig }
         }
-        
-        $totalHits = $hits.Hide.Count + $hits.Cheat.Count
-        if ($totalHits -gt 20) { break }
+        if (($hits.Hide.Count + $hits.Cheat.Count) -gt 20) { break }
     }
-    
     $hits.Hide = $hits.Hide | Select-Object -Unique
     $hits.Cheat = $hits.Cheat | Select-Object -Unique
     return $hits
@@ -246,13 +279,13 @@ function Get-SSBypassHits {
 function Get-ThreatLevel {
     param([hashtable]$Hits)
     $total = $Hits.Hide.Count + $Hits.Cheat.Count
-    if ($total -ge 10) { return "CRITICAL - SS BYPASS" }
-    if ($total -ge 5) { return "HIGH - SUSPICIOUS" }
-    if ($total -ge 2) { return "MEDIUM - CHECK" }
-    return "LOW - UNKNOWN"
+    if ($total -ge 10) { return "CRITICAL" }
+    if ($total -ge 5) { return "HIGH" }
+    if ($total -ge 2) { return "MEDIUM" }
+    return "LOW"
 }
 
-# ─── SCAN ──────────────────────────────────────────────────────
+# ─── ANIMATED SCAN ─────────────────────────────────────────────
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host "  🔍  SCANNING FOR SS BYPASSES" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
@@ -268,11 +301,18 @@ $counter = 0
 $tempRoot = Join-Path $env:TEMP ("kettehlyzer_" + [guid]::NewGuid().ToString('N').Substring(0,8))
 New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
 
+# ─── SCAN LOOP WITH ANIMATION ────────────────────────────────
+$spinner = @('◢', '◣', '◤', '◥')
+$spinnerIndex = 0
+
 try {
     foreach ($file in $jarFiles) {
         $counter++
         $pct = [math]::Round(100 * $counter / $total)
-        Write-Host "`r  [>>] Scanning $counter/$total ($pct%)...$(' ' * 30)" -ForegroundColor Cyan -NoNewline
+        $spinnerChar = $spinner[$spinnerIndex % $spinner.Length]
+        $spinnerIndex++
+        
+        Write-Host "`r  [$spinnerChar] Scanning $counter/$total ($pct%)...$(' ' * 20)" -ForegroundColor Cyan -NoNewline
 
         # 1. NAME CHECK
         $nameHit = Get-NameHit -FileName $file.Name
@@ -281,7 +321,7 @@ try {
                 FileName = $file.Name
                 Type = "NAME MATCH"
                 Reason = "BLATANT CHEAT: $nameHit"
-                Threat = "CRITICAL - CHEAT CLIENT"
+                Threat = "CRITICAL"
                 Hits = @{ Hide = @(); Cheat = @() }
             }
             continue
@@ -301,10 +341,9 @@ try {
             }
         } catch {}
 
-        # 3. DEEP SCAN - SS BYPASS DETECTION
+        # 3. DEEP SCAN
         $extractDir = Join-Path $tempRoot ([System.IO.Path]::GetFileNameWithoutExtension($file.Name))
         New-Item -ItemType Directory -Path $extractDir -Force | Out-Null
-        
         Expand-JarLimited -JarPath $file.FullName -DestDir $extractDir
 
         $hits = Get-SSBypassHits -ExtractedDir $extractDir
@@ -315,7 +354,7 @@ try {
             $bypassMods += [pscustomobject]@{ 
                 FileName = $file.Name
                 Type = "SS BYPASS"
-                Reason = "$totalHits bypass/hide signatures detected"
+                Reason = "$totalHits bypass/hide signatures"
                 Threat = $threatLevel
                 Hits = $hits
             }
@@ -341,11 +380,11 @@ Write-Host "  📊  ANALYSIS COMPLETE" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
 
-# ─── SUMMARY TABLE ─────────────────────────────────────────────
-$criticalCount = ($bypassMods | Where-Object { $_.Threat -match "CRITICAL" }).Count
-$highCount = ($bypassMods | Where-Object { $_.Threat -match "HIGH" }).Count
-$mediumCount = ($bypassMods | Where-Object { $_.Threat -match "MEDIUM" }).Count
+$criticalCount = ($bypassMods | Where-Object { $_.Threat -eq "CRITICAL" }).Count
+$highCount = ($bypassMods | Where-Object { $_.Threat -eq "HIGH" }).Count
+$mediumCount = ($bypassMods | Where-Object { $_.Threat -eq "MEDIUM" }).Count
 
+# ─── SUMMARY TABLE ─────────────────────────────────────────────
 Write-Host "  ┌─────────────────────────────────────────────────────────────────────────────────────┐" -ForegroundColor DarkMagenta
 Write-Host "  │  ✅ VERIFIED  │  ❓ UNKNOWN  │  🚨 SS BYPASS  │  💀 CRITICAL  │  📦 TOTAL  │   " -ForegroundColor White
 Write-Host "  │  $($verifiedMods.Count.ToString().PadLeft(4))           │  $($unknownMods.Count.ToString().PadLeft(4))          │  $($bypassMods.Count.ToString().PadLeft(4))           │  $criticalCount.ToString().PadLeft(4)           │  $($total.ToString().PadLeft(4))        │   " -ForegroundColor White
@@ -387,15 +426,15 @@ if ($bypassMods.Count -gt 0) {
     Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkRed
     
     foreach ($mod in $bypassMods | Sort-Object { 
-        if ($_.Threat -match "CRITICAL") { return 0 }
-        if ($_.Threat -match "HIGH") { return 1 }
-        if ($_.Threat -match "MEDIUM") { return 2 }
+        if ($_.Threat -eq "CRITICAL") { return 0 }
+        if ($_.Threat -eq "HIGH") { return 1 }
+        if ($_.Threat -eq "MEDIUM") { return 2 }
         return 3
     }) {
-        $threatColor = switch -Wildcard ($mod.Threat) {
-            "*CRITICAL*" { $DarkRed }
-            "*HIGH*" { $Red }
-            "*MEDIUM*" { $Yellow }
+        $threatColor = switch ($mod.Threat) {
+            "CRITICAL" { $DarkRed }
+            "HIGH" { $Red }
+            "MEDIUM" { $Yellow }
             default { $DarkGray }
         }
         
@@ -495,10 +534,10 @@ Write-Host "  ══════════════════════
 Write-Host ""
 Write-Host "  🔥  Exposed hidden mods. Justice served." -ForegroundColor Magenta
 Write-Host ""
-Write-Host "  [SYSTEM] Ketteh SS Bypass Detector v7.0 — Done." -ForegroundColor Green
+Write-Host "  [SYSTEM] Ketteh SS Bypass Detector v8.0 — Done." -ForegroundColor Green
 Write-Host ""
 
-# ─── KITTY ─────────────────────────────────────────────────────
+# ─── EPIC KITTY ─────────────────────────────────────────────────
 $kitty = @"
         /\_/\
        ( ^.^ )
@@ -509,6 +548,14 @@ $kitty = @"
        _|   |_
       (___|___)
 "@
-Write-Host $kitty -ForegroundColor Magenta
+
+$kittyColors = @($Magenta, $Cyan, $Green, $Yellow, $Red)
+$kittyLines = $kitty -split "`n"
+for ($i = 0; $i -lt $kittyLines.Count; $i++) {
+    $color = $kittyColors[$i % $kittyColors.Length]
+    Write-Host $kittyLines[$i] -ForegroundColor $color
+}
+
 Write-Host "  🔥  Exposing hidden cheats since 2024" -ForegroundColor Magenta
+Write-Host "  ⚡  Stay vigilant, stay safe." -ForegroundColor Cyan
 Write-Host ""
