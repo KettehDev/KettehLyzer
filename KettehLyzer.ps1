@@ -71,6 +71,13 @@ function Invoke-ScanJar {
     param([string]$FilePath)
     $found = [System.Collections.Generic.HashSet[string]]::new()
     $isClient = $false
+    $fileNameLower = (Split-Path $FilePath -Leaf).ToLower()
+    foreach ($p in $CheatPatterns) {
+        if ($fileNameLower -match [regex]::Escape($p)) {
+            $found.Add($p) | Out-Null
+            if ($CheatClientNames -contains $p) { $isClient = $true }
+        }
+    }
     try {
         $archive = [System.IO.Compression.ZipFile]::OpenRead($FilePath)
         foreach ($entry in $archive.Entries) {
@@ -135,7 +142,8 @@ function Get-JavaProcessModules {
     $procs = Get-Process javaw,java -ErrorAction SilentlyContinue
     $rows = @()
     foreach ($p in $procs) {
-        $expectedDirs = @($p.Path | Split-Path -Parent, "$env:WINDIR\System32", "$env:WINDIR\SysWOW64", "${env:ProgramFiles}", "${env:ProgramFiles(x86)}")
+        $javaDir = try { Split-Path $p.Path -Parent } catch { $null }
+        $expectedDirs = @($javaDir, "$env:WINDIR\System32", "$env:WINDIR\SysWOW64", "$env:ProgramFiles", "${env:ProgramFiles(x86)}") | Where-Object { $_ }
         try { $mods = $p.Modules } catch { $mods = @() }
         foreach ($m in $mods) {
             $signed = "Unknown"
