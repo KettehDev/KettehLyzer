@@ -4,42 +4,56 @@ $OutputEncoding           = [System.Text.Encoding]::UTF8
 chcp 65001 | Out-Null
 Clear-Host
 
-# ─── KETTEH BRANDING ──────────────────────────────────────────
+# ─── KETTEH CYBER BANNER ──────────────────────────────────────
 $Banner = @"
-
-  ██╗  ██╗███████╗████████╗████████╗███████╗██╗  ██╗
-  ██║ ██╔╝██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██║  ██║
-  █████╔╝ █████╗     ██║      ██║   █████╗  ███████║
-  ██╔═██╗ ██╔══╝     ██║      ██║   ██╔══╝  ██╔══██║
-  ██║  ██╗███████╗   ██║      ██║   ███████╗██║  ██║
-  ╚═╝  ╚═╝╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝
-  
-   █████╗ ███╗   ██╗ █████╗ ██╗  ██╗   ██╗███████╗███████╗██████╗
-  ██╔══██╗████╗  ██║██╔══██╗██║  ╚██╗ ██╔╝╚══███╔╝██╔════╝██╔══██╗
-  ███████║██╔██╗ ██║███████║██║   ╚████╔╝  ███╔╝ █████╗  ██████╔╝
-  ██╔══██║██║╚██╗██║██╔══██║██║    ╚██╔╝  ███╔╝  ██╔══╝  ██╔══██╗
-  ██║  ██║██║ ╚████║██║  ██║███████╗ ██║   ███████╗███████╗██║  ██║
-  ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝ ╚═╝   ╚══════╝╚══════╝╚═╝  ╚═╝
-
-                         \    /\
-                          )  ( ')
-                         (  /  )
-                          \(__)|
-
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                                                                           ║
+║   ██╗  ██╗███████╗████████╗████████╗███████╗██╗  ██╗                     ║
+║   ██║ ██╔╝██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██║  ██║                     ║
+║   █████╔╝ █████╗     ██║      ██║   █████╗  ███████║                     ║
+║   ██╔═██╗ ██╔══╝     ██║      ██║   ██╔══╝  ██╔══██║                     ║
+║   ██║  ██╗███████╗   ██║      ██║   ███████╗██║  ██║                     ║
+║   ╚═╝  ╚═╝╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝                     ║
+║                                                                           ║
+║   █████╗ ███╗   ██╗ █████╗ ██╗  ██╗   ██╗███████╗███████╗██████╗        ║
+║  ██╔══██╗████╗  ██║██╔══██╗██║  ╚██╗ ██╔╝╚══███╔╝██╔════╝██╔══██╗       ║
+║  ███████║██╔██╗ ██║███████║██║   ╚████╔╝  ███╔╝ █████╗  ██████╔╝        ║
+║  ██╔══██║██║╚██╗██║██╔══██║██║    ╚██╔╝  ███╔╝  ██╔══╝  ██╔══██╗        ║
+║  ██║  ██║██║ ╚████║██║  ██║███████╗ ██║   ███████╗███████╗██║  ██║        ║
+║  ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝ ╚═╝   ╚══════╝╚══════╝╚═╝  ╚═╝        ║
+║                                                                           ║
+║              ⚡  M O D   A N A L Y Z E R  ⚡                           ║
+║                   D E T E C T   C H E A T S                            ║
+║                                                                           ║
+╚═══════════════════════════════════════════════════════════════════════════╝
 "@
 
 Write-Host $Banner -ForegroundColor Cyan
-Write-Host ("═" * 76) -ForegroundColor DarkCyan
-Write-Host "  ███╗   ██╗███████╗██╗  ██╗██╗   ██╗███████╗" -ForegroundColor Magenta
-Write-Host "  ████╗  ██║██╔════╝██║  ██║╚██╗ ██╔╝██╔════╝" -ForegroundColor Magenta
-Write-Host "  ██╔██╗ ██║█████╗  ███████║ ╚████╔╝ █████╗  " -ForegroundColor Magenta
-Write-Host "  ██║╚██╗██║██╔══╝  ██╔══██║  ╚██╔╝  ██╔══╝  " -ForegroundColor Magenta
-Write-Host "  ██║ ╚████║███████╗██║  ██║   ██║   ███████╗" -ForegroundColor Magenta
-Write-Host "  ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝" -ForegroundColor Magenta
-Write-Host ("═" * 76) -ForegroundColor DarkCyan
+
+# ─── GLOW LINE ──────────────────────────────────────────────────
+Write-Host ("  " + "█" * 72) -ForegroundColor DarkMagenta
+Write-Host "  ███████╗██╗   ██╗██████╗ ███████╗██████╗  ██████╗ ██╗  ██╗" -ForegroundColor Magenta
+Write-Host "  ██╔════╝╚██╗ ██╔╝██╔══██╗██╔════╝██╔══██╗██╔═══██╗╚██╗██╔╝" -ForegroundColor Magenta
+Write-Host "  █████╗   ╚████╔╝ ██████╔╝█████╗  ██████╔╝██║   ██║ ╚███╔╝ " -ForegroundColor Magenta
+Write-Host "  ██╔══╝    ╚██╔╝  ██╔═══╝ ██╔══╝  ██╔══██╗██║   ██║ ██╔██╗ " -ForegroundColor Magenta
+Write-Host "  ███████╗   ██║   ██║     ███████╗██║  ██║╚██████╔╝██╔╝ ██╗" -ForegroundColor Magenta
+Write-Host "  ╚══════╝   ╚═╝   ╚═╝     ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝" -ForegroundColor Magenta
+Write-Host ("  " + "█" * 72) -ForegroundColor DarkMagenta
 Write-Host ""
 
-Write-Host "  ⚡ Enter path to the mods folder:" -ForegroundColor White
+Write-Host "  ⚡ █████████████████████████████████████████████████████████████████" -ForegroundColor DarkCyan
+Write-Host "  ⚡  ███████  ██   ██  ██████  ███████  ██████  ██████  ██    ██" -ForegroundColor Cyan
+Write-Host "  ⚡  ██       ██   ██  ██   ██ ██       ██   ██ ██   ██ ██    ██" -ForegroundColor Cyan
+Write-Host "  ⚡  ███████  ███████  ██████  ███████  ██████  ██████  ██    ██" -ForegroundColor Cyan
+Write-Host "  ⚡       ██  ██   ██  ██   ██      ██  ██   ██ ██   ██ ██    ██" -ForegroundColor Cyan
+Write-Host "  ⚡  ███████  ██   ██  ██   ██ ███████  ██   ██ ██   ██  ██████" -ForegroundColor Cyan
+Write-Host "  ⚡ █████████████████████████████████████████████████████████████████" -ForegroundColor DarkCyan
+Write-Host ""
+
+# ─── PATH INPUT ─────────────────────────────────────────────────
+Write-Host "  📂  TARGET DIRECTORY" -ForegroundColor White
+Write-Host "  ────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+Write-Host "  Enter path to the mods folder:" -ForegroundColor White
 Write-Host "  (press Enter to use default)" -ForegroundColor DarkGray
 Write-Host ""
 Write-Host "  ────▶ " -ForegroundColor Cyan -NoNewline
@@ -48,12 +62,13 @@ Write-Host ""
 
 if ([string]::IsNullOrWhiteSpace($modsPath)) {
     $modsPath = "$env:USERPROFILE\AppData\Roaming\.minecraft\mods"
-    Write-Host "  Using default path: $modsPath" -ForegroundColor Yellow
+    Write-Host "  ◆ Using default path: $modsPath" -ForegroundColor Yellow
     Write-Host ""
 }
 
 if (-not (Test-Path $modsPath -PathType Container)) {
-    Write-Host "  ❌ Invalid path!" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "  ⚠️  INVALID PATH!" -ForegroundColor Red
     Write-Host "  Press any key to exit..." -ForegroundColor Gray
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
     exit 1
@@ -61,40 +76,55 @@ if (-not (Test-Path $modsPath -PathType Container)) {
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-# ─── REAL CHEAT PATTERNS (NO FALSE FLAGS) ─────────────────────
-$realCheatPatterns = @(
-    # Actual cheat clients
+# ─── ANIMATED LOADING ──────────────────────────────────────────
+Write-Host "  ═══ INITIALIZING SCAN ENGINE ═══" -ForegroundColor DarkCyan
+$loadingChars = @("█", "▓", "▒", "░")
+for ($i = 0; $i -le 100; $i += 5) {
+    $bar = "["
+    $filled = [math]::Floor($i / 5)
+    $bar += ($loadingChars[$i % 4] * $filled).PadRight(20, "░")
+    $bar += "]"
+    Write-Host "`r  $bar $i% " -ForegroundColor Cyan -NoNewline
+    Start-Sleep -Milliseconds 15
+}
+Write-Host "`r  [████████████████████] 100% " -ForegroundColor Green
+Write-Host ""
+
+# ─── CHEAT PATTERNS ────────────────────────────────────────────
+$cheatPatterns = @(
+    # Cheat Clients
     "wurst","meteor","impact","liquidbounce","aristois","future","sigma","vape",
     "dqrkis","grim","prestige","asteria","catlean","vengeance","exhibition",
     "rusherhack","novoline","ghostclient","kamiblue","salhack","clickcrystals",
     "baritone","doomsday","kuro","rise","flux","zero","astolfo","xenon",
     
-    # Crystal PVP cheats
-    "autocrystal","autocrystalaura","crystalaura","anchoraura","bedaura",
+    # Crystal PVP
+    "autocrystal","crystalaura","anchoraura","bedaura","autocrystalaura",
     "autodoublehand","autohitcrystal","crystaloptimizer","anchoroptimizer",
     
-    # Obvious cheat features
+    # Combat
     "killaura","aimassist","reach","hitbox","triggerbot","bowaimbot",
-    "antiknockback","velocity","nofall","bhop","flight","phase","blink",
-    "freecam","scaffold","elytrafly","xray","esp","nametags","chams",
-    "tracers","radar","cheststealer","nuker","autoarmor","autopot",
-    "autototem","inventorytotem","hover totem","pingspoof","selfdestruct",
+    "antiknockback","velocity","criticals","autoclicker",
+    
+    # Movement
+    "nofall","bhop","flight","phase","blink","freecam","scaffold",
+    "elytrafly","speedmine","jumpreset","longjump",
+    
+    # Visual
+    "xray","esp","nametags","chams","tracers","radar",
+    
+    # Utility
+    "cheststealer","nuker","autoarmor","autopot","autototem",
+    "inventorytotem","pingspoof","selfdestruct","fastplace","fastbreak",
     
     # Obfuscation
     "meteordevelopment","cc/novoline","com/alan/clients","club/maxstats",
-    "wtf/moonlight","me/zeroeightsix/kami","net/ccbluex","today/opai",
+    "wtf/moonlight","me/zeroeightsix/kami","net/ccbluex",
     "xyz/greaj","com/cheatbreaker","com/moonsworth","phantom-refmap.json",
     
-    # Rat detection
+    # Rats
     "sessionstealer","tokenlogger","tokengrabber","discordtoken",
-    "remoteaccess","reverseshell","c2server","backdoor","keylogger"
-)
-
-# ─── LEGIT WORDS TO IGNORE ────────────────────────────────────
-$legitWords = @(
-    "future","phase","impact","reach","aura","radar","esp","flight","velocity",
-    "auto","clicker","crystal","anchor","pot","totem","armor","shield","breaker",
-    "double","hover","safe","air","macro","web","mace","spear","stun","slam"
+    "remoteaccess","reverseshell","c2server","backdoor"
 )
 
 # ─── FUNCTIONS ──────────────────────────────────────────────────
@@ -106,10 +136,10 @@ function Get-FileSHA1 {
 function Query-Modrinth {
     param([string]$Hash)
     try {
-        $versionInfo = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/version_file/$Hash" -Method Get -UseBasicParsing -ErrorAction Stop
-        if ($versionInfo.project_id) {
-            $projectInfo = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/project/$($versionInfo.project_id)" -Method Get -UseBasicParsing -ErrorAction Stop
-            return @{ Name = $projectInfo.title; Slug = $projectInfo.slug }
+        $ver = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/version_file/$Hash" -Method Get -UseBasicParsing -ErrorAction Stop
+        if ($ver.project_id) {
+            $proj = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/project/$($ver.project_id)" -Method Get -UseBasicParsing -ErrorAction Stop
+            return @{ Name = $proj.title; Slug = $proj.slug }
         }
     } catch { }
     return @{ Name = ""; Slug = "" }
@@ -124,11 +154,11 @@ function Query-Megabase {
     return $null
 }
 
-function Invoke-SmartScan {
+function Invoke-ScanJar {
     param([string]$FilePath)
     
     $found = [System.Collections.Generic.HashSet[string]]::new()
-    $fullCheatFound = $false
+    $isCheatClient = $false
     
     try {
         $archive = [System.IO.Compression.ZipFile]::OpenRead($FilePath)
@@ -136,17 +166,17 @@ function Invoke-SmartScan {
         foreach ($entry in $archive.Entries) {
             $name = $entry.FullName.ToLower()
             
-            # Check if it's a known cheat client
-            foreach ($cheat in $realCheatPatterns) {
+            # Check names
+            foreach ($cheat in $cheatPatterns) {
                 if ($name -match $cheat) {
                     $found.Add($cheat)
-                    if ($cheat -match "wurst|meteor|impact|sigma|vengeance|dqrkis|grim|prestige") {
-                        $fullCheatFound = $true
+                    if ($cheat -match "wurst|meteor|impact|sigma|vengeance|dqrkis|grim|prestige|exhibition|rusherhack|novoline") {
+                        $isCheatClient = $true
                     }
                 }
             }
             
-            # Scan class files
+            # Check class files
             if ($name -match '\.class$') {
                 try {
                     $st = $entry.Open()
@@ -155,11 +185,11 @@ function Invoke-SmartScan {
                     $bytes = $ms.ToArray(); $ms.Dispose()
                     $text = [System.Text.Encoding]::ASCII.GetString($bytes).ToLower()
                     
-                    foreach ($cheat in $realCheatPatterns) {
-                        if ($text -match $cheat -and $cheat.Length -gt 4) {
+                    foreach ($cheat in $cheatPatterns) {
+                        if ($cheat.Length -gt 4 -and $text -match $cheat) {
                             $found.Add($cheat)
-                            if ($cheat -match "wurst|meteor|impact|sigma|vengeance|dqrkis|grim|prestige") {
-                                $fullCheatFound = $true
+                            if ($cheat -match "wurst|meteor|impact|sigma|vengeance|dqrkis|grim|prestige|exhibition|rusherhack|novoline") {
+                                $isCheatClient = $true
                             }
                         }
                     }
@@ -171,21 +201,22 @@ function Invoke-SmartScan {
     
     return @{ 
         Hits = $found
-        IsFullCheat = $fullCheatFound
+        IsCheatClient = $isCheatClient
+        HitCount = $found.Count
     }
 }
 
-function Invoke-ScanFile {
+function Invoke-DeepScan {
     param([string]$FilePath)
     $flags = [System.Collections.Generic.List[string]]::new()
     
     try {
         $zip = [System.IO.Compression.ZipFile]::OpenRead($FilePath)
         
-        # Check for runtime.exec
         $hasRuntimeExec = $false
         $hasHttpDownload = $false
         $hasHttpExfil = $false
+        $hasObfuscation = $false
         
         foreach ($entry in $zip.Entries) {
             if ($entry.FullName -match '\.class$') {
@@ -196,23 +227,19 @@ function Invoke-ScanFile {
                     $bytes = $ms.ToArray(); $ms.Dispose()
                     $text = [System.Text.Encoding]::ASCII.GetString($bytes)
                     
-                    if ($text -match "java/lang/Runtime" -and $text -match "exec") {
-                        $hasRuntimeExec = $true
-                    }
-                    if ($text -match "HttpURLConnection" -and $text -match "FileOutputStream") {
-                        $hasHttpDownload = $true
-                    }
-                    if ($text -match "setDoOutput" -and $text -match "getOutputStream") {
-                        $hasHttpExfil = $true
-                    }
+                    if ($text -match "java/lang/Runtime" -and $text -match "exec") { $hasRuntimeExec = $true }
+                    if ($text -match "HttpURLConnection" -and $text -match "FileOutputStream") { $hasHttpDownload = $true }
+                    if ($text -match "setDoOutput" -and $text -match "getOutputStream") { $hasHttpExfil = $true }
+                    if ($text -match "ProGuard|Allatori|ZKM|Stringer|Radon|Paramorphism") { $hasObfuscation = $true }
                 } catch { }
             }
         }
         $zip.Dispose()
         
-        if ($hasRuntimeExec) { $flags.Add("⚠️ RUNTIME.EXEC — Can execute OS commands") }
-        if ($hasHttpDownload) { $flags.Add("⚠️ HTTP DOWNLOAD — Fetches files from remote server") }
-        if ($hasHttpExfil) { $flags.Add("⚠️ DATA EXFIL — Sends data to external server") }
+        if ($hasRuntimeExec) { $flags.Add("⚡ RUNTIME.EXEC — Can execute OS commands") }
+        if ($hasHttpDownload) { $flags.Add("⬇ HTTP DOWNLOAD — Fetches files from remote server") }
+        if ($hasHttpExfil) { $flags.Add("📤 DATA EXFIL — Sends data to external server") }
+        if ($hasObfuscation) { $flags.Add("🕵️ OBFUSCATION — Uses obfuscation techniques") }
         
     } catch { }
     
@@ -220,67 +247,67 @@ function Invoke-ScanFile {
 }
 
 # ─── SCAN ──────────────────────────────────────────────────────
-$verifiedMods = @()
-$unknownMods = @()
-$cheatMods = @()
-$suspiciousMods = @()
-
 $jarFiles = Get-ChildItem -Path $modsPath -Filter *.jar -File
 $total = $jarFiles.Count
 
 Write-Host "  🔍 Found $total JAR files" -ForegroundColor Green
-Write-Host ("═" * 76) -ForegroundColor DarkCyan
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkCyan
 Write-Host ""
 
-$spinner = @("⣾","⣽","⣻","⢿","⡿","⣟","⣯","⣷")
+$verifiedMods = @()
+$unknownMods = @()
+$cheatMods = @()
+$suspiciousMods = @()
+$dangerousMods = @()
+
 $idx = 0
+$spinner = @("◢","◣","◤","◥")
 
 foreach ($jar in $jarFiles) {
     $idx++
     $pct = [math]::Round(100 * $idx / $total)
-    $spinnerChar = $spinner[$idx % $spinner.Length]
-    Write-Host "`r  [$spinnerChar] Scanning $idx/$total ($pct%) — $($jar.Name)" -ForegroundColor Cyan -NoNewline
+    $spin = $spinner[$idx % $spinner.Length]
+    Write-Host "`r  [$spin] Scanning $idx/$total ($pct%) — $($jar.Name)" -ForegroundColor Cyan -NoNewline
     
     # Hash check
     $hash = Get-FileSHA1 -Path $jar.FullName
     $verified = $false
-    $modName = ""
     
     if ($hash) {
         $modrinthData = Query-Modrinth -Hash $hash
         if ($modrinthData.Slug) {
-            $verified = $true
-            $modName = $modrinthData.Name
-            $verifiedMods += [PSCustomObject]@{ 
-                FileName = $jar.Name
-                ModName = $modName
-            }
+            $verifiedMods += [PSCustomObject]@{ FileName = $jar.Name; ModName = $modrinthData.Name }
             continue
         }
         $megabaseData = Query-Megabase -Hash $hash
         if ($megabaseData.name) {
-            $verified = $true
-            $modName = $megabaseData.name
-            $verifiedMods += [PSCustomObject]@{ 
-                FileName = $jar.Name
-                ModName = $modName
-            }
+            $verifiedMods += [PSCustomObject]@{ FileName = $jar.Name; ModName = $megabaseData.name }
             continue
         }
     }
     
-    # Smart scan for cheats
-    $scanResult = Invoke-SmartScan -FilePath $jar.FullName
+    # Scan for cheats
+    $scanResult = Invoke-ScanJar -FilePath $jar.FullName
     
-    if ($scanResult.IsFullCheat) {
+    if ($scanResult.IsCheatClient) {
         $cheatMods += [PSCustomObject]@{
             FileName = $jar.Name
             Hits = $scanResult.Hits
+            HitCount = $scanResult.HitCount
         }
-    } elseif ($scanResult.Hits.Count -gt 0) {
+        # Deep scan for dangerous mods
+        $flags = Invoke-DeepScan -FilePath $jar.FullName
+        if ($flags.Count -gt 0) {
+            $dangerousMods += [PSCustomObject]@{
+                FileName = $jar.Name
+                Flags = $flags
+            }
+        }
+    } elseif ($scanResult.HitCount -gt 0) {
         $suspiciousMods += [PSCustomObject]@{
             FileName = $jar.Name
             Hits = $scanResult.Hits
+            HitCount = $scanResult.HitCount
         }
     } else {
         $unknownMods += [PSCustomObject]@{ FileName = $jar.Name }
@@ -291,32 +318,50 @@ Write-Host "`r" + " " * 80 + "`r" -NoNewline
 
 # ─── RESULTS ───────────────────────────────────────────────────
 Write-Host ""
-Write-Host ("═" * 76) -ForegroundColor Cyan
-Write-Host "  📊  SCAN RESULTS" -ForegroundColor Cyan
-Write-Host ("═" * 76) -ForegroundColor Cyan
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+Write-Host "  📊  S C A N   R E S U L T S" -ForegroundColor Cyan
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
 Write-Host ""
 
-Write-Host "  ✅ VERIFIED   : $($verifiedMods.Count)" -ForegroundColor Green
-Write-Host "  ❓ UNKNOWN    : $($unknownMods.Count)" -ForegroundColor Yellow
-Write-Host "  ⚠️  SUSPICIOUS : $($suspiciousMods.Count)" -ForegroundColor Yellow
-Write-Host "  🚨 CHEATS     : $($cheatMods.Count)" -ForegroundColor Red
+$totalFlagged = $cheatMods.Count + $suspiciousMods.Count
+
+Write-Host "  ┌─────────────────────────────────────────────────────────────────┐" -ForegroundColor DarkMagenta
+Write-Host "  │  ✅ VERIFIED    │  ❓ UNKNOWN    │  ⚠️ SUSPICIOUS │  🚨 CHEATS  │" -ForegroundColor White
+Write-Host "  │  $($verifiedMods.Count.ToString().PadLeft(4))           │  $($unknownMods.Count.ToString().PadLeft(4))          │  $($suspiciousMods.Count.ToString().PadLeft(4))           │  $($cheatMods.Count.ToString().PadLeft(4))        │" -ForegroundColor White
+Write-Host "  └─────────────────────────────────────────────────────────────────┘" -ForegroundColor DarkMagenta
 Write-Host ""
 
 # ─── CHEATS ────────────────────────────────────────────────────
 if ($cheatMods.Count -gt 0) {
-    Write-Host ("═" * 76) -ForegroundColor Red
-    Write-Host "  🚨 CHEATS DETECTED" -ForegroundColor Red
-    Write-Host ("═" * 76) -ForegroundColor Red
+    Write-Host "  ═══ 🚨 C H E A T S   D E T E C T E D ═══" -ForegroundColor Red
+    Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkRed
     Write-Host ""
     
     foreach ($mod in $cheatMods) {
         Write-Host "  ⚡ $($mod.FileName)" -ForegroundColor Red
         Write-Host "     ─────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-        $displayHits = $mod.Hits | Where-Object { $_ -match "wurst|meteor|impact|sigma|vengeance|dqrkis|grim|prestige" }
-        if ($displayHits.Count -gt 0) {
-            Write-Host "     CHEAT CLIENT: $($displayHits -join ', ')" -ForegroundColor Magenta
-        } else {
-            Write-Host "     SUSPICIOUS PATTERNS: $($mod.Hits -join ', ')" -ForegroundColor Yellow
+        
+        $clientHits = $mod.Hits | Where-Object { $_ -match "wurst|meteor|impact|sigma|vengeance|dqrkis|grim|prestige|exhibition|rusherhack|novoline" }
+        if ($clientHits.Count -gt 0) {
+            Write-Host "     🔥 CHEAT CLIENT: $($clientHits -join ', ')" -ForegroundColor Magenta
+        }
+        Write-Host "     🎯 SIGNATURES: $($mod.Hits -join ', ')" -ForegroundColor Yellow
+        Write-Host "     📊 HIT COUNT: $($mod.HitCount)" -ForegroundColor Gray
+        Write-Host ""
+    }
+}
+
+# ─── DANGEROUS MODS ───────────────────────────────────────────
+if ($dangerousMods.Count -gt 0) {
+    Write-Host "  ═══ ☣️  D A N G E R O U S   M O D S ═══" -ForegroundColor DarkRed
+    Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkRed
+    Write-Host ""
+    
+    foreach ($mod in $dangerousMods) {
+        Write-Host "  ☢️ $($mod.FileName)" -ForegroundColor DarkRed
+        Write-Host "     ─────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        foreach ($flag in $mod.Flags) {
+            Write-Host "     $flag" -ForegroundColor Red
         }
         Write-Host ""
     }
@@ -324,50 +369,104 @@ if ($cheatMods.Count -gt 0) {
 
 # ─── SUSPICIOUS ─────────────────────────────────────────────────
 if ($suspiciousMods.Count -gt 0) {
-    Write-Host ("═" * 76) -ForegroundColor Yellow
-    Write-Host "  ⚠️  SUSPICIOUS MODS" -ForegroundColor Yellow
-    Write-Host ("═" * 76) -ForegroundColor Yellow
+    Write-Host "  ═══ ⚠️  S U S P I C I O U S   M O D S ═══" -ForegroundColor Yellow
+    Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkYellow
     Write-Host ""
     
     foreach ($mod in $suspiciousMods) {
-        Write-Host "  ⚠️  $($mod.FileName)" -ForegroundColor Yellow
-        Write-Host "     PATTERNS: $($mod.Hits -join ', ')" -ForegroundColor DarkGray
+        Write-Host "  ⚠️ $($mod.FileName)" -ForegroundColor Yellow
+        Write-Host "     🎯 PATTERNS: $($mod.Hits -join ', ')" -ForegroundColor DarkGray
+        Write-Host "     📊 HIT COUNT: $($mod.HitCount)" -ForegroundColor Gray
         Write-Host ""
     }
 }
 
 # ─── UNKNOWN ──────────────────────────────────────────────────
 if ($unknownMods.Count -gt 0) {
-    Write-Host ("═" * 76) -ForegroundColor DarkGray
-    Write-Host "  ❓ UNKNOWN MODS" -ForegroundColor DarkGray
-    Write-Host ("═" * 76) -ForegroundColor DarkGray
+    Write-Host "  ═══ ❓ U N K N O W N   M O D S ═══" -ForegroundColor DarkGray
+    Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkGray
     Write-Host ""
     
-    foreach ($mod in $unknownMods) {
+    $displayUnknown = $unknownMods | Select-Object -First 20
+    foreach ($mod in $displayUnknown) {
         Write-Host "  ▸ $($mod.FileName)" -ForegroundColor DarkGray
+    }
+    if ($unknownMods.Count -gt 20) {
+        Write-Host "  ... and $($unknownMods.Count - 20) more" -ForegroundColor DarkGray
     }
     Write-Host ""
 }
 
 # ─── VERIFIED ──────────────────────────────────────────────────
 if ($verifiedMods.Count -gt 0) {
-    Write-Host ("═" * 76) -ForegroundColor Green
-    Write-Host "  ✅ VERIFIED MODS" -ForegroundColor Green
-    Write-Host ("═" * 76) -ForegroundColor Green
+    Write-Host "  ═══ ✅ V E R I F I E D   M O D S ═══" -ForegroundColor Green
+    Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkGreen
     Write-Host ""
     
-    foreach ($mod in $verifiedMods) {
+    $displayVerified = $verifiedMods | Select-Object -First 20
+    foreach ($mod in $displayVerified) {
         Write-Host "  ✓ $($mod.ModName)" -ForegroundColor Green -NoNewline
         Write-Host " [$($mod.FileName)]" -ForegroundColor DarkGray
+    }
+    if ($verifiedMods.Count -gt 20) {
+        Write-Host "  ... and $($verifiedMods.Count - 20) more" -ForegroundColor DarkGray
     }
     Write-Host ""
 }
 
+# ─── SECURITY RATING ───────────────────────────────────────────
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+Write-Host "  🛡️  S E C U R I T Y   R A T I N G" -ForegroundColor Cyan
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+Write-Host ""
+
+$riskScore = ($cheatMods.Count * 3) + ($suspiciousMods.Count * 1) + ($dangerousMods.Count * 5)
+
+if ($dangerousMods.Count -gt 0) {
+    Write-Host "  ☣️  STATUS: CRITICAL — Dangerous mods detected!" -ForegroundColor DarkRed
+    Write-Host "  ⚡ IMMEDIATE ACTION REQUIRED" -ForegroundColor Red
+} elseif ($cheatMods.Count -gt 0) {
+    Write-Host "  🚨 STATUS: COMPROMISED — Cheat clients detected!" -ForegroundColor Red
+    Write-Host "  ⚠️ Remove flagged mods immediately" -ForegroundColor Yellow
+} elseif ($suspiciousMods.Count -gt 3) {
+    Write-Host "  ⚠️  STATUS: CAUTION — Suspicious mods found" -ForegroundColor Yellow
+    Write-Host "  🔍 Manual inspection recommended" -ForegroundColor Yellow
+} else {
+    Write-Host "  ✅ STATUS: CLEAN — No threats detected" -ForegroundColor Green
+    Write-Host "  🔥 You're good to go!" -ForegroundColor Green
+}
+Write-Host ""
+
+# ─── STATS ─────────────────────────────────────────────────────
+Write-Host "  📊  S C A N   S T A T S" -ForegroundColor Cyan
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkCyan
+Write-Host ""
+Write-Host "  📦 Total Files    : $total" -ForegroundColor White
+Write-Host "  ✅ Verified      : $($verifiedMods.Count)" -ForegroundColor Green
+Write-Host "  ❓ Unknown       : $($unknownMods.Count)" -ForegroundColor Yellow
+Write-Host "  ⚠️ Suspicious    : $($suspiciousMods.Count)" -ForegroundColor Yellow
+Write-Host "  🚨 Cheats        : $($cheatMods.Count)" -ForegroundColor Red
+Write-Host "  ☣️ Dangerous     : $($dangerousMods.Count)" -ForegroundColor DarkRed
+Write-Host "  📊 Risk Score    : $riskScore" -ForegroundColor White
+Write-Host ""
+
 # ─── FOOTER ────────────────────────────────────────────────────
-Write-Host ("═" * 76) -ForegroundColor DarkCyan
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
+Write-Host "  🔥  K E T T E H   M O D   A N A L Y Z E R" -ForegroundColor Magenta
+Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
-Write-Host "  🔥 Analysis complete. Stay vigilant." -ForegroundColor Magenta
-Write-Host "  ⚡ Ketteh's Mod Analyzer v2" -ForegroundColor Cyan
+
+$kitty = @"
+        /\_/\
+       ( ^.^ )
+        > ^ <
+       /|   |\
+      (_|   |_)
+"@
+Write-Host $kitty -ForegroundColor Magenta
+Write-Host "  ⚡  Stay vigilant. Stay safe." -ForegroundColor Cyan
+Write-Host "  🔥  No mercy for cheaters." -ForegroundColor Magenta
 Write-Host ""
+
 Write-Host "  Press any key to exit..." -ForegroundColor DarkGray
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
