@@ -12,17 +12,17 @@ if ($currentFont -notmatch "NSimSun|Gothic|Noto") {
 
 $Banner = @"
 
-  ███╗   ███╗███████╗ ██████╗ ██╗    ██╗  ███╗   ███╗ ██████╗ ██████╗
-  ████╗ ████║██╔════╝██╔═══██╗██║    ██║  ████╗ ████║██╔═══██╗██╔══██╗
-  ██╔████╔██║█████╗  ██║   ██║██║ █╗ ██║  ██╔████╔██║██║   ██║██║  ██║
-  ██║╚██╔╝██║██╔══╝  ██║   ██║██║███╗██║  ██║╚██╔╝██║██║   ██║██║  ██║
-  ██║ ╚═╝ ██║███████╗╚██████╔╝╚███╔███╔╝  ██║ ╚═╝ ██║╚██████╔╝██████╔╝
-  ╚═╝     ╚═╝╚══════╝ ╚═════╝  ╚══╝╚══╝   ╚═╝     ╚═╝ ╚═════╝ ╚═════╝
-
-   █████╗ ███╗   ██╗ █████╗ ██╗   ██╗   ██╗███████╗███████╗██████╗
-  ██╔══██╗████╗  ██║██╔══██╗██║   ╚██╗ ██╔╝╚══███╔╝██╔════╝██╔══██╗
-  ███████║██╔██╗ ██║███████║██║    ╚████╔╝   ███╔╝ █████╗  ██████╔╝
-  ██╔══██║██║╚██╗██║██╔══██║██║     ╚██╔╝   ███╔╝  ██╔══╝  ██╔══██╗
+  ██╗  ██╗███████╗████████╗████████╗███████╗██╗  ██╗    ███████╗
+  ██║ ██╔╝██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██║  ██║    ██╔════╝
+  █████╔╝ █████╗     ██║      ██║   █████╗  ███████║    █████╗  
+  ██╔═██╗ ██╔══╝     ██║      ██║   ██╔══╝  ██╔══██║    ██╔══╝  
+  ██║  ██╗███████╗   ██║      ██║   ███████╗██║  ██║    ███████╗
+  ╚═╝  ╚═╝╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝    ╚══════╝
+  
+   █████╗ ███╗   ██╗ █████╗ ██╗  ██╗   ██╗███████╗███████╗██████╗
+  ██╔══██╗████╗  ██║██╔══██╗██║  ╚██╗ ██╔╝╚══███╔╝██╔════╝██╔══██╗
+  ███████║██╔██╗ ██║███████║██║   ╚████╔╝  ███╔╝ █████╗  ██████╔╝
+  ██╔══██║██║╚██╗██║██╔══██║██║    ╚██╔╝  ███╔╝  ██╔══╝  ██╔══██╗
   ██║  ██║██║ ╚████║██║  ██║███████╗ ██║   ███████╗███████╗██║  ██║
   ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝ ╚═╝   ╚══════╝╚══════╝╚═╝  ╚═╝
 
@@ -38,7 +38,7 @@ Write-Host ""
 Write-Host "                Made with " -ForegroundColor Gray -NoNewline
 Write-Host "♥ " -ForegroundColor Red -NoNewline
 Write-Host "by " -ForegroundColor Gray -NoNewline
-Write-Host "MeowTonynoh" -ForegroundColor Cyan
+Write-Host "Ketteh" -ForegroundColor Magenta
 Write-Host ""
 Write-Host ("━" * 76) -ForegroundColor DarkCyan
 Write-Host
@@ -87,7 +87,7 @@ if ($mcProcess) {
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-# ─── EXPANDED CHEAT PATTERNS ──────────────────────────────────
+# ─── KETTEH'S CHEAT PATTERNS ──────────────────────────────────
 $suspiciousPatterns = @(
     # Combat
     "AimAssist", "KillAura", "Reach", "HitBox", "Aura", "BowAimbot", "Velocity", "AntiKnockback",
@@ -99,7 +99,7 @@ $suspiciousPatterns = @(
     "LiquidBounce", "Future", "RusherHack", "Sigma", "Novoline", "GhostClient",
     
     # Crystal PVP
-    "AutoCrystal", "autocrystal", "auto crystal", "cw crystal", "JDWP.VirtualMachine.AllModules",
+    "AutoCrystal", "autocrystal", "auto crystal", "cw crystal",
     "AutoHitCrystal", "autohitcrystal", "dontPlaceCrystal", "dontBreakCrystal",
     "AutoAnchor", "autoanchor", "auto anchor", "DoubleAnchor", "HasAnchor",
     "anchorTweaks", "anchor macro", "safe anchor", "safeanchor",
@@ -115,12 +115,10 @@ $suspiciousPatterns = @(
     
     # Shield
     "ShieldDisabler", "ShieldBreaker", "preventSwordBlockBreaking", "preventSwordBlockAttack",
-    "Breaking shield with axe...",
     
     # Obfuscation
     "imgui.gl3", "imgui.glfw", "JNativeHook", "GlobalScreen", "NativeKeyListener",
     "client-refmap.json", "cheat-refmap.json", "phantom-refmap.json",
-    "aHR0cDovL2FwaS5ub3ZhY2xpZW50LmxvbC93ZWJob29rLnR4dA==",
     "meteordevelopment", "cc/novoline", "com/alan/clients", "club/maxstats",
     "wtf/moonlight", "me/zeroeightsix/kami", "net/ccbluex", "today/opai",
     "xyz/greaj", "com/cheatbreaker", "com/moonsworth",
@@ -132,7 +130,7 @@ $suspiciousPatterns = @(
     "と.class", "み.class", "び.class", "す.class", "の.class",
     
     # Clients
-    "WalksyOptimizer", "WalksyCrystalOptimizerMod", "WalskyOptimizer", "walsky.optimizer",
+    "WalksyOptimizer", "WalksyCrystalOptimizerMod", "WalskyOptimizer",
     "DoomsdayClient", "doomsday.jar", "doomsdayclient",
     "Dqrkis Client", "dqrkis.xyz", "dqrkis",
     "GrimClient", "grim client", "GrimInject",
@@ -159,10 +157,7 @@ $suspiciousPatterns = @(
     "ＡｉｍＡｓｓｉｓｔ", "Ａｉｍ Ａｓｓｉｓｔ", "ＴｒｉｇｇｅｒＢｏｔ",
     "ＦａｋｅＬａｇ", "Ｆａｋｅ Ｌａｇ", "Ｆａｋｅ Ｐｕｎｃｈ",
     "Ｗａｌｋｓｙ Ｏｐｔｉｍｉｚｅｒ", "ＥｌｙｔｒａＳｗａｐ", "ＫｅｙＰｅａｒｌ",
-    "Ｌｏｏｔ Ｙｅｅｔｅｒ", "Ｆａｓｔ Ｐｌａｃｅ", "Ａｕｔｏ Ｂｒｅａｃｈ",
-    "Ｂｌａｔａｎｔ", "Ｆｏｒｃｅ Ｔｏｔｅｍ", "Ｓｔａｙ Ｏｐｅｎ Ｆｏｒ",
-    "ＬＷＦＨ Ｃｒｙｓｔａｌ", "Ｓｔｕｎ Ｓｌａｍ", "ＭａｃｅＳｗａｐ",
-    "Ｓｉｌｅｎｔ Ｒｏｔａｔｉｏｎｓ", "Ｓｍｏｏｔｈ Ｒｏｔａｔｉｏｎｓ"
+    "Ｌｏｏｔ Ｙｅｅｔｅｒ", "Ｆａｓｔ Ｐｌａｃｅ", "Ａｕｔｏ Ｂｒｅａｃｈ"
 )
 
 # ─── FUNCTIONS ──────────────────────────────────────────────────
@@ -285,7 +280,7 @@ function Invoke-ModScan {
         $archive.Dispose()
     } catch { }
 
-    $fwCheatPool = @($cheatStrings | Where-Object {
+    $fwCheatPool = @($suspiciousPatterns | Where-Object {
         $_ -cmatch "[\uFF21-\uFF3A\uFF41-\uFF5A\uFF10-\uFF19]"
     })
     $resolvedFullwidth = [System.Collections.Generic.HashSet[string]]::new()
@@ -1084,24 +1079,20 @@ Write-Host
 Write-Rule "━" 76 Blue
 Write-Host ""
 
-# ─── CREDITS ────────────────────────────────────────────────────
-Write-Host "  ✨ Analysis complete! Thanks for using the best analyzer made by Ketteh Ofc 🐱" -ForegroundColor Cyan
+# ─── KETTEH CREDITS ────────────────────────────────────────────
+Write-Host "  ✨ Analysis complete! Ketteh's Mod Analyzer 🔥" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  👤 Created by: " -ForegroundColor White -NoNewline
-Write-Host "🌟 " -ForegroundColor Cyan -NoNewline
-Write-Host "Tonynoh" -ForegroundColor Cyan
+Write-Host "⚡ " -ForegroundColor Magenta -NoNewline
+Write-Host "Ketteh" -ForegroundColor Magenta
 Write-Host "  📱 My Socials: " -ForegroundColor White -NoNewline
 Write-Host "💬 " -ForegroundColor Blue -NoNewline
 Write-Host "Discord  : " -ForegroundColor Blue -NoNewline
-Write-Host "tonyboy90_" -ForegroundColor Blue
+Write-Host "ketteh" -ForegroundColor Blue
 Write-Host "                 " -NoNewline
 Write-Host "🔗 " -ForegroundColor DarkGray -NoNewline
 Write-Host "GitHub   : " -ForegroundColor DarkGray -NoNewline
-Write-Host "https://github.com/MeowTonynoh" -ForegroundColor DarkGray
-Write-Host "                 " -NoNewline
-Write-Host "🎥 " -ForegroundColor Red -NoNewline
-Write-Host "YouTube  : " -ForegroundColor Red -NoNewline
-Write-Host "tonynoh-07" -ForegroundColor Red
+Write-Host "KettehDev" -ForegroundColor DarkGray
 Write-Host ""
 Write-Rule "━" 76 Blue
 Write-Host ""
