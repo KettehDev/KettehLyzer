@@ -5,13 +5,12 @@
 #  ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██║██║    ██║
 #  ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║███████╗██║
 #  ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝╚═╝
-#           KETTEH SS BYPASS DETECTOR v8.0
+#           KETTEH SS BYPASS DETECTOR v9.0
 #         CATCHES MODS HIDING FROM SCREENSHARES 🔥
 # ============================================================
 
-# Clear and set up
 Clear-Host
-$Host.UI.RawUI.WindowTitle = "⚡ KETTEH SS BYPASS DETECTOR v8.0 ⚡"
+$Host.UI.RawUI.WindowTitle = "⚡ KETTEH SS BYPASS DETECTOR v9.0 ⚡"
 
 # ─── COLOR DEFINITIONS ────────────────────────────────────────
 $Cyan = "Cyan"
@@ -25,10 +24,11 @@ $DarkGray = "DarkGray"
 $DarkMagenta = "DarkMagenta"
 $DarkCyan = "DarkCyan"
 $DarkRed = "DarkRed"
+$DarkGreen = "DarkGreen"
 
 # ─── RAINBOW TEXT FUNCTION ────────────────────────────────────
 function Write-Rainbow {
-    param([string]$Text, [int]$Delay = 30)
+    param([string]$Text, [int]$Delay = 20)
     $colors = @('Red','Yellow','Green','Cyan','Magenta','White')
     $i = 0
     foreach ($char in $Text.ToCharArray()) {
@@ -44,7 +44,24 @@ function Write-Rainbow {
     Write-Host ""
 }
 
-# ─── ASCII BANNER WITH GLOW ──────────────────────────────────
+# ─── BIG EPIC CAT ──────────────────────────────────────────────
+$bigCat = @"
+        ╔═══════════════════════════════════════════════════╗
+        ║    /\_/\    /\_/\    /\_/\    /\_/\    /\_/\    ║
+        ║   ( o.o )  ( ^.^ )  ( >.< )  ( O.o )  ( -.- )   ║
+        ║    > ^ <    > ^ <    > ^ <    > ^ <    > ^ <    ║
+        ║   /|   |\  /|   |\  /|   |\  /|   |\  /|   |\   ║
+        ║  (_|   |_)(_|   |_)(_|   |_)(_|   |_)(_|   |_)  ║
+        ║    |   |    |   |    |   |    |   |    |   |    ║
+        ║   _|   |_  _|   |_  _|   |_  _|   |_  _|   |_   ║
+        ║  (___|___)(___|___)(___|___)(___|___)(___|___)  ║
+        ║                                                   ║
+        ║  🔥  CATCHING CHEATERS SINCE 2024  🔥           ║
+        ║  ⚡  JUSTICE SERVED. NO MERCY.  ⚡              ║
+        ╚═══════════════════════════════════════════════════╝
+"@
+
+# ─── ASCII BANNER ─────────────────────────────────────────────
 $banner = @"
 ╔═══════════════════════════════════════════════════════════════╗
 ║                                                               ║
@@ -55,19 +72,19 @@ $banner = @"
 ║      ██║  ██╗███████╗   ██║      ██║   ███████╗██║  ██║     ║
 ║      ╚═╝  ╚═╝╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝     ║
 ║                                                               ║
-║        ⚡ SS BYPASS & HIDE DETECTOR v8.0 ⚡               ║
+║        ⚡ SS BYPASS & HIDE DETECTOR v9.0 ⚡               ║
 ║     CATCHES MODS HIDING FROM SCREENSHARES 🔥              ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
 "@
 
-# Write banner with rainbow effect
+# ─── DISPLAY BANNER ──────────────────────────────────────────
 $bannerLines = $banner -split "`n"
 foreach ($line in $bannerLines) {
-    if ($line -match "█" -or $line -match "╔" -or $line -match "╗" -or $line -match "║" -or $line -match "╚" -or $line -match "╝") {
+    if ($line -match "█" -or $line -match "╔" -or $line -match "╗" -or $line -match "║" -or $line -match "╚" -or $line -match "╝" -or $line -match "═") {
         Write-Host $line -ForegroundColor DarkMagenta
-    } elseif ($line -match "KETTEH") {
-        Write-Rainbow -Text $line -Delay 15
+    } elseif ($line -match "KETTEH" -or $line -match "SS BYPASS") {
+        Write-Rainbow -Text $line -Delay 10
     } else {
         Write-Host $line -ForegroundColor Magenta
     }
@@ -93,10 +110,10 @@ foreach ($text in $loadingTexts) {
     for ($i = 0; $i -lt 3; $i++) {
         $dots += "."
         Write-Host "`r  $text$dots" -ForegroundColor Yellow -NoNewline
-        Start-Sleep -Milliseconds 300
+        Start-Sleep -Milliseconds 250
     }
     Write-Host "`r  $text" -ForegroundColor Green
-    Start-Sleep -Milliseconds 200
+    Start-Sleep -Milliseconds 150
 }
 Write-Host ""
 
@@ -109,7 +126,7 @@ for ($i = 0; $i -le 100; $i += 2) {
     $bar += "]"
     $percent = $i.ToString().PadLeft(3)
     Write-Host "`r  $bar $percent% " -ForegroundColor Cyan -NoNewline
-    Start-Sleep -Milliseconds 15
+    Start-Sleep -Milliseconds 10
 }
 Write-Host "`r  [██████████████████████████████████████████████████] 100% " -ForegroundColor Green
 Write-Host ""
@@ -195,8 +212,7 @@ $CheatClientNames = @(
     'crystalaura','autocrystal','anchoraura','bedaura',
     'rusherhack','novoline','ghostclient','kamiblue','salhack','clickcrystals',
     'baritone','vengeance','exhibition','kuro','rise','flux',
-    'zero','astolfo','dortware','xenon','tenacity',
-    'injector','inject','bypass','exploit','spoofer','disabler'
+    'zero','astolfo','dortware','xenon','tenacity'
 )
 
 $LegitMods = @{
@@ -269,7 +285,7 @@ function Get-SSBypassHits {
         foreach ($sig in $CheatSignatures) {
             if ($text -match [regex]::Escape($sig)) { $hits.Cheat += $sig }
         }
-        if (($hits.Hide.Count + $hits.Cheat.Count) -gt 20) { break }
+        if (($hits.Hide.Count + $hits.Cheat.Count) -gt 30) { break }
     }
     $hits.Hide = $hits.Hide | Select-Object -Unique
     $hits.Cheat = $hits.Cheat | Select-Object -Unique
@@ -279,8 +295,8 @@ function Get-SSBypassHits {
 function Get-ThreatLevel {
     param([hashtable]$Hits)
     $total = $Hits.Hide.Count + $Hits.Cheat.Count
-    if ($total -ge 10) { return "CRITICAL" }
-    if ($total -ge 5) { return "HIGH" }
+    if ($total -ge 12) { return "CRITICAL" }
+    if ($total -ge 6) { return "HIGH" }
     if ($total -ge 2) { return "MEDIUM" }
     return "LOW"
 }
@@ -439,38 +455,40 @@ if ($bypassMods.Count -gt 0) {
         }
         
         Write-Host ""
-        Write-Host "  ⚡ $($mod.FileName)" -ForegroundColor Red -NoNewline
+        Write-Host "  ╔══════════════════════════════════════════════════════════════════╗" -ForegroundColor DarkRed
+        Write-Host "  ║  ⚡ FLAGGED: $($mod.FileName)" -ForegroundColor Red
+        Write-Host "  ╠══════════════════════════════════════════════════════════════════╣" -ForegroundColor DarkRed
         
         if ($mod.Type -eq "NAME MATCH") {
-            Write-Host "  — $($mod.Reason)" -ForegroundColor DarkRed
-            Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+            Write-Host "  ║  TYPE        : NAME MATCH" -ForegroundColor Yellow
+            Write-Host "  ║  REASON      : $($mod.Reason)" -ForegroundColor DarkRed
+            Write-Host "  ║  THREAT      : " -NoNewline -ForegroundColor Yellow
+            Write-Host "CRITICAL" -ForegroundColor DarkRed
         } else {
-            Write-Host "  — $($mod.Reason)" -ForegroundColor DarkMagenta
-            Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-            Write-Host "  🎯 THREAT LEVEL: " -ForegroundColor Yellow -NoNewline
+            Write-Host "  ║  TYPE        : SS BYPASS / HIDE" -ForegroundColor Yellow
+            Write-Host "  ║  REASON      : $($mod.Reason)" -ForegroundColor DarkMagenta
+            Write-Host "  ║  THREAT      : " -NoNewline -ForegroundColor Yellow
             Write-Host $mod.Threat -ForegroundColor $threatColor
+            Write-Host "  ║  TOTAL HITS  : $($mod.Hits.Hide.Count + $mod.Hits.Cheat.Count)" -ForegroundColor Yellow
             
             if ($mod.Hits.Hide.Count -gt 0) {
-                Write-Host "  🕵️ SS BYPASS / HIDE Signatures Found:" -ForegroundColor Cyan
-                foreach ($hit in $mod.Hits.Hide[0..5]) {
-                    Write-Host "     🔸 $hit" -ForegroundColor Red
-                }
-                if ($mod.Hits.Hide.Count -gt 6) {
-                    Write-Host "     ... and $($mod.Hits.Hide.Count - 6) more" -ForegroundColor DarkGray
+                Write-Host "  ╠══════════════════════════════════════════════════════════════════╣" -ForegroundColor DarkRed
+                Write-Host "  ║  🕵️ SS BYPASS / HIDE SIGNATURES:" -ForegroundColor Cyan
+                foreach ($hit in $mod.Hits.Hide) {
+                    Write-Host "  ║     🔸 $hit" -ForegroundColor Red
                 }
             }
             
             if ($mod.Hits.Cheat.Count -gt 0) {
-                Write-Host "  ⚔️ Cheat Features Found:" -ForegroundColor Cyan
-                foreach ($hit in $mod.Hits.Cheat[0..5]) {
-                    Write-Host "     🔸 $hit" -ForegroundColor Magenta
-                }
-                if ($mod.Hits.Cheat.Count -gt 6) {
-                    Write-Host "     ... and $($mod.Hits.Cheat.Count - 6) more" -ForegroundColor DarkGray
+                Write-Host "  ╠══════════════════════════════════════════════════════════════════╣" -ForegroundColor DarkRed
+                Write-Host "  ║  ⚔️ CHEAT FEATURES FOUND:" -ForegroundColor Cyan
+                foreach ($hit in $mod.Hits.Cheat) {
+                    Write-Host "  ║     🔸 $hit" -ForegroundColor Magenta
                 }
             }
         }
-        Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host "  ╚══════════════════════════════════════════════════════════════════╝" -ForegroundColor DarkRed
+        Write-Host ""
     }
     Write-Host ""
 }
@@ -532,30 +550,21 @@ Write-Host "  ══════════════════════
 Write-Host "  ⚡  SS BYPASS SCAN COMPLETE  ⚡" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
-Write-Host "  🔥  Exposed hidden mods. Justice served." -ForegroundColor Magenta
-Write-Host ""
-Write-Host "  [SYSTEM] Ketteh SS Bypass Detector v8.0 — Done." -ForegroundColor Green
-Write-Host ""
 
-# ─── EPIC KITTY ─────────────────────────────────────────────────
-$kitty = @"
-        /\_/\
-       ( ^.^ )
-        > ^ <
-       /|   |\
-      (_|   |_)
-        |   |
-       _|   |_
-      (___|___)
-"@
+# ─── EPIC BIG CAT ─────────────────────────────────────────────
+$catLines = $bigCat -split "`n"
+$catColors = @($DarkMagenta, $Magenta, $Cyan, $DarkCyan, $Green, $DarkGreen, $Yellow, $Red, $White, $Gray)
 
-$kittyColors = @($Magenta, $Cyan, $Green, $Yellow, $Red)
-$kittyLines = $kitty -split "`n"
-for ($i = 0; $i -lt $kittyLines.Count; $i++) {
-    $color = $kittyColors[$i % $kittyColors.Length]
-    Write-Host $kittyLines[$i] -ForegroundColor $color
+for ($i = 0; $i -lt $catLines.Count; $i++) {
+    $color = $catColors[$i % $catColors.Length]
+    if ($catLines[$i] -match "CATCHING CHEATERS" -or $catLines[$i] -match "JUSTICE SERVED") {
+        Write-Rainbow -Text $catLines[$i] -Delay 15
+    } else {
+        Write-Host $catLines[$i] -ForegroundColor $color
+    }
 }
 
-Write-Host "  🔥  Exposing hidden cheats since 2024" -ForegroundColor Magenta
+Write-Host ""
+Write-Host "  🔥  Exposed hidden mods. Justice served." -ForegroundColor Magenta
 Write-Host "  ⚡  Stay vigilant, stay safe." -ForegroundColor Cyan
 Write-Host ""
