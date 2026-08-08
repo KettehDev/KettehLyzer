@@ -5,8 +5,8 @@
 #  ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██║██║    ██║
 #  ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║███████╗██║
 #  ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝╚═╝
-#              KETTEH MOD ANALYZER v5.0
-#           CHEAT STRING DETECTION ENGINE 🔥
+#           KETTEH SS BYPASS DETECTOR v7.0
+#         CATCHES MODS HIDING FROM SCREENSHARES 🔥
 # ============================================================
 
 Clear-Host
@@ -35,20 +35,21 @@ Write-Host @"
 ║      ██║  ██╗███████╗   ██║      ██║   ███████╗██║  ██║     ║
 ║      ╚═╝  ╚═╝╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝     ║
 ║                                                               ║
-║           ⚡ KETTEH MOD ANALYZER v5.0 ⚡                   ║
-║        CHEAT STRING DETECTION ENGINE                     ║
+║        ⚡ SS BYPASS & HIDE DETECTOR v7.0 ⚡               ║
+║     CATCHES MODS HIDING FROM SCREENSHARES 🔥              ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
 "@ -ForegroundColor Magenta
 
 Write-Host ""
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host "  ⚡  CHEAT STRING DETECTION ENGINE  ⚡" -ForegroundColor Cyan
+Write-Host "  ⚡  SS BYPASS DETECTION ENGINE  ⚡" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
-Write-Host "  [SYSTEM] Loading cheat string database..." -ForegroundColor Yellow
-Write-Host "  [SYSTEM] Initializing detection engine..." -ForegroundColor Yellow
-Write-Host "  [SYSTEM] Ready to catch cheaters." -ForegroundColor Yellow
+Write-Host "  [SYSTEM] Loading SS bypass signatures..." -ForegroundColor Yellow
+Write-Host "  [SYSTEM] Loading hide detection patterns..." -ForegroundColor Yellow
+Write-Host "  [SYSTEM] Loading injection detection..." -ForegroundColor Yellow
+Write-Host "  [SYSTEM] Ready to expose hidden cheats." -ForegroundColor Yellow
 Write-Host ""
 
 # ─── LOADING BAR ──────────────────────────────────────────────
@@ -96,25 +97,58 @@ Write-Host ""
 # ─── DEPENDENCIES ─────────────────────────────────────────────
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-# ─── CHEAT STRINGS DATABASE ───────────────────────────────────
-$CheatStrings = @(
-    'KillAura', 'AimAssist', 'Reach', 'HitBox', 'Aura', 'BowAimbot', 'Velocity', 'AntiKnockback',
-    'Criticals', 'AutoClicker', 'Flight', 'BHop', 'SpeedMine', 'NoFall', 'Phase', 'Blink',
-    'Freecam', 'NoSlow', 'Scaffold', 'ElytraFly', 'XRay', 'ESP', 'Nametags', 'Chams',
-    'Tracers', 'Radar', 'ChestStealer', 'Nuker', 'AutoCrystal', 'AutoAnchor', 'AutoPot',
-    'AutoTotem', 'AutoArmor', 'CrystalAura', 'PingSpoof', 'SelfDestruct', 'FastPlace',
-    'FastBreak', 'ClickGUI', 'AltManager', 'Meteor', 'Wurst', 'Impact', 'Aristois',
-    'LiquidBounce', 'Future', 'RusherHack', 'Sigma', 'Novoline', 'GhostClient'
+# ─── SS BYPASS SIGNATURES ─────────────────────────────────────
+$HideSignatures = @(
+    # File Hiding
+    'File', 'Hide', 'Hidden', 'Directory', 'Delete', 'Temp', 'Cache', 'Clean',
+    'DeleteOnExit', 'File.delete', 'Files.delete', 'Files.move', 'Files.copy',
+    'FileOutputStream', 'FileInputStream', 'RandomAccessFile',
+    
+    # Process Hiding
+    'Process', 'HideWindow', 'Shell', 'Execute', 'Runtime', 'ProcessBuilder',
+    'ProcessHandle', 'ProcessInfo', 'GetProcess', 'FindProcess',
+    
+    # Memory Hiding
+    'Memory', 'Heap', 'Stack', 'Unsafe', 'Direct', 'Buffer', 'Mapped',
+    'Unsafe.allocateMemory', 'Unsafe.putInt', 'Unsafe.getInt',
+    'Native', 'JNI', 'JNA', 'Invoke', 'Call',
+    
+    # Injection
+    'Inject', 'Injection', 'Injector', 'Injector', 'Load', 'Insert',
+    'ClassLoader', 'System.load', 'loadLibrary', 'DefineClass',
+    'Instrumentation', 'Agent_OnLoad', 'Agent_OnAttach', 'Transform',
+    'ClassFileTransformer', 'JVM_LoadClass', 'AttachCurrentThread',
+    
+    # Bypass
+    'Bypass', 'Disable', 'Disabler', 'Spoof', 'Spoofer', 'Bypasser',
+    'AntiCheat', 'AAC', 'NCP', 'Vulcan', 'Matrix', 'Verus', 'Spartan',
+    'Watchdog', 'Grim', 'Intave', 'Kauri', 'Negativity',
+    
+    # Ghost/Stealth
+    'Ghost', 'Stealth', 'Invisible', 'Invisible', 'Phantom', 'Shadow',
+    'Dark', 'Cloak', 'Hide', 'Secret', 'Undetectable', 'Injection'
+)
+
+# ─── CHEAT SIGNATURES ──────────────────────────────────────────
+$CheatSignatures = @(
+    'KillAura', 'AimAssist', 'Reach', 'HitBox', 'Aura', 'BowAimbot', 'Velocity',
+    'AntiKnockback', 'Criticals', 'AutoClicker', 'Flight', 'BHop', 'SpeedMine',
+    'NoFall', 'Phase', 'Blink', 'Freecam', 'NoSlow', 'Scaffold', 'ElytraFly',
+    'XRay', 'ESP', 'Nametags', 'Chams', 'Tracers', 'Radar', 'ChestStealer',
+    'Nuker', 'AutoCrystal', 'CrystalAura', 'PingSpoof', 'SelfDestruct',
+    'FastPlace', 'FastBreak', 'ClickGUI', 'AltManager', 'AutoPot', 'AutoTotem',
+    'AutoArmor', 'CrystalAura', 'AnchorAura', 'BedAura'
 )
 
 # ─── CHEAT CLIENT NAMES ───────────────────────────────────────
 $CheatClientNames = @(
     'wurst','meteor','impact','liquidbounce','aristois','future',
-    'sigma','vape','entropy','dqrkis',
+    'sigma','vape','entropy','dqrkis','ketteh','eventplugin',
     'crystalaura','autocrystal','anchoraura','bedaura',
     'rusherhack','novoline','ghostclient','kamiblue','salhack','clickcrystals',
     'baritone','vengeance','exhibition','kuro','rise','flux',
-    'zero','astolfo','dortware','xenon','tenacity'
+    'zero','astolfo','dortware','xenon','tenacity',
+    'injector','inject','bypass','exploit','spoofer','disabler','crasher'
 )
 
 # ─── LEGIT MODS ─────────────────────────────────────────────────
@@ -176,9 +210,15 @@ function Get-NameHit {
     return $null
 }
 
-function Get-CheatHits {
+function Get-SSBypassHits {
     param([string]$ExtractedDir)
-    $hits = @()
+    $hits = @{
+        Hide = @()
+        Injection = @()
+        Bypass = @()
+        Cheat = @()
+    }
+    
     $files = Get-ChildItem -Path $ExtractedDir -Recurse -File -Include *.class -ErrorAction SilentlyContinue
     foreach ($f in $files) {
         try {
@@ -186,23 +226,41 @@ function Get-CheatHits {
             if ($bytes.Length -gt 524288) { $bytes = $bytes[0..524287] }
             $text = [System.Text.Encoding]::ASCII.GetString($bytes)
         } catch { continue }
-        foreach ($sig in $CheatStrings) {
-            if ($text -match [regex]::Escape($sig)) { $hits += $sig }
+        
+        foreach ($sig in $HideSignatures) {
+            if ($text -match [regex]::Escape($sig)) { $hits.Hide += $sig }
         }
-        if ($hits.Count -gt 10) { break }
+        foreach ($sig in $CheatSignatures) {
+            if ($text -match [regex]::Escape($sig)) { $hits.Cheat += $sig }
+        }
+        
+        $totalHits = $hits.Hide.Count + $hits.Cheat.Count
+        if ($totalHits -gt 20) { break }
     }
-    return $hits | Select-Object -Unique
+    
+    $hits.Hide = $hits.Hide | Select-Object -Unique
+    $hits.Cheat = $hits.Cheat | Select-Object -Unique
+    return $hits
+}
+
+function Get-ThreatLevel {
+    param([hashtable]$Hits)
+    $total = $Hits.Hide.Count + $Hits.Cheat.Count
+    if ($total -ge 10) { return "CRITICAL - SS BYPASS" }
+    if ($total -ge 5) { return "HIGH - SUSPICIOUS" }
+    if ($total -ge 2) { return "MEDIUM - CHECK" }
+    return "LOW - UNKNOWN"
 }
 
 # ─── SCAN ──────────────────────────────────────────────────────
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host "  🔍  SCANNING MODS" -ForegroundColor Cyan
+Write-Host "  🔍  SCANNING FOR SS BYPASSES" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
 
 $verifiedMods = @()
 $unknownMods = @()
-$cheatMods = @()
+$bypassMods = @()
 
 $jarFiles = Get-ChildItem -Path $mods -Filter *.jar -File
 $total = $jarFiles.Count
@@ -219,11 +277,12 @@ try {
         # 1. NAME CHECK
         $nameHit = Get-NameHit -FileName $file.Name
         if ($nameHit) {
-            $cheatMods += [pscustomobject]@{ 
+            $bypassMods += [pscustomobject]@{ 
                 FileName = $file.Name
+                Type = "NAME MATCH"
                 Reason = "BLATANT CHEAT: $nameHit"
-                Type = "CLIENT"
-                Hits = @()
+                Threat = "CRITICAL - CHEAT CLIENT"
+                Hits = @{ Hide = @(); Cheat = @() }
             }
             continue
         }
@@ -242,18 +301,22 @@ try {
             }
         } catch {}
 
-        # 3. DEEP SCAN - CHEAT STRING DETECTION
+        # 3. DEEP SCAN - SS BYPASS DETECTION
         $extractDir = Join-Path $tempRoot ([System.IO.Path]::GetFileNameWithoutExtension($file.Name))
         New-Item -ItemType Directory -Path $extractDir -Force | Out-Null
         
         Expand-JarLimited -JarPath $file.FullName -DestDir $extractDir
 
-        $hits = Get-CheatHits -ExtractedDir $extractDir
-        if ($hits.Count -gt 0) {
-            $cheatMods += [pscustomobject]@{ 
+        $hits = Get-SSBypassHits -ExtractedDir $extractDir
+        $totalHits = $hits.Hide.Count + $hits.Cheat.Count
+        
+        if ($totalHits -gt 0) {
+            $threatLevel = Get-ThreatLevel -Hits $hits
+            $bypassMods += [pscustomobject]@{ 
                 FileName = $file.Name
-                Reason = "CHEAT STRINGS FOUND"
-                Type = "FEATURE"
+                Type = "SS BYPASS"
+                Reason = "$totalHits bypass/hide signatures detected"
+                Threat = $threatLevel
                 Hits = $hits
             }
         } else {
@@ -279,10 +342,14 @@ Write-Host "  ══════════════════════
 Write-Host ""
 
 # ─── SUMMARY TABLE ─────────────────────────────────────────────
-Write-Host "  ┌─────────────────────────────────────────────────────────────────────┐" -ForegroundColor DarkMagenta
-Write-Host "  │  ✅ VERIFIED  │  ❓ UNKNOWN  │  🚨 CHEATS  │  📦 TOTAL  │        " -ForegroundColor White
-Write-Host "  │  $($verifiedMods.Count.ToString().PadLeft(4))           │  $($unknownMods.Count.ToString().PadLeft(4))          │  $($cheatMods.Count.ToString().PadLeft(4))           │  $($total.ToString().PadLeft(4))        │        " -ForegroundColor White
-Write-Host "  └─────────────────────────────────────────────────────────────────────┘" -ForegroundColor DarkMagenta
+$criticalCount = ($bypassMods | Where-Object { $_.Threat -match "CRITICAL" }).Count
+$highCount = ($bypassMods | Where-Object { $_.Threat -match "HIGH" }).Count
+$mediumCount = ($bypassMods | Where-Object { $_.Threat -match "MEDIUM" }).Count
+
+Write-Host "  ┌─────────────────────────────────────────────────────────────────────────────────────┐" -ForegroundColor DarkMagenta
+Write-Host "  │  ✅ VERIFIED  │  ❓ UNKNOWN  │  🚨 SS BYPASS  │  💀 CRITICAL  │  📦 TOTAL  │   " -ForegroundColor White
+Write-Host "  │  $($verifiedMods.Count.ToString().PadLeft(4))           │  $($unknownMods.Count.ToString().PadLeft(4))          │  $($bypassMods.Count.ToString().PadLeft(4))           │  $criticalCount.ToString().PadLeft(4)           │  $($total.ToString().PadLeft(4))        │   " -ForegroundColor White
+Write-Host "  └─────────────────────────────────────────────────────────────────────────────────────┘" -ForegroundColor DarkMagenta
 Write-Host ""
 
 # ─── VERIFIED MODS ─────────────────────────────────────────────
@@ -314,43 +381,84 @@ if ($unknownMods.Count -gt 0) {
     Write-Host ""
 }
 
-# ─── CHEATS DETECTED ──────────────────────────────────────────
-if ($cheatMods.Count -gt 0) {
-    Write-Host "  🚨 CHEATS DETECTED!" -ForegroundColor Red
+# ─── SS BYPASS DETECTED ────────────────────────────────────────
+if ($bypassMods.Count -gt 0) {
+    Write-Host "  🚨 SS BYPASS / HIDE DETECTED!" -ForegroundColor Red
     Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkRed
-    foreach ($mod in $cheatMods) {
-        if ($mod.Type -eq "CLIENT") {
-            Write-Host ""
-            Write-Host "  ⚡ $($mod.FileName)" -ForegroundColor Red -NoNewline
+    
+    foreach ($mod in $bypassMods | Sort-Object { 
+        if ($_.Threat -match "CRITICAL") { return 0 }
+        if ($_.Threat -match "HIGH") { return 1 }
+        if ($_.Threat -match "MEDIUM") { return 2 }
+        return 3
+    }) {
+        $threatColor = switch -Wildcard ($mod.Threat) {
+            "*CRITICAL*" { $DarkRed }
+            "*HIGH*" { $Red }
+            "*MEDIUM*" { $Yellow }
+            default { $DarkGray }
+        }
+        
+        Write-Host ""
+        Write-Host "  ⚡ $($mod.FileName)" -ForegroundColor Red -NoNewline
+        
+        if ($mod.Type -eq "NAME MATCH") {
             Write-Host "  — $($mod.Reason)" -ForegroundColor DarkRed
             Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
         } else {
-            Write-Host ""
-            Write-Host "  ⚡ $($mod.FileName)" -ForegroundColor Red -NoNewline
             Write-Host "  — $($mod.Reason)" -ForegroundColor DarkMagenta
             Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-            Write-Host "  🎯 Cheat Strings Found:" -ForegroundColor Yellow
-            foreach ($hit in $mod.Hits) {
-                Write-Host "     🔸 $hit" -ForegroundColor Red
+            Write-Host "  🎯 THREAT LEVEL: " -ForegroundColor Yellow -NoNewline
+            Write-Host $mod.Threat -ForegroundColor $threatColor
+            
+            if ($mod.Hits.Hide.Count -gt 0) {
+                Write-Host "  🕵️ SS BYPASS / HIDE Signatures Found:" -ForegroundColor Cyan
+                foreach ($hit in $mod.Hits.Hide[0..5]) {
+                    Write-Host "     🔸 $hit" -ForegroundColor Red
+                }
+                if ($mod.Hits.Hide.Count -gt 6) {
+                    Write-Host "     ... and $($mod.Hits.Hide.Count - 6) more" -ForegroundColor DarkGray
+                }
             }
-            Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+            
+            if ($mod.Hits.Cheat.Count -gt 0) {
+                Write-Host "  ⚔️ Cheat Features Found:" -ForegroundColor Cyan
+                foreach ($hit in $mod.Hits.Cheat[0..5]) {
+                    Write-Host "     🔸 $hit" -ForegroundColor Magenta
+                }
+                if ($mod.Hits.Cheat.Count -gt 6) {
+                    Write-Host "     ... and $($mod.Hits.Cheat.Count - 6) more" -ForegroundColor DarkGray
+                }
+            }
         }
+        Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
     }
     Write-Host ""
 }
 
 # ─── SECURITY ASSESSMENT ──────────────────────────────────────
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host "  🛡️  SECURITY ASSESSMENT" -ForegroundColor Cyan
+Write-Host "  🛡️  SS BYPASS ASSESSMENT" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
 
-if ($cheatMods.Count -gt 0) {
-    Write-Host "  ⚠️  STATUS: CHEATS DETECTED!" -ForegroundColor Red
+if ($criticalCount -gt 0) {
+    Write-Host "  ⚠️  STATUS: SS BYPASS DETECTED!" -ForegroundColor DarkRed
     Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-    Write-Host "  ▸ ${cheatMods.Count} cheat clients/features found" -ForegroundColor Red
-    Write-Host "  ▸ Cheat strings detected in the mods above" -ForegroundColor Red
+    Write-Host "  ▸ $criticalCount mods with CRITICAL bypass signatures!" -ForegroundColor DarkRed
+    Write-Host "  ▸ These mods are actively hiding from screenshares!" -ForegroundColor Red
     Write-Host "  ▸ ACTION REQUIRED: REMOVE IMMEDIATELY" -ForegroundColor DarkRed
+} elseif ($highCount -gt 0) {
+    Write-Host "  ⚠️  STATUS: HIGH SUSPICION" -ForegroundColor Red
+    Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "  ▸ $highCount mods with HIGH bypass signatures" -ForegroundColor Red
+    Write-Host "  ▸ Likely using hide/injection techniques" -ForegroundColor Red
+    Write-Host "  ▸ ACTION REQUIRED: REMOVE IMMEDIATELY" -ForegroundColor Red
+} elseif ($mediumCount -gt 0) {
+    Write-Host "  ⚠️  STATUS: CAUTION" -ForegroundColor Yellow
+    Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "  ▸ $mediumCount mods with MEDIUM bypass signatures" -ForegroundColor Yellow
+    Write-Host "  ▸ Manual inspection recommended" -ForegroundColor Yellow
 } elseif ($unknownMods.Count -gt 3) {
     Write-Host "  ⚠️  STATUS: CAUTION" -ForegroundColor Yellow
     Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
@@ -359,7 +467,7 @@ if ($cheatMods.Count -gt 0) {
 } else {
     Write-Host "  ✅ STATUS: CLEAN" -ForegroundColor Green
     Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-    Write-Host "  ▸ No suspicious mods detected" -ForegroundColor Green
+    Write-Host "  ▸ No SS bypass techniques detected" -ForegroundColor Green
     Write-Host "  ▸ You're good to go!" -ForegroundColor Green
 }
 
@@ -367,51 +475,27 @@ Write-Host ""
 
 # ─── STATISTICS ────────────────────────────────────────────────
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host "  📊  SCAN STATISTICS" -ForegroundColor Cyan
+Write-Host "  📊  SS BYPASS STATISTICS" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
 Write-Host "  Total Scanned   : $total" -ForegroundColor White
 Write-Host "  Verified Safe   : $($verifiedMods.Count)" -ForegroundColor Green
 Write-Host "  Unknown         : $($unknownMods.Count)" -ForegroundColor Yellow
-Write-Host "  Cheats Caught   : $($cheatMods.Count)" -ForegroundColor Red
+Write-Host "  SS Bypass Found : $($bypassMods.Count)" -ForegroundColor Red
+Write-Host "    Critical      : $criticalCount" -ForegroundColor DarkRed
+Write-Host "    High          : $highCount" -ForegroundColor Red
+Write-Host "    Medium        : $mediumCount" -ForegroundColor Yellow
 Write-Host "  Scan Completed  : $((Get-Date).ToString('HH:mm:ss'))" -ForegroundColor White
 Write-Host ""
 
-# ─── CHEAT STRING DATABASE DISPLAY ──────────────────────────
-Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host "  📋  CHEAT STRING DATABASE" -ForegroundColor Cyan
-Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host ""
-Write-Host "  Loaded $($CheatStrings.Count) cheat signatures:" -ForegroundColor Yellow
-Write-Host ""
-
-$cols = 4
-$colWidth = 25
-$row = 0
-$output = "  "
-foreach ($sig in $CheatStrings) {
-    $output += $sig.PadRight($colWidth)
-    $row++
-    if ($row -ge $cols) {
-        Write-Host $output -ForegroundColor DarkGray
-        $output = "  "
-        $row = 0
-    }
-}
-if ($output -ne "  ") { Write-Host $output -ForegroundColor DarkGray }
-
-Write-Host ""
-Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-
 # ─── FOOTER ────────────────────────────────────────────────────
-Write-Host ""
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host "  ⚡  SCAN COMPLETE  ⚡" -ForegroundColor Cyan
+Write-Host "  ⚡  SS BYPASS SCAN COMPLETE  ⚡" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
-Write-Host "  🔥  Justice served. Cheaters caught." -ForegroundColor Magenta
+Write-Host "  🔥  Exposed hidden mods. Justice served." -ForegroundColor Magenta
 Write-Host ""
-Write-Host "  [SYSTEM] Ketteh Mod Analyzer v5.0 — Done." -ForegroundColor Green
+Write-Host "  [SYSTEM] Ketteh SS Bypass Detector v7.0 — Done." -ForegroundColor Green
 Write-Host ""
 
 # ─── KITTY ─────────────────────────────────────────────────────
@@ -426,5 +510,5 @@ $kitty = @"
       (___|___)
 "@
 Write-Host $kitty -ForegroundColor Magenta
-Write-Host "  🔥  Catching cheaters since 2024" -ForegroundColor Magenta
+Write-Host "  🔥  Exposing hidden cheats since 2024" -ForegroundColor Magenta
 Write-Host ""
