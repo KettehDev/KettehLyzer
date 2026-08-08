@@ -69,7 +69,6 @@ Write-Host "  ⚡  SS BYPASS DETECTION ENGINE" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
 
-# ─── LOADING ──────────────────────────────────────────────────
 Write-Host "  [SYSTEM] Loading SS bypass signatures..." -ForegroundColor Yellow
 Start-Sleep -Milliseconds 300
 Write-Host "  [SYSTEM] Loading hide detection patterns..." -ForegroundColor Yellow
@@ -79,7 +78,6 @@ Start-Sleep -Milliseconds 300
 Write-Host "  [SYSTEM] Ready to expose hidden cheats." -ForegroundColor Green
 Write-Host ""
 
-# ─── LOADING BAR ──────────────────────────────────────────────
 Write-Host "  ═══ LOADING MODULES ═══" -ForegroundColor DarkCyan
 for ($i = 0; $i -le 100; $i += 5) {
     $bar = "["
@@ -92,7 +90,6 @@ for ($i = 0; $i -le 100; $i += 5) {
 Write-Host "`r  [████████████████████] 100% " -ForegroundColor Green
 Write-Host ""
 
-# ─── MINECRAFT CHECK ──────────────────────────────────────────
 $process = Get-Process javaw -ErrorAction SilentlyContinue
 if (-not $process) { $process = Get-Process java -ErrorAction SilentlyContinue }
 if ($process) {
@@ -106,7 +103,6 @@ if ($process) {
     Write-Host ""
 }
 
-# ─── PATH INPUT ───────────────────────────────────────────────
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host "  📂  TARGET DIRECTORY" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
@@ -133,8 +129,6 @@ if (-not (Test-Path $mods -PathType Container)) {
 
 Write-Host "  [SYSTEM] Target locked." -ForegroundColor Green
 Write-Host ""
-
-# ─── DEPENDENCIES ─────────────────────────────────────────────
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 # ─── SIGNATURES ────────────────────────────────────────────────
@@ -304,7 +298,6 @@ try {
     Remove-Item -Recurse -Force $tempRoot -ErrorAction SilentlyContinue
 }
 
-# ─── RESULTS ──────────────────────────────────────────────────
 Write-Host ""
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host "  📊  ANALYSIS COMPLETE" -ForegroundColor Cyan
@@ -321,7 +314,6 @@ Write-Host "  │  $($verifiedMods.Count.ToString().PadLeft(4))           │  $
 Write-Host "  └─────────────────────────────────────────────────────────────────────────────────────┘" -ForegroundColor DarkMagenta
 Write-Host ""
 
-# ─── VERIFIED ──────────────────────────────────────────────────
 if ($verifiedMods.Count -gt 0) {
     Write-Host "  ✅ VERIFIED MODS (SAFE)" -ForegroundColor Green
     Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
@@ -331,7 +323,6 @@ if ($verifiedMods.Count -gt 0) {
     Write-Host ""
 }
 
-# ─── UNKNOWN ──────────────────────────────────────────────────
 if ($unknownMods.Count -gt 0) {
     Write-Host "  ❓ UNKNOWN MODS" -ForegroundColor Yellow
     Write-Host "  ─────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
@@ -345,7 +336,6 @@ if ($unknownMods.Count -gt 0) {
     Write-Host ""
 }
 
-# ─── FLAGGED MODS ──────────────────────────────────────────────
 if ($bypassMods.Count -gt 0) {
     Write-Host "  🚨 SS BYPASS / HIDE DETECTED!" -ForegroundColor Red
     Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkRed
@@ -392,7 +382,6 @@ if ($bypassMods.Count -gt 0) {
     Write-Host ""
 }
 
-# ─── ASSESSMENT ────────────────────────────────────────────────
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host "  🛡️  SECURITY ASSESSMENT" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
@@ -417,8 +406,6 @@ if ($criticalCount -gt 0) {
 }
 
 Write-Host ""
-
-# ─── STATS ─────────────────────────────────────────────────────
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host "  📊  SCAN STATISTICS" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
@@ -433,13 +420,11 @@ Write-Host "    Medium        : $mediumCount" -ForegroundColor Yellow
 Write-Host "  Scan Completed  : $((Get-Date).ToString('HH:mm:ss'))" -ForegroundColor White
 Write-Host ""
 
-# ─── FOOTER ────────────────────────────────────────────────────
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host "  ⚡  SCAN COMPLETE  ⚡" -ForegroundColor Cyan
 Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host ""
 
-# ─── EPIC BIG CAT ─────────────────────────────────────────────
 $catLines = $bigCat -split "`n"
 $catColors = @($DarkMagenta, $Magenta, $Cyan, $DarkCyan, $Green, $DarkGreen, $Yellow, $Red, $White, $Gray)
 
