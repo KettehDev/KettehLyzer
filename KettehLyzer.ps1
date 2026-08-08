@@ -33,7 +33,7 @@ Write-Host @"
 ║       ██║  ██╗███████╗   ██║      ██║   ███████╗██║  ██║      ║
 ║       ╚═╝  ╚═╝╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝      ║
 ║                                                               ║
-║               ⚡ ULTIMATE CHEATER CATCHER ⚡                 ║
+║               ⚡ ULTIMATE CHEATER CATCHER ⚡                  ║
 ║                       DETECTS CHEATERS                        ║
 ║                     NUMBER 1 MOD ANELYZER                     ║    
 ║                                                               ║
