@@ -1,472 +1,468 @@
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-[Console]::InputEncoding  = [System.Text.Encoding]::UTF8
-$OutputEncoding           = [System.Text.Encoding]::UTF8
-chcp 65001 | Out-Null
-Clear-Host
-
-# ─── KETTEH CYBER BANNER ──────────────────────────────────────
-$Banner = @"
-╔═══════════════════════════════════════════════════════════════════════════╗
-║                                                                           ║
-║   ██╗  ██╗███████╗████████╗████████╗███████╗██╗  ██╗                     ║
-║   ██║ ██╔╝██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██║  ██║                     ║
-║   █████╔╝ █████╗     ██║      ██║   █████╗  ███████║                     ║
-║   ██╔═██╗ ██╔══╝     ██║      ██║   ██╔══╝  ██╔══██║                     ║
-║   ██║  ██╗███████╗   ██║      ██║   ███████╗██║  ██║                     ║
-║   ╚═╝  ╚═╝╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝                     ║
-║                                                                           ║
-║   █████╗ ███╗   ██╗ █████╗ ██╗  ██╗   ██╗███████╗███████╗██████╗        ║
-║  ██╔══██╗████╗  ██║██╔══██╗██║  ╚██╗ ██╔╝╚══███╔╝██╔════╝██╔══██╗       ║
-║  ███████║██╔██╗ ██║███████║██║   ╚████╔╝  ███╔╝ █████╗  ██████╔╝        ║
-║  ██╔══██║██║╚██╗██║██╔══██║██║    ╚██╔╝  ███╔╝  ██╔══╝  ██╔══██╗        ║
-║  ██║  ██║██║ ╚████║██║  ██║███████╗ ██║   ███████╗███████╗██║  ██║        ║
-║  ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝ ╚═╝   ╚══════╝╚══════╝╚═╝  ╚═╝        ║
-║                                                                           ║
-║              ⚡  M O D   A N A L Y Z E R  ⚡                           ║
-║                   D E T E C T   C H E A T S                            ║
-║                                                                           ║
-╚═══════════════════════════════════════════════════════════════════════════╝
-"@
-
-Write-Host $Banner -ForegroundColor Cyan
-
-# ─── GLOW LINE ──────────────────────────────────────────────────
-Write-Host ("  " + "█" * 72) -ForegroundColor DarkMagenta
-Write-Host "  ███████╗██╗   ██╗██████╗ ███████╗██████╗  ██████╗ ██╗  ██╗" -ForegroundColor Magenta
-Write-Host "  ██╔════╝╚██╗ ██╔╝██╔══██╗██╔════╝██╔══██╗██╔═══██╗╚██╗██╔╝" -ForegroundColor Magenta
-Write-Host "  █████╗   ╚████╔╝ ██████╔╝█████╗  ██████╔╝██║   ██║ ╚███╔╝ " -ForegroundColor Magenta
-Write-Host "  ██╔══╝    ╚██╔╝  ██╔═══╝ ██╔══╝  ██╔══██╗██║   ██║ ██╔██╗ " -ForegroundColor Magenta
-Write-Host "  ███████╗   ██║   ██║     ███████╗██║  ██║╚██████╔╝██╔╝ ██╗" -ForegroundColor Magenta
-Write-Host "  ╚══════╝   ╚═╝   ╚═╝     ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝" -ForegroundColor Magenta
-Write-Host ("  " + "█" * 72) -ForegroundColor DarkMagenta
-Write-Host ""
-
-Write-Host "  ⚡ █████████████████████████████████████████████████████████████████" -ForegroundColor DarkCyan
-Write-Host "  ⚡  ███████  ██   ██  ██████  ███████  ██████  ██████  ██    ██" -ForegroundColor Cyan
-Write-Host "  ⚡  ██       ██   ██  ██   ██ ██       ██   ██ ██   ██ ██    ██" -ForegroundColor Cyan
-Write-Host "  ⚡  ███████  ███████  ██████  ███████  ██████  ██████  ██    ██" -ForegroundColor Cyan
-Write-Host "  ⚡       ██  ██   ██  ██   ██      ██  ██   ██ ██   ██ ██    ██" -ForegroundColor Cyan
-Write-Host "  ⚡  ███████  ██   ██  ██   ██ ███████  ██   ██ ██   ██  ██████" -ForegroundColor Cyan
-Write-Host "  ⚡ █████████████████████████████████████████████████████████████████" -ForegroundColor DarkCyan
-Write-Host ""
-
-# ─── PATH INPUT ─────────────────────────────────────────────────
-Write-Host "  📂  TARGET DIRECTORY" -ForegroundColor White
-Write-Host "  ────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-Write-Host "  Enter path to the mods folder:" -ForegroundColor White
-Write-Host "  (press Enter to use default)" -ForegroundColor DarkGray
-Write-Host ""
-Write-Host "  ────▶ " -ForegroundColor Cyan -NoNewline
-$modsPath = Read-Host
-Write-Host ""
-
-if ([string]::IsNullOrWhiteSpace($modsPath)) {
-    $modsPath = "$env:USERPROFILE\AppData\Roaming\.minecraft\mods"
-    Write-Host "  ◆ Using default path: $modsPath" -ForegroundColor Yellow
-    Write-Host ""
-}
-
-if (-not (Test-Path $modsPath -PathType Container)) {
-    Write-Host ""
-    Write-Host "  ⚠️  INVALID PATH!" -ForegroundColor Red
-    Write-Host "  Press any key to exit..." -ForegroundColor Gray
-    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-    exit 1
-}
-
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
 Add-Type -AssemblyName System.IO.Compression.FileSystem
+[System.Windows.Forms.Application]::EnableVisualStyles()
 
-# ─── ANIMATED LOADING ──────────────────────────────────────────
-Write-Host "  ═══ INITIALIZING SCAN ENGINE ═══" -ForegroundColor DarkCyan
-$loadingChars = @("█", "▓", "▒", "░")
-for ($i = 0; $i -le 100; $i += 5) {
-    $bar = "["
-    $filled = [math]::Floor($i / 5)
-    $bar += ($loadingChars[$i % 4] * $filled).PadRight(20, "░")
-    $bar += "]"
-    Write-Host "`r  $bar $i% " -ForegroundColor Cyan -NoNewline
-    Start-Sleep -Milliseconds 15
-}
-Write-Host "`r  [████████████████████] 100% " -ForegroundColor Green
-Write-Host ""
+# =============================================================================
+# THEME
+# =============================================================================
+$bg      = [System.Drawing.Color]::FromArgb(10,10,18)
+$panelBg = [System.Drawing.Color]::FromArgb(18,18,28)
+$boxBg   = [System.Drawing.Color]::FromArgb(14,14,22)
+$accentM = [System.Drawing.Color]::FromArgb(255,90,220)
+$accentC = [System.Drawing.Color]::FromArgb(90,220,255)
+$txt     = [System.Drawing.Color]::FromArgb(230,230,240)
+$dim     = [System.Drawing.Color]::FromArgb(140,140,160)
+$green   = [System.Drawing.Color]::FromArgb(90,220,140)
+$yellow  = [System.Drawing.Color]::FromArgb(240,210,90)
+$red     = [System.Drawing.Color]::FromArgb(240,90,90)
+$darkred = [System.Drawing.Color]::FromArgb(180,40,40)
 
-# ─── CHEAT PATTERNS ────────────────────────────────────────────
-$cheatPatterns = @(
-    # Cheat Clients
+$fontTitle = New-Object System.Drawing.Font("Consolas",18,[System.Drawing.FontStyle]::Bold)
+$fontSub   = New-Object System.Drawing.Font("Consolas",9)
+$fontCat   = New-Object System.Drawing.Font("Consolas",9)
+$fontUI    = New-Object System.Drawing.Font("Segoe UI",9)
+$fontMono  = New-Object System.Drawing.Font("Consolas",9)
+
+# =============================================================================
+# DETECTION ENGINE  (same logic as the console version, called from GUI events)
+# =============================================================================
+$CheatPatterns = @(
     "wurst","meteor","impact","liquidbounce","aristois","future","sigma","vape",
     "dqrkis","grim","prestige","asteria","catlean","vengeance","exhibition",
     "rusherhack","novoline","ghostclient","kamiblue","salhack","clickcrystals",
     "baritone","doomsday","kuro","rise","flux","zero","astolfo","xenon",
-    
-    # Crystal PVP
     "autocrystal","crystalaura","anchoraura","bedaura","autocrystalaura",
     "autodoublehand","autohitcrystal","crystaloptimizer","anchoroptimizer",
-    
-    # Combat
     "killaura","aimassist","reach","hitbox","triggerbot","bowaimbot",
     "antiknockback","velocity","criticals","autoclicker",
-    
-    # Movement
     "nofall","bhop","flight","phase","blink","freecam","scaffold",
     "elytrafly","speedmine","jumpreset","longjump",
-    
-    # Visual
     "xray","esp","nametags","chams","tracers","radar",
-    
-    # Utility
     "cheststealer","nuker","autoarmor","autopot","autototem",
     "inventorytotem","pingspoof","selfdestruct","fastplace","fastbreak",
-    
-    # Obfuscation
     "meteordevelopment","cc/novoline","com/alan/clients","club/maxstats",
     "wtf/moonlight","me/zeroeightsix/kami","net/ccbluex",
     "xyz/greaj","com/cheatbreaker","com/moonsworth","phantom-refmap.json",
-    
-    # Rats
     "sessionstealer","tokenlogger","tokengrabber","discordtoken",
     "remoteaccess","reverseshell","c2server","backdoor"
 )
+$CheatClientNames = @("wurst","meteor","impact","sigma","vengeance","dqrkis","grim","prestige","exhibition","rusherhack","novoline")
 
-# ─── FUNCTIONS ──────────────────────────────────────────────────
-function Get-FileSHA1 {
-    param([string]$Path)
-    return (Get-FileHash -Path $Path -Algorithm SHA1).Hash
-}
+function Get-FileSHA1 { param([string]$Path) (Get-FileHash -Path $Path -Algorithm SHA1).Hash }
 
+$script:ModrinthCache = @{}
 function Query-Modrinth {
     param([string]$Hash)
+    if ($script:ModrinthCache.ContainsKey($Hash)) { return $script:ModrinthCache[$Hash] }
+    $r = @{ Name = ""; Slug = "" }
     try {
         $ver = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/version_file/$Hash" -Method Get -UseBasicParsing -ErrorAction Stop
         if ($ver.project_id) {
             $proj = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/project/$($ver.project_id)" -Method Get -UseBasicParsing -ErrorAction Stop
-            return @{ Name = $proj.title; Slug = $proj.slug }
+            $r = @{ Name = $proj.title; Slug = $proj.slug }
         }
-    } catch { }
-    return @{ Name = ""; Slug = "" }
-}
-
-function Query-Megabase {
-    param([string]$Hash)
-    try {
-        $result = Invoke-RestMethod -Uri "https://megabase.vercel.app/api/query?hash=$Hash" -Method Get -UseBasicParsing -ErrorAction Stop
-        if (-not $result.error) { return $result.data }
-    } catch { }
-    return $null
+    } catch {}
+    $script:ModrinthCache[$Hash] = $r
+    return $r
 }
 
 function Invoke-ScanJar {
     param([string]$FilePath)
-    
     $found = [System.Collections.Generic.HashSet[string]]::new()
-    $isCheatClient = $false
-    
+    $isClient = $false
     try {
         $archive = [System.IO.Compression.ZipFile]::OpenRead($FilePath)
-        
         foreach ($entry in $archive.Entries) {
             $name = $entry.FullName.ToLower()
-            
-            # Check names
-            foreach ($cheat in $cheatPatterns) {
-                if ($name -match $cheat) {
-                    $found.Add($cheat)
-                    if ($cheat -match "wurst|meteor|impact|sigma|vengeance|dqrkis|grim|prestige|exhibition|rusherhack|novoline") {
-                        $isCheatClient = $true
-                    }
+            foreach ($p in $CheatPatterns) {
+                if ($name -match [regex]::Escape($p)) {
+                    $found.Add($p) | Out-Null
+                    if ($CheatClientNames -contains $p) { $isClient = $true }
                 }
             }
-            
-            # Check class files
             if ($name -match '\.class$') {
                 try {
-                    $st = $entry.Open()
-                    $ms = New-Object System.IO.MemoryStream
+                    $st = $entry.Open(); $ms = New-Object System.IO.MemoryStream
                     $st.CopyTo($ms); $st.Close()
                     $bytes = $ms.ToArray(); $ms.Dispose()
                     $text = [System.Text.Encoding]::ASCII.GetString($bytes).ToLower()
-                    
-                    foreach ($cheat in $cheatPatterns) {
-                        if ($cheat.Length -gt 4 -and $text -match $cheat) {
-                            $found.Add($cheat)
-                            if ($cheat -match "wurst|meteor|impact|sigma|vengeance|dqrkis|grim|prestige|exhibition|rusherhack|novoline") {
-                                $isCheatClient = $true
-                            }
+                    foreach ($p in $CheatPatterns) {
+                        if ($p.Length -gt 4 -and $text -match [regex]::Escape($p)) {
+                            $found.Add($p) | Out-Null
+                            if ($CheatClientNames -contains $p) { $isClient = $true }
                         }
                     }
-                } catch { }
+                } catch {}
             }
         }
         $archive.Dispose()
-    } catch { }
-    
-    return @{ 
-        Hits = $found
-        IsCheatClient = $isCheatClient
-        HitCount = $found.Count
-    }
+    } catch {}
+    return @{ Hits = $found; IsCheatClient = $isClient; HitCount = $found.Count }
 }
 
 function Invoke-DeepScan {
     param([string]$FilePath)
     $flags = [System.Collections.Generic.List[string]]::new()
-    
     try {
         $zip = [System.IO.Compression.ZipFile]::OpenRead($FilePath)
-        
-        $hasRuntimeExec = $false
-        $hasHttpDownload = $false
-        $hasHttpExfil = $false
-        $hasObfuscation = $false
-        
+        $execHit = $false; $dlHit = $false; $exfilHit = $false; $obfHit = $false
         foreach ($entry in $zip.Entries) {
             if ($entry.FullName -match '\.class$') {
                 try {
-                    $st = $entry.Open()
-                    $ms = New-Object System.IO.MemoryStream
+                    $st = $entry.Open(); $ms = New-Object System.IO.MemoryStream
                     $st.CopyTo($ms); $st.Close()
                     $bytes = $ms.ToArray(); $ms.Dispose()
                     $text = [System.Text.Encoding]::ASCII.GetString($bytes)
-                    
-                    if ($text -match "java/lang/Runtime" -and $text -match "exec") { $hasRuntimeExec = $true }
-                    if ($text -match "HttpURLConnection" -and $text -match "FileOutputStream") { $hasHttpDownload = $true }
-                    if ($text -match "setDoOutput" -and $text -match "getOutputStream") { $hasHttpExfil = $true }
-                    if ($text -match "ProGuard|Allatori|ZKM|Stringer|Radon|Paramorphism") { $hasObfuscation = $true }
-                } catch { }
+                    if ($text -match "java/lang/Runtime" -and $text -match "exec") { $execHit = $true }
+                    if ($text -match "HttpURLConnection" -and $text -match "FileOutputStream") { $dlHit = $true }
+                    if ($text -match "setDoOutput" -and $text -match "getOutputStream") { $exfilHit = $true }
+                    if ($text -match "ProGuard|Allatori|ZKM|Stringer|Radon|Paramorphism") { $obfHit = $true }
+                } catch {}
             }
         }
         $zip.Dispose()
-        
-        if ($hasRuntimeExec) { $flags.Add("⚡ RUNTIME.EXEC — Can execute OS commands") }
-        if ($hasHttpDownload) { $flags.Add("⬇ HTTP DOWNLOAD — Fetches files from remote server") }
-        if ($hasHttpExfil) { $flags.Add("📤 DATA EXFIL — Sends data to external server") }
-        if ($hasObfuscation) { $flags.Add("🕵️ OBFUSCATION — Uses obfuscation techniques") }
-        
-    } catch { }
-    
+        if ($execHit)  { $flags.Add("Runtime.exec — can run OS commands") }
+        if ($dlHit)    { $flags.Add("HTTP download — fetches files from a remote server") }
+        if ($exfilHit) { $flags.Add("HTTP upload — sends data to a remote server") }
+        if ($obfHit)   { $flags.Add("Obfuscated — packed with a known obfuscator") }
+    } catch {}
     return $flags
 }
 
-# ─── SCAN ──────────────────────────────────────────────────────
-$jarFiles = Get-ChildItem -Path $modsPath -Filter *.jar -File
-$total = $jarFiles.Count
-
-Write-Host "  🔍 Found $total JAR files" -ForegroundColor Green
-Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkCyan
-Write-Host ""
-
-$verifiedMods = @()
-$unknownMods = @()
-$cheatMods = @()
-$suspiciousMods = @()
-$dangerousMods = @()
-
-$idx = 0
-$spinner = @("◢","◣","◤","◥")
-
-foreach ($jar in $jarFiles) {
-    $idx++
-    $pct = [math]::Round(100 * $idx / $total)
-    $spin = $spinner[$idx % $spinner.Length]
-    Write-Host "`r  [$spin] Scanning $idx/$total ($pct%) — $($jar.Name)" -ForegroundColor Cyan -NoNewline
-    
-    # Hash check
-    $hash = Get-FileSHA1 -Path $jar.FullName
-    $verified = $false
-    
-    if ($hash) {
-        $modrinthData = Query-Modrinth -Hash $hash
-        if ($modrinthData.Slug) {
-            $verifiedMods += [PSCustomObject]@{ FileName = $jar.Name; ModName = $modrinthData.Name }
-            continue
-        }
-        $megabaseData = Query-Megabase -Hash $hash
-        if ($megabaseData.name) {
-            $verifiedMods += [PSCustomObject]@{ FileName = $jar.Name; ModName = $megabaseData.name }
-            continue
+# --- Process / injection check ---------------------------------------------
+function Get-JavaProcessModules {
+    $procs = Get-Process javaw,java -ErrorAction SilentlyContinue
+    $rows = @()
+    foreach ($p in $procs) {
+        $expectedDirs = @($p.Path | Split-Path -Parent, "$env:WINDIR\System32", "$env:WINDIR\SysWOW64", "${env:ProgramFiles}", "${env:ProgramFiles(x86)}")
+        try { $mods = $p.Modules } catch { $mods = @() }
+        foreach ($m in $mods) {
+            $signed = "Unknown"
+            try {
+                $sig = Get-AuthenticodeSignature -FilePath $m.FileName -ErrorAction Stop
+                $signed = $sig.Status.ToString()
+            } catch {}
+            $inExpected = $false
+            foreach ($d in $expectedDirs) { if ($d -and $m.FileName -like "$d*") { $inExpected = $true } }
+            $verdict = "OK"
+            if ($signed -ne "Valid" -and -not $inExpected) { $verdict = "Review — unsigned, unusual path" }
+            elseif ($signed -ne "Valid") { $verdict = "Unsigned" }
+            $rows += [pscustomobject]@{ PID=$p.Id; Module=$m.ModuleName; Path=$m.FileName; Signed=$signed; Verdict=$verdict }
         }
     }
-    
-    # Scan for cheats
-    $scanResult = Invoke-ScanJar -FilePath $jar.FullName
-    
-    if ($scanResult.IsCheatClient) {
-        $cheatMods += [PSCustomObject]@{
-            FileName = $jar.Name
-            Hits = $scanResult.Hits
-            HitCount = $scanResult.HitCount
+    return $rows
+}
+
+# --- Network check ------------------------------------------------------
+function Get-JavaConnections {
+    $procs = Get-Process javaw,java -ErrorAction SilentlyContinue
+    $rows = @()
+    foreach ($p in $procs) {
+        try {
+            $conns = Get-NetTCPConnection -OwningProcess $p.Id -State Established -ErrorAction SilentlyContinue
+        } catch { $conns = @() }
+        foreach ($c in $conns) {
+            $rows += [pscustomobject]@{ PID=$p.Id; Remote="$($c.RemoteAddress):$($c.RemotePort)"; State=$c.State; Note="Review manually — not auto-classified" }
         }
-        # Deep scan for dangerous mods
-        $flags = Invoke-DeepScan -FilePath $jar.FullName
-        if ($flags.Count -gt 0) {
-            $dangerousMods += [PSCustomObject]@{
-                FileName = $jar.Name
-                Flags = $flags
+    }
+    return $rows
+}
+
+# --- Persistence check ------------------------------------------------
+function Get-PersistenceItems {
+    $rows = @()
+    $runKeys = @("HKCU:\Software\Microsoft\Windows\CurrentVersion\Run","HKLM:\Software\Microsoft\Windows\CurrentVersion\Run")
+    foreach ($k in $runKeys) {
+        try {
+            $items = Get-ItemProperty -Path $k -ErrorAction Stop
+            foreach ($prop in $items.PSObject.Properties) {
+                if ($prop.Name -notmatch '^PS') {
+                    $rows += [pscustomobject]@{ Source="Run key ($k)"; Name=$prop.Name; Value=$prop.Value }
+                }
+            }
+        } catch {}
+    }
+    $startupDirs = @([Environment]::GetFolderPath("Startup"), [Environment]::GetFolderPath("CommonStartup"))
+    foreach ($dir in $startupDirs) {
+        if (Test-Path $dir) {
+            Get-ChildItem $dir -File -ErrorAction SilentlyContinue | ForEach-Object {
+                $rows += [pscustomobject]@{ Source="Startup folder"; Name=$_.Name; Value=$_.FullName }
             }
         }
-    } elseif ($scanResult.HitCount -gt 0) {
-        $suspiciousMods += [PSCustomObject]@{
-            FileName = $jar.Name
-            Hits = $scanResult.Hits
-            HitCount = $scanResult.HitCount
+    }
+    try {
+        Get-ScheduledTask -ErrorAction Stop | Where-Object { $_.Date -and ([datetime]$_.Date) -gt (Get-Date).AddDays(-30) } | ForEach-Object {
+            $rows += [pscustomobject]@{ Source="Scheduled task"; Name=$_.TaskName; Value=$_.TaskPath }
         }
-    } else {
-        $unknownMods += [PSCustomObject]@{ FileName = $jar.Name }
-    }
+    } catch {}
+    return $rows
 }
 
-Write-Host "`r" + " " * 80 + "`r" -NoNewline
+# =============================================================================
+# FORM
+# =============================================================================
+$form = New-Object System.Windows.Forms.Form
+$form.Text = "KettehLyzer — SS Toolkit"
+$form.Size = New-Object System.Drawing.Size(1000,720)
+$form.StartPosition = "CenterScreen"
+$form.BackColor = $bg
+$form.ForeColor = $txt
+$form.Font = $fontUI
 
-# ─── RESULTS ───────────────────────────────────────────────────
-Write-Host ""
-Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-Write-Host "  📊  S C A N   R E S U L T S" -ForegroundColor Cyan
-Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-Write-Host ""
+# --- Header ---
+$header = New-Object System.Windows.Forms.Panel
+$header.Dock = "Top"; $header.Height = 90; $header.BackColor = $panelBg
+$catLbl = New-Object System.Windows.Forms.Label
+$catLbl.Text = "/\_/\`n( o.o )`n > ^ <"
+$catLbl.Font = $fontCat; $catLbl.ForeColor = $accentM
+$catLbl.Location = New-Object System.Drawing.Point(18,8); $catLbl.AutoSize = $true
+$titleLbl = New-Object System.Windows.Forms.Label
+$titleLbl.Text = "KETTEHLYZER — SS TOOLKIT"
+$titleLbl.Font = $fontTitle; $titleLbl.ForeColor = $accentC
+$titleLbl.Location = New-Object System.Drawing.Point(110,14); $titleLbl.AutoSize = $true
+$subLbl = New-Object System.Windows.Forms.Label
+$subLbl.Text = "Layered mod / process / network / persistence checks. Read-only — nothing here kills processes or hides itself. No detection tool is unbypassable; use this as one part of an SS, not the whole thing."
+$subLbl.Font = $fontSub; $subLbl.ForeColor = $dim
+$subLbl.Location = New-Object System.Drawing.Point(112,46); $subLbl.Size = New-Object System.Drawing.Size(860,36)
+$header.Controls.AddRange(@($catLbl,$titleLbl,$subLbl))
 
-$totalFlagged = $cheatMods.Count + $suspiciousMods.Count
+# --- Path bar ---
+$pathBar = New-Object System.Windows.Forms.Panel
+$pathBar.Dock = "Top"; $pathBar.Height = 44; $pathBar.BackColor = $bg
+$pathLbl = New-Object System.Windows.Forms.Label
+$pathLbl.Text = "Mods folder:"; $pathLbl.ForeColor = $txt
+$pathLbl.Location = New-Object System.Drawing.Point(18,12); $pathLbl.AutoSize = $true
+$pathBox = New-Object System.Windows.Forms.TextBox
+$pathBox.Text = Join-Path $env:APPDATA ".minecraft\mods"
+$pathBox.Location = New-Object System.Drawing.Point(100,9); $pathBox.Size = New-Object System.Drawing.Size(560,24)
+$pathBox.BackColor = $boxBg; $pathBox.ForeColor = $txt; $pathBox.BorderStyle = "FixedSingle"
+$browseBtn = New-Object System.Windows.Forms.Button
+$browseBtn.Text = "Browse..."; $browseBtn.Location = New-Object System.Drawing.Point(668,8); $browseBtn.Size = New-Object System.Drawing.Size(80,26)
+$browseBtn.BackColor = $panelBg; $browseBtn.ForeColor = $txt; $browseBtn.FlatStyle = "Flat"
+$scanBtn = New-Object System.Windows.Forms.Button
+$scanBtn.Text = "Run Full Mod Scan"; $scanBtn.Location = New-Object System.Drawing.Point(758,8); $scanBtn.Size = New-Object System.Drawing.Size(150,26)
+$scanBtn.BackColor = $accentM; $scanBtn.ForeColor = [System.Drawing.Color]::Black; $scanBtn.FlatStyle = "Flat"
+$pathBar.Controls.AddRange(@($pathLbl,$pathBox,$browseBtn,$scanBtn))
 
-Write-Host "  ┌─────────────────────────────────────────────────────────────────┐" -ForegroundColor DarkMagenta
-Write-Host "  │  ✅ VERIFIED    │  ❓ UNKNOWN    │  ⚠️ SUSPICIOUS │  🚨 CHEATS  │" -ForegroundColor White
-Write-Host "  │  $($verifiedMods.Count.ToString().PadLeft(4))           │  $($unknownMods.Count.ToString().PadLeft(4))          │  $($suspiciousMods.Count.ToString().PadLeft(4))           │  $($cheatMods.Count.ToString().PadLeft(4))        │" -ForegroundColor White
-Write-Host "  └─────────────────────────────────────────────────────────────────┘" -ForegroundColor DarkMagenta
-Write-Host ""
+# --- Progress + status ---
+$progress = New-Object System.Windows.Forms.ProgressBar
+$progress.Dock = "Top"; $progress.Height = 6
+$statusLbl = New-Object System.Windows.Forms.Label
+$statusLbl.Dock = "Bottom"; $statusLbl.Height = 30; $statusLbl.TextAlign = "MiddleLeft"
+$statusLbl.Text = "  Ready."; $statusLbl.ForeColor = $dim; $statusLbl.BackColor = $panelBg
 
-# ─── CHEATS ────────────────────────────────────────────────────
-if ($cheatMods.Count -gt 0) {
-    Write-Host "  ═══ 🚨 C H E A T S   D E T E C T E D ═══" -ForegroundColor Red
-    Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkRed
-    Write-Host ""
-    
-    foreach ($mod in $cheatMods) {
-        Write-Host "  ⚡ $($mod.FileName)" -ForegroundColor Red
-        Write-Host "     ─────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-        
-        $clientHits = $mod.Hits | Where-Object { $_ -match "wurst|meteor|impact|sigma|vengeance|dqrkis|grim|prestige|exhibition|rusherhack|novoline" }
-        if ($clientHits.Count -gt 0) {
-            Write-Host "     🔥 CHEAT CLIENT: $($clientHits -join ', ')" -ForegroundColor Magenta
+# --- Tabs ---
+$tabs = New-Object System.Windows.Forms.TabControl
+$tabs.Dock = "Fill"
+
+function New-ResultListView {
+    param([string[]]$Columns)
+    $lv = New-Object System.Windows.Forms.ListView
+    $lv.View = "Details"; $lv.FullRowSelect = $true; $lv.GridLines = $true
+    $lv.Dock = "Fill"; $lv.BackColor = $boxBg; $lv.ForeColor = $txt; $lv.Font = $fontMono
+    foreach ($c in $Columns) { $lv.Columns.Add($c, 200) | Out-Null }
+    return $lv
+}
+
+# Tab: Mods
+$tabMods = New-Object System.Windows.Forms.TabPage; $tabMods.Text = "Mods"; $tabMods.BackColor = $bg
+$modsList = New-ResultListView -Columns @("File","Status","Detail")
+$tabMods.Controls.Add($modsList)
+
+# Tab: Process
+$tabProc = New-Object System.Windows.Forms.TabPage; $tabProc.Text = "Process && Injection"; $tabProc.BackColor = $bg
+$procBtn = New-Object System.Windows.Forms.Button
+$procBtn.Text = "Scan Java Process Modules"; $procBtn.Dock = "Top"; $procBtn.Height = 30
+$procBtn.BackColor = $panelBg; $procBtn.ForeColor = $txt; $procBtn.FlatStyle = "Flat"
+$procList = New-ResultListView -Columns @("PID","Module","Path","Signed","Verdict")
+$tabProc.Controls.Add($procList); $tabProc.Controls.Add($procBtn)
+
+# Tab: Network
+$tabNet = New-Object System.Windows.Forms.TabPage; $tabNet.Text = "Network"; $tabNet.BackColor = $bg
+$netBtn = New-Object System.Windows.Forms.Button
+$netBtn.Text = "List Java Process Connections"; $netBtn.Dock = "Top"; $netBtn.Height = 30
+$netBtn.BackColor = $panelBg; $netBtn.ForeColor = $txt; $netBtn.FlatStyle = "Flat"
+$netList = New-ResultListView -Columns @("PID","Remote","State","Note")
+$tabNet.Controls.Add($netList); $tabNet.Controls.Add($netBtn)
+
+# Tab: Persistence
+$tabPersist = New-Object System.Windows.Forms.TabPage; $tabPersist.Text = "Persistence"; $tabPersist.BackColor = $bg
+$persistBtn = New-Object System.Windows.Forms.Button
+$persistBtn.Text = "Check Startup Items"; $persistBtn.Dock = "Top"; $persistBtn.Height = 30
+$persistBtn.BackColor = $panelBg; $persistBtn.ForeColor = $txt; $persistBtn.FlatStyle = "Flat"
+$persistList = New-ResultListView -Columns @("Source","Name","Value")
+$tabPersist.Controls.Add($persistList); $tabPersist.Controls.Add($persistBtn)
+
+# Tab: Report
+$tabReport = New-Object System.Windows.Forms.TabPage; $tabReport.Text = "Report"; $tabReport.BackColor = $bg
+$reportBtn = New-Object System.Windows.Forms.Button
+$reportBtn.Text = "Generate + Save Report (.txt)"; $reportBtn.Dock = "Top"; $reportBtn.Height = 30
+$reportBtn.BackColor = $accentC; $reportBtn.ForeColor = [System.Drawing.Color]::Black; $reportBtn.FlatStyle = "Flat"
+$reportBox = New-Object System.Windows.Forms.RichTextBox
+$reportBox.Dock = "Fill"; $reportBox.BackColor = $boxBg; $reportBox.ForeColor = $txt; $reportBox.Font = $fontMono; $reportBox.ReadOnly = $true
+$tabReport.Controls.Add($reportBox); $tabReport.Controls.Add($reportBtn)
+
+$tabs.TabPages.AddRange(@($tabMods,$tabProc,$tabNet,$tabPersist,$tabReport))
+
+$form.Controls.Add($tabs)
+$form.Controls.Add($statusLbl)
+$form.Controls.Add($progress)
+$form.Controls.Add($pathBar)
+$form.Controls.Add($header)
+
+# =============================================================================
+# EVENTS
+# =============================================================================
+$browseBtn.Add_Click({
+    $dlg = New-Object System.Windows.Forms.FolderBrowserDialog
+    if ($dlg.ShowDialog() -eq "OK") { $pathBox.Text = $dlg.SelectedPath }
+})
+
+$scanBtn.Add_Click({
+    $modsList.Items.Clear()
+    $modsPath = $pathBox.Text
+    if (-not (Test-Path $modsPath -PathType Container)) {
+        $statusLbl.Text = "  Invalid mods folder path."; $statusLbl.ForeColor = $red
+        return
+    }
+    $jars = Get-ChildItem -Path $modsPath -Filter *.jar -File
+    $total = $jars.Count
+    $progress.Maximum = [math]::Max($total,1); $progress.Value = 0
+    $script:VerifiedCount=0; $script:UnknownCount=0; $script:SuspiciousCount=0; $script:CheatCount=0; $script:DangerousCount=0
+    $idx = 0
+    foreach ($jar in $jars) {
+        $idx++; $progress.Value = $idx
+        $statusLbl.Text = "  Scanning $idx/$total — $($jar.Name)"; $statusLbl.ForeColor = $accentC
+        [System.Windows.Forms.Application]::DoEvents()
+
+        $hash = Get-FileSHA1 -Path $jar.FullName
+        $known = Query-Modrinth -Hash $hash
+        if ($known.Slug) {
+            $item = New-Object System.Windows.Forms.ListViewItem($jar.Name)
+            $item.SubItems.Add("Verified") | Out-Null; $item.SubItems.Add($known.Name) | Out-Null
+            $item.ForeColor = $green
+            $modsList.Items.Add($item) | Out-Null
+            $script:VerifiedCount++
+            continue
         }
-        Write-Host "     🎯 SIGNATURES: $($mod.Hits -join ', ')" -ForegroundColor Yellow
-        Write-Host "     📊 HIT COUNT: $($mod.HitCount)" -ForegroundColor Gray
-        Write-Host ""
-    }
-}
 
-# ─── DANGEROUS MODS ───────────────────────────────────────────
-if ($dangerousMods.Count -gt 0) {
-    Write-Host "  ═══ ☣️  D A N G E R O U S   M O D S ═══" -ForegroundColor DarkRed
-    Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkRed
-    Write-Host ""
-    
-    foreach ($mod in $dangerousMods) {
-        Write-Host "  ☢️ $($mod.FileName)" -ForegroundColor DarkRed
-        Write-Host "     ─────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-        foreach ($flag in $mod.Flags) {
-            Write-Host "     $flag" -ForegroundColor Red
+        $scan = Invoke-ScanJar -FilePath $jar.FullName
+        if ($scan.IsCheatClient) {
+            $deep = Invoke-DeepScan -FilePath $jar.FullName
+            $item = New-Object System.Windows.Forms.ListViewItem($jar.Name)
+            $status = if ($deep.Count -gt 0) { "DANGEROUS" } else { "CHEAT CLIENT" }
+            $item.SubItems.Add($status) | Out-Null
+            $item.SubItems.Add((($scan.Hits -join ', ') + $(if($deep.Count -gt 0){" | " + ($deep -join '; ')}else{""}))) | Out-Null
+            $item.ForeColor = if ($deep.Count -gt 0) { $darkred } else { $red }
+            $modsList.Items.Add($item) | Out-Null
+            if ($deep.Count -gt 0) { $script:DangerousCount++ } else { $script:CheatCount++ }
+        } elseif ($scan.HitCount -gt 0) {
+            $item = New-Object System.Windows.Forms.ListViewItem($jar.Name)
+            $item.SubItems.Add("Suspicious") | Out-Null; $item.SubItems.Add($scan.Hits -join ', ') | Out-Null
+            $item.ForeColor = $yellow
+            $modsList.Items.Add($item) | Out-Null
+            $script:SuspiciousCount++
+        } else {
+            $item = New-Object System.Windows.Forms.ListViewItem($jar.Name)
+            $item.SubItems.Add("Unknown") | Out-Null; $item.SubItems.Add("No hash match, no signature hits") | Out-Null
+            $item.ForeColor = $dim
+            $modsList.Items.Add($item) | Out-Null
+            $script:UnknownCount++
         }
-        Write-Host ""
     }
-}
+    foreach ($c in $modsList.Columns) { $c.Width = -2 }
+    $verdict = if ($script:DangerousCount -gt 0) { "CRITICAL — dangerous mods found" }
+               elseif ($script:CheatCount -gt 0) { "FLAGGED — cheat client(s) found" }
+               elseif ($script:SuspiciousCount -gt 3) { "REVIEW — several suspicious mods" }
+               else { "CLEAN — no mod-based hits" }
+    $statusLbl.Text = "  Done. $verdict   (V:$($script:VerifiedCount) U:$($script:UnknownCount) S:$($script:SuspiciousCount) C:$($script:CheatCount) D:$($script:DangerousCount))"
+    $statusLbl.ForeColor = if ($script:DangerousCount -gt 0 -or $script:CheatCount -gt 0) { $red } elseif ($script:SuspiciousCount -gt 3) { $yellow } else { $green }
+})
 
-# ─── SUSPICIOUS ─────────────────────────────────────────────────
-if ($suspiciousMods.Count -gt 0) {
-    Write-Host "  ═══ ⚠️  S U S P I C I O U S   M O D S ═══" -ForegroundColor Yellow
-    Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkYellow
-    Write-Host ""
-    
-    foreach ($mod in $suspiciousMods) {
-        Write-Host "  ⚠️ $($mod.FileName)" -ForegroundColor Yellow
-        Write-Host "     🎯 PATTERNS: $($mod.Hits -join ', ')" -ForegroundColor DarkGray
-        Write-Host "     📊 HIT COUNT: $($mod.HitCount)" -ForegroundColor Gray
-        Write-Host ""
+$procBtn.Add_Click({
+    $procList.Items.Clear()
+    $statusLbl.Text = "  Enumerating Java process modules..."; $statusLbl.ForeColor = $accentC
+    [System.Windows.Forms.Application]::DoEvents()
+    $rows = Get-JavaProcessModules
+    if ($rows.Count -eq 0) {
+        $statusLbl.Text = "  No running java/javaw process found."; $statusLbl.ForeColor = $dim
+        return
     }
-}
-
-# ─── UNKNOWN ──────────────────────────────────────────────────
-if ($unknownMods.Count -gt 0) {
-    Write-Host "  ═══ ❓ U N K N O W N   M O D S ═══" -ForegroundColor DarkGray
-    Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkGray
-    Write-Host ""
-    
-    $displayUnknown = $unknownMods | Select-Object -First 20
-    foreach ($mod in $displayUnknown) {
-        Write-Host "  ▸ $($mod.FileName)" -ForegroundColor DarkGray
+    $reviewCount = 0
+    foreach ($r in $rows) {
+        $item = New-Object System.Windows.Forms.ListViewItem($r.PID.ToString())
+        $item.SubItems.Add($r.Module) | Out-Null
+        $item.SubItems.Add($r.Path) | Out-Null
+        $item.SubItems.Add($r.Signed) | Out-Null
+        $item.SubItems.Add($r.Verdict) | Out-Null
+        if ($r.Verdict -like "Review*") { $item.ForeColor = $red; $reviewCount++ }
+        elseif ($r.Verdict -eq "Unsigned") { $item.ForeColor = $yellow }
+        else { $item.ForeColor = $dim }
+        $procList.Items.Add($item) | Out-Null
     }
-    if ($unknownMods.Count -gt 20) {
-        Write-Host "  ... and $($unknownMods.Count - 20) more" -ForegroundColor DarkGray
+    foreach ($c in $procList.Columns) { $c.Width = -2 }
+    $statusLbl.Text = "  Done. $reviewCount module(s) worth a manual look (unsigned + outside expected folders)."
+    $statusLbl.ForeColor = if ($reviewCount -gt 0) { $yellow } else { $green }
+})
+
+$netBtn.Add_Click({
+    $netList.Items.Clear()
+    $rows = Get-JavaConnections
+    foreach ($r in $rows) {
+        $item = New-Object System.Windows.Forms.ListViewItem($r.PID.ToString())
+        $item.SubItems.Add($r.Remote) | Out-Null
+        $item.SubItems.Add($r.State.ToString()) | Out-Null
+        $item.SubItems.Add($r.Note) | Out-Null
+        $item.ForeColor = $dim
+        $netList.Items.Add($item) | Out-Null
     }
-    Write-Host ""
-}
+    foreach ($c in $netList.Columns) { $c.Width = -2 }
+    $statusLbl.Text = "  $($rows.Count) established connection(s) listed. Not auto-classified — check remote IPs manually."
+    $statusLbl.ForeColor = $accentC
+})
 
-# ─── VERIFIED ──────────────────────────────────────────────────
-if ($verifiedMods.Count -gt 0) {
-    Write-Host "  ═══ ✅ V E R I F I E D   M O D S ═══" -ForegroundColor Green
-    Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkGreen
-    Write-Host ""
-    
-    $displayVerified = $verifiedMods | Select-Object -First 20
-    foreach ($mod in $displayVerified) {
-        Write-Host "  ✓ $($mod.ModName)" -ForegroundColor Green -NoNewline
-        Write-Host " [$($mod.FileName)]" -ForegroundColor DarkGray
+$persistBtn.Add_Click({
+    $persistList.Items.Clear()
+    $rows = Get-PersistenceItems
+    foreach ($r in $rows) {
+        $item = New-Object System.Windows.Forms.ListViewItem($r.Source)
+        $item.SubItems.Add($r.Name) | Out-Null
+        $item.SubItems.Add($r.Value) | Out-Null
+        $item.ForeColor = $dim
+        $persistList.Items.Add($item) | Out-Null
     }
-    if ($verifiedMods.Count -gt 20) {
-        Write-Host "  ... and $($verifiedMods.Count - 20) more" -ForegroundColor DarkGray
+    foreach ($c in $persistList.Columns) { $c.Width = -2 }
+    $statusLbl.Text = "  $($rows.Count) startup/persistence item(s) listed for manual review."
+    $statusLbl.ForeColor = $accentC
+})
+
+$reportBtn.Add_Click({
+    $sb = New-Object System.Text.StringBuilder
+    [void]$sb.AppendLine("KettehLyzer SS Toolkit — Report")
+    [void]$sb.AppendLine("Generated: $(Get-Date)")
+    [void]$sb.AppendLine("Mods folder: $($pathBox.Text)")
+    [void]$sb.AppendLine("")
+    [void]$sb.AppendLine("--- Mods ($($modsList.Items.Count)) ---")
+    foreach ($i in $modsList.Items) { [void]$sb.AppendLine("[$($i.SubItems[1].Text)] $($i.Text) — $($i.SubItems[2].Text)") }
+    [void]$sb.AppendLine("")
+    [void]$sb.AppendLine("--- Process modules ($($procList.Items.Count)) ---")
+    foreach ($i in $procList.Items) { [void]$sb.AppendLine("[$($i.SubItems[4].Text)] $($i.SubItems[1].Text) — $($i.SubItems[2].Text) (Signed: $($i.SubItems[3].Text))") }
+    [void]$sb.AppendLine("")
+    [void]$sb.AppendLine("--- Network connections ($($netList.Items.Count)) ---")
+    foreach ($i in $netList.Items) { [void]$sb.AppendLine("$($i.SubItems[1].Text) [$($i.SubItems[2].Text)]") }
+    [void]$sb.AppendLine("")
+    [void]$sb.AppendLine("--- Persistence items ($($persistList.Items.Count)) ---")
+    foreach ($i in $persistList.Items) { [void]$sb.AppendLine("$($i.Text): $($i.SubItems[1].Text) -> $($i.SubItems[2].Text)") }
+    $reportBox.Text = $sb.ToString()
+
+    $save = New-Object System.Windows.Forms.SaveFileDialog
+    $save.Filter = "Text report (*.txt)|*.txt"
+    $save.FileName = "KettehLyzer-Report-$(Get-Date -Format yyyyMMdd-HHmmss).txt"
+    if ($save.ShowDialog() -eq "OK") {
+        $sb.ToString() | Out-File -FilePath $save.FileName -Encoding UTF8
+        $statusLbl.Text = "  Report saved to $($save.FileName)"; $statusLbl.ForeColor = $green
     }
-    Write-Host ""
-}
+})
 
-# ─── SECURITY RATING ───────────────────────────────────────────
-Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-Write-Host "  🛡️  S E C U R I T Y   R A T I N G" -ForegroundColor Cyan
-Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-Write-Host ""
-
-$riskScore = ($cheatMods.Count * 3) + ($suspiciousMods.Count * 1) + ($dangerousMods.Count * 5)
-
-if ($dangerousMods.Count -gt 0) {
-    Write-Host "  ☣️  STATUS: CRITICAL — Dangerous mods detected!" -ForegroundColor DarkRed
-    Write-Host "  ⚡ IMMEDIATE ACTION REQUIRED" -ForegroundColor Red
-} elseif ($cheatMods.Count -gt 0) {
-    Write-Host "  🚨 STATUS: COMPROMISED — Cheat clients detected!" -ForegroundColor Red
-    Write-Host "  ⚠️ Remove flagged mods immediately" -ForegroundColor Yellow
-} elseif ($suspiciousMods.Count -gt 3) {
-    Write-Host "  ⚠️  STATUS: CAUTION — Suspicious mods found" -ForegroundColor Yellow
-    Write-Host "  🔍 Manual inspection recommended" -ForegroundColor Yellow
-} else {
-    Write-Host "  ✅ STATUS: CLEAN — No threats detected" -ForegroundColor Green
-    Write-Host "  🔥 You're good to go!" -ForegroundColor Green
-}
-Write-Host ""
-
-# ─── STATS ─────────────────────────────────────────────────────
-Write-Host "  📊  S C A N   S T A T S" -ForegroundColor Cyan
-Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkCyan
-Write-Host ""
-Write-Host "  📦 Total Files    : $total" -ForegroundColor White
-Write-Host "  ✅ Verified      : $($verifiedMods.Count)" -ForegroundColor Green
-Write-Host "  ❓ Unknown       : $($unknownMods.Count)" -ForegroundColor Yellow
-Write-Host "  ⚠️ Suspicious    : $($suspiciousMods.Count)" -ForegroundColor Yellow
-Write-Host "  🚨 Cheats        : $($cheatMods.Count)" -ForegroundColor Red
-Write-Host "  ☣️ Dangerous     : $($dangerousMods.Count)" -ForegroundColor DarkRed
-Write-Host "  📊 Risk Score    : $riskScore" -ForegroundColor White
-Write-Host ""
-
-# ─── FOOTER ────────────────────────────────────────────────────
-Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host "  🔥  K E T T E H   M O D   A N A L Y Z E R" -ForegroundColor Magenta
-Write-Host "  ═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkMagenta
-Write-Host ""
-
-$kitty = @"
-        /\_/\
-       ( ^.^ )
-        > ^ <
-       /|   |\
-      (_|   |_)
-"@
-Write-Host $kitty -ForegroundColor Magenta
-Write-Host "  ⚡  Stay vigilant. Stay safe." -ForegroundColor Cyan
-Write-Host "  🔥  No mercy for cheaters." -ForegroundColor Magenta
-Write-Host ""
-
-Write-Host "  Press any key to exit..." -ForegroundColor DarkGray
-$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+[System.Windows.Forms.Application]::Run($form)
