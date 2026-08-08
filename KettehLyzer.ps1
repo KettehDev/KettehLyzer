@@ -5,8 +5,8 @@
 #  ██╔═██╗ ██╔══╝     ██║      ██║   ██╔══╝  ██╔══██║██║    ██║
 #  ██║  ██╗███████╗   ██║      ██║   ███████╗██║  ██║███████╗██║
 #  ╚═╝  ╚═╝╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝╚═╝
-#              KETTEH TOOLS PRO v2.0
-#           NEXT-GEN JUSTICE SUITE 🔥
+#              KETTEH TOOLS CYBER v3.0
+#           NEXT-LEVEL JUSTICE SUITE 🔥
 # ============================================================
 
 # Clear PowerShell window
@@ -19,79 +19,108 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 Add-Type -AssemblyName System.Net.Http
 
 # ─── COLOR SCHEME ─────────────────────────────────────────────
-$DarkBg = [System.Drawing.Color]::FromArgb(12, 12, 28)
-$DarkCard = [System.Drawing.Color]::FromArgb(22, 22, 45)
-$DarkHover = [System.Drawing.Color]::FromArgb(30, 30, 60)
-$NeonPink = [System.Drawing.Color]::FromArgb(255, 45, 155)
+$DarkBg = [System.Drawing.Color]::FromArgb(8, 8, 20)
+$DarkCard = [System.Drawing.Color]::FromArgb(18, 18, 40)
+$DarkHover = [System.Drawing.Color]::FromArgb(28, 28, 55)
+$NeonPink = [System.Drawing.Color]::FromArgb(255, 0, 100)
 $NeonCyan = [System.Drawing.Color]::FromArgb(0, 212, 255)
-$NeonPurple = [System.Drawing.Color]::FromArgb(180, 77, 255)
+$NeonPurple = [System.Drawing.Color]::FromArgb(160, 80, 255)
 $NeonGreen = [System.Drawing.Color]::FromArgb(0, 255, 157)
+$NeonYellow = [System.Drawing.Color]::FromArgb(255, 215, 0)
 $TextColor = [System.Drawing.Color]::FromArgb(240, 240, 255)
 $TextMuted = [System.Drawing.Color]::FromArgb(136, 136, 187)
-$BorderColor = [System.Drawing.Color]::FromArgb(40, 40, 70)
+$BorderGlow = [System.Drawing.Color]::FromArgb(255, 0, 100, 50)
 
 # ─── MAIN FORM ─────────────────────────────────────────────────
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "⚡ KETTEH TOOLS PRO ⚡"
-$form.Size = New-Object System.Drawing.Size(1200, 800)
+$form.Text = "⚡ KETTEH TOOLS CYBER ⚡"
+$form.Size = New-Object System.Drawing.Size(1250, 850)
 $form.StartPosition = "CenterScreen"
 $form.BackColor = $DarkBg
 $form.FormBorderStyle = "FixedSingle"
 $form.MaximizeBox = $false
-$form.MinimumSize = New-Object System.Drawing.Size(1000, 700)
+$form.MinimumSize = New-Object System.Drawing.Size(1100, 750)
+$form.Opacity = 0.98
 $form.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon((Get-Command powershell).Path)
 
-# ─── TOP HEADER PANEL ──────────────────────────────────────────
+# ─── GLOW BACKGROUND ──────────────────────────────────────────
+$bgPanel = New-Object System.Windows.Forms.Panel
+$bgPanel.Dock = "Fill"
+$bgPanel.BackColor = $DarkBg
+$form.Controls.Add($bgPanel)
+
+# ─── TOP HEADER WITH GLOW ─────────────────────────────────────
 $headerPanel = New-Object System.Windows.Forms.Panel
 $headerPanel.Dock = "Top"
-$headerPanel.Height = 65
+$headerPanel.Height = 80
 $headerPanel.BackColor = $DarkCard
 $headerPanel.BorderStyle = "FixedSingle"
-$headerPanel.Padding = New-Object System.Windows.Forms.Padding(10, 0, 10, 0)
-$form.Controls.Add($headerPanel)
+$headerPanel.Padding = New-Object System.Windows.Forms.Padding(15, 0, 15, 0)
+$bgPanel.Controls.Add($headerPanel)
 
-# Logo
+# Logo with gradient
 $logoLabel = New-Object System.Windows.Forms.Label
-$logoLabel.Text = "⚡ KETTEH TOOLS PRO ⚡"
-$logoLabel.Font = New-Object System.Drawing.Font("Consolas", 18, [System.Drawing.FontStyle]::Bold)
+$logoLabel.Text = "⚡ KETTEH TOOLS CYBER ⚡"
+$logoLabel.Font = New-Object System.Drawing.Font("Consolas", 22, [System.Drawing.FontStyle]::Bold)
 $logoLabel.ForeColor = $NeonPink
 $logoLabel.BackColor = $DarkCard
 $logoLabel.Location = New-Object System.Drawing.Point(20, 10)
-$logoLabel.Size = New-Object System.Drawing.Size(400, 40)
+$logoLabel.Size = New-Object System.Drawing.Size(500, 50)
 $logoLabel.TextAlign = "MiddleLeft"
 $headerPanel.Controls.Add($logoLabel)
 
-# Version label
+# Glow effect on logo
+$glowLabel = New-Object System.Windows.Forms.Label
+$glowLabel.Text = "⚡ KETTEH TOOLS CYBER ⚡"
+$glowLabel.Font = New-Object System.Drawing.Font("Consolas", 22, [System.Drawing.FontStyle]::Bold)
+$glowLabel.ForeColor = $NeonPink
+$glowLabel.BackColor = $DarkCard
+$glowLabel.Location = New-Object System.Drawing.Point(22, 12)
+$glowLabel.Size = New-Object System.Drawing.Size(500, 50)
+$glowLabel.TextAlign = "MiddleLeft"
+$glowLabel.Enabled = $false
+$glowLabel.BackColor = [System.Drawing.Color]::Transparent
+$headerPanel.Controls.Add($glowLabel)
+
+# Version
 $versionLabel = New-Object System.Windows.Forms.Label
-$versionLabel.Text = "v2.0  |  Justice Engine"
+$versionLabel.Text = "v3.0  |  CYBER JUSTICE ENGINE"
 $versionLabel.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Regular)
 $versionLabel.ForeColor = $TextMuted
 $versionLabel.BackColor = $DarkCard
-$versionLabel.Location = New-Object System.Drawing.Point(20, 45)
-$versionLabel.Size = New-Object System.Drawing.Size(300, 20)
+$versionLabel.Location = New-Object System.Drawing.Point(20, 55)
+$versionLabel.Size = New-Object System.Drawing.Size(400, 20)
 $headerPanel.Controls.Add($versionLabel)
 
-# Status indicator
+# Status with pulse animation
+$statusPanel = New-Object System.Windows.Forms.Panel
+$statusPanel.Location = New-Object System.Drawing.Point(1040, 20)
+$statusPanel.Size = New-Object System.Drawing.Size(170, 40)
+$statusPanel.BackColor = [System.Drawing.Color]::FromArgb(0, 40, 20)
+$statusPanel.BorderStyle = "FixedSingle"
+$headerPanel.Controls.Add($statusPanel)
+
 $statusIndicator = New-Object System.Windows.Forms.Label
-$statusIndicator.Text = "● READY"
-$statusIndicator.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
+$statusIndicator.Text = "● ONLINE"
+$statusIndicator.Font = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.FontStyle]::Bold)
 $statusIndicator.ForeColor = $NeonGreen
-$statusIndicator.BackColor = $DarkCard
-$statusIndicator.Location = New-Object System.Drawing.Point(1000, 20)
+$statusIndicator.BackColor = [System.Drawing.Color]::Transparent
+$statusIndicator.Location = New-Object System.Drawing.Point(10, 5)
 $statusIndicator.Size = New-Object System.Drawing.Size(150, 30)
-$statusIndicator.TextAlign = "MiddleRight"
-$headerPanel.Controls.Add($statusIndicator)
+$statusIndicator.TextAlign = "MiddleCenter"
+$statusPanel.Controls.Add($statusIndicator)
 
 # ─── TAB CONTROL ──────────────────────────────────────────────
 $tabControl = New-Object System.Windows.Forms.TabControl
 $tabControl.Dock = "Fill"
 $tabControl.BackColor = $DarkBg
 $tabControl.ForeColor = $TextColor
-$tabControl.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Regular)
-$tabControl.Padding = New-Object System.Drawing.Point(12, 8)
+$tabControl.Font = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
+$tabControl.Padding = New-Object System.Drawing.Point(15, 10)
 $tabControl.SizeMode = "Fixed"
-$tabControl.ItemSize = New-Object System.Drawing.Size(120, 35)
-$form.Controls.Add($tabControl)
+$tabControl.ItemSize = New-Object System.Drawing.Size(140, 40)
+$tabControl.Alignment = "Top"
+$bgPanel.Controls.Add($tabControl)
 
 # ─── TAB STYLING ──────────────────────────────────────────────
 $tabControl.Add_DrawItem({
@@ -119,26 +148,31 @@ $tabModScanner.BackColor = $DarkBg
 $tabModScanner.UseVisualStyleBackColor = $false
 $tabControl.TabPages.Add($tabModScanner)
 
-# ─── MOD SCANNER LAYOUT ──────────────────────────────────────
 $modPanel = New-Object System.Windows.Forms.Panel
 $modPanel.Dock = "Fill"
 $modPanel.BackColor = $DarkBg
-$modPanel.Padding = New-Object System.Windows.Forms.Padding(15)
+$modPanel.Padding = New-Object System.Windows.Forms.Padding(20)
 $tabModScanner.Controls.Add($modPanel)
 
-# Path input group
-$pathGroup = New-Object System.Windows.Forms.GroupBox
-$pathGroup.Text = "📂 Target Directory"
-$pathGroup.ForeColor = $NeonCyan
-$pathGroup.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
-$pathGroup.Location = New-Object System.Drawing.Point(15, 15)
-$pathGroup.Size = New-Object System.Drawing.Size(1130, 75)
+# ─── PATH SECTION ─────────────────────────────────────────────
+$pathGroup = New-Object System.Windows.Forms.Panel
+$pathGroup.Location = New-Object System.Drawing.Point(20, 20)
+$pathGroup.Size = New-Object System.Drawing.Size(1160, 80)
 $pathGroup.BackColor = $DarkCard
-$pathGroup.FlatStyle = "Flat"
+$pathGroup.BorderStyle = "FixedSingle"
+$pathGroup.Padding = New-Object System.Windows.Forms.Padding(10)
 $modPanel.Controls.Add($pathGroup)
 
+$pathLabel = New-Object System.Windows.Forms.Label
+$pathLabel.Text = "📂 TARGET DIRECTORY"
+$pathLabel.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
+$pathLabel.ForeColor = $NeonCyan
+$pathLabel.Location = New-Object System.Drawing.Point(15, 5)
+$pathLabel.Size = New-Object System.Drawing.Size(300, 25)
+$pathGroup.Controls.Add($pathLabel)
+
 $modPathBox = New-Object System.Windows.Forms.TextBox
-$modPathBox.Location = New-Object System.Drawing.Point(15, 30)
+$modPathBox.Location = New-Object System.Drawing.Point(15, 35)
 $modPathBox.Size = New-Object System.Drawing.Size(850, 30)
 $modPathBox.BackColor = $DarkBg
 $modPathBox.ForeColor = $TextColor
@@ -148,10 +182,10 @@ $modPathBox.Text = Join-Path $env:APPDATA ".minecraft\mods"
 $pathGroup.Controls.Add($modPathBox)
 
 $browseBtn = New-Object System.Windows.Forms.Button
-$browseBtn.Text = "📂 Browse"
-$browseBtn.Location = New-Object System.Drawing.Point(875, 28)
-$browseBtn.Size = New-Object System.Drawing.Size(110, 34)
-$browseBtn.BackColor = $DarkCard
+$browseBtn.Text = "📂 BROWSE"
+$browseBtn.Location = New-Object System.Drawing.Point(875, 33)
+$browseBtn.Size = New-Object System.Drawing.Size(120, 35)
+$browseBtn.BackColor = $DarkBg
 $browseBtn.ForeColor = $NeonCyan
 $browseBtn.FlatStyle = "Flat"
 $browseBtn.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
@@ -172,57 +206,65 @@ $pathGroup.Controls.Add($browseBtn)
 
 $scanBtn = New-Object System.Windows.Forms.Button
 $scanBtn.Text = "🚀 SCAN NOW"
-$scanBtn.Location = New-Object System.Drawing.Point(995, 28)
-$scanBtn.Size = New-Object System.Drawing.Size(120, 34)
+$scanBtn.Location = New-Object System.Drawing.Point(1005, 33)
+$scanBtn.Size = New-Object System.Drawing.Size(140, 35)
 $scanBtn.BackColor = $NeonPink
 $scanBtn.ForeColor = [System.Drawing.Color]::White
 $scanBtn.FlatStyle = "Flat"
-$scanBtn.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
+$scanBtn.Font = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
 $scanBtn.FlatAppearance.BorderSize = 0
 $scanBtn.Cursor = [System.Windows.Forms.Cursors]::Hand
 $pathGroup.Controls.Add($scanBtn)
 
-# Stats bar
+# ─── STATS SECTION ────────────────────────────────────────────
 $statsPanel = New-Object System.Windows.Forms.Panel
-$statsPanel.Location = New-Object System.Drawing.Point(15, 105)
-$statsPanel.Size = New-Object System.Drawing.Size(1130, 40)
+$statsPanel.Location = New-Object System.Drawing.Point(20, 115)
+$statsPanel.Size = New-Object System.Drawing.Size(1160, 50)
 $statsPanel.BackColor = $DarkCard
+$statsPanel.BorderStyle = "FixedSingle"
 $modPanel.Controls.Add($statsPanel)
 
-$statsLabels = @()
 $statsData = @(
-    @{Text = "📦 Total"; Id = "totalLabel"},
-    @{Text = "✅ Safe"; Id = "safeLabel"},
-    @{Text = "❓ Unknown"; Id = "unknownLabel"},
-    @{Text = "🚨 Cheats"; Id = "cheatLabel"}
+    @{Text = "📦 TOTAL"; Color = $TextColor; Id = "totalLabel"},
+    @{Text = "✅ SAFE"; Color = $NeonGreen; Id = "safeLabel"},
+    @{Text = "❓ UNKNOWN"; Color = $NeonYellow; Id = "unknownLabel"},
+    @{Text = "🚨 CHEATS"; Color = $NeonPink; Id = "cheatLabel"}
 )
 
+$statsLabels = @{}
 for ($i = 0; $i -lt $statsData.Count; $i++) {
+    $panel = New-Object System.Windows.Forms.Panel
+    $panel.Location = New-Object System.Drawing.Point(20 + ($i * 280), 5)
+    $panel.Size = New-Object System.Drawing.Size(260, 40)
+    $panel.BackColor = $DarkBg
+    $statsPanel.Controls.Add($panel)
+    
     $label = New-Object System.Windows.Forms.Label
     $label.Text = "$($statsData[$i].Text): 0"
-    $label.ForeColor = $TextColor
-    $label.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
-    $label.Location = New-Object System.Drawing.Point(20 + ($i * 250), 8)
-    $label.Size = New-Object System.Drawing.Size(200, 25)
+    $label.ForeColor = $statsData[$i].Color
+    $label.Font = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
+    $label.Location = New-Object System.Drawing.Point(10, 8)
+    $label.Size = New-Object System.Drawing.Size(240, 25)
+    $label.TextAlign = "MiddleCenter"
     $label.Name = $statsData[$i].Id
-    $statsPanel.Controls.Add($label)
-    $statsLabels += $label
+    $panel.Controls.Add($label)
+    $statsLabels[$statsData[$i].Id] = $label
 }
 
-# Progress bar
+# ─── PROGRESS ──────────────────────────────────────────────────
 $progressBar = New-Object System.Windows.Forms.ProgressBar
-$progressBar.Location = New-Object System.Drawing.Point(15, 150)
-$progressBar.Size = New-Object System.Drawing.Size(1130, 25)
+$progressBar.Location = New-Object System.Drawing.Point(20, 175)
+$progressBar.Size = New-Object System.Drawing.Size(1160, 20)
 $progressBar.Style = "Continuous"
 $progressBar.ForeColor = $NeonPink
 $progressBar.BackColor = $DarkCard
 $progressBar.Value = 0
 $modPanel.Controls.Add($progressBar)
 
-# Results ListView
+# ─── RESULTS ──────────────────────────────────────────────────
 $resultListView = New-Object System.Windows.Forms.ListView
-$resultListView.Location = New-Object System.Drawing.Point(15, 185)
-$resultListView.Size = New-Object System.Drawing.Size(1130, 280)
+$resultListView.Location = New-Object System.Drawing.Point(20, 205)
+$resultListView.Size = New-Object System.Drawing.Size(1160, 280)
 $resultListView.BackColor = $DarkCard
 $resultListView.ForeColor = $TextColor
 $resultListView.Font = New-Object System.Drawing.Font("Consolas", 10)
@@ -231,16 +273,14 @@ $resultListView.FullRowSelect = $true
 $resultListView.GridLines = $true
 $resultListView.View = "Details"
 $resultListView.OwnerDraw = $true
-$resultListView.Columns.Add("Mod Name", 350)
+$resultListView.Columns.Add("Mod Name", 380)
 $resultListView.Columns.Add("Status", 150)
 $resultListView.Columns.Add("Reason", 500)
-$resultListView.MultiSelect = $false
 
-# Custom drawing for ListView
 $resultListView.Add_DrawColumnHeader({
     param($sender, $e)
     $e.Graphics.FillRectangle([System.Drawing.Brushes]::FromColor($DarkCard), $e.Bounds)
-    $e.Graphics.DrawRectangle([System.Drawing.Pen]::new($BorderColor, 1), $e.Bounds)
+    $e.Graphics.DrawRectangle([System.Drawing.Pen]::new($NeonPink, 1), $e.Bounds)
     $e.Graphics.DrawString($e.Header.Text, $e.Font, [System.Drawing.Brushes]::White, $e.Bounds, [System.Drawing.StringFormat]::GenericDefault)
 })
 
@@ -256,10 +296,10 @@ $resultListView.Add_DrawItem({
 
 $modPanel.Controls.Add($resultListView)
 
-# Output box
+# ─── OUTPUT ────────────────────────────────────────────────────
 $outputBox = New-Object System.Windows.Forms.RichTextBox
-$outputBox.Location = New-Object System.Drawing.Point(15, 475)
-$outputBox.Size = New-Object System.Drawing.Size(1130, 200)
+$outputBox.Location = New-Object System.Drawing.Point(20, 495)
+$outputBox.Size = New-Object System.Drawing.Size(1160, 210)
 $outputBox.BackColor = $DarkCard
 $outputBox.ForeColor = $TextColor
 $outputBox.Font = New-Object System.Drawing.Font("Consolas", 9)
@@ -285,11 +325,10 @@ $scanBtn.Add_Click({
     $statusIndicator.Text = "● SCANNING"
     $statusIndicator.ForeColor = $NeonCyan
     
-    # Reset stats
-    $statsLabels[0].Text = "📦 Total: 0"
-    $statsLabels[1].Text = "✅ Safe: 0"
-    $statsLabels[2].Text = "❓ Unknown: 0"
-    $statsLabels[3].Text = "🚨 Cheats: 0"
+    $statsLabels["totalLabel"].Text = "📦 TOTAL: 0"
+    $statsLabels["safeLabel"].Text = "✅ SAFE: 0"
+    $statsLabels["unknownLabel"].Text = "❓ UNKNOWN: 0"
+    $statsLabels["cheatLabel"].Text = "🚨 CHEATS: 0"
     
     $jarFiles = Get-ChildItem -Path $modsPath -Filter *.jar -File
     $total = $jarFiles.Count
@@ -303,7 +342,7 @@ $scanBtn.Add_Click({
         'sigma','vape','entropy','dqrkis','ketteh','eventplugin',
         'crystalaura','autocrystal','anchoraura','bedaura',
         'client','hack','cheat','module','exploit','bypass',
-        'injection','obfuscate','crystalpvp','crystalfight'
+        'injection','obfuscate','crystalpvp'
     )
     
     $legitMods = @(
@@ -333,7 +372,6 @@ $scanBtn.Add_Click({
         $reason = ""
         $fileName = $file.Name.ToLower()
         
-        # Check legit mods
         foreach ($legit in $legitMods) {
             if ($fileName -match $legit) { 
                 $isLegit = $true
@@ -342,7 +380,6 @@ $scanBtn.Add_Click({
             }
         }
         
-        # Check cheats
         if (-not $isLegit) {
             foreach ($cheat in $cheatNames) {
                 if ($fileName -match $cheat) {
@@ -353,7 +390,6 @@ $scanBtn.Add_Click({
             }
         }
         
-        # Add to ListView
         $item = New-Object System.Windows.Forms.ListViewItem($file.Name)
         if ($isCheat) {
             $item.SubItems.Add("🚨 CHEAT")
@@ -376,11 +412,10 @@ $scanBtn.Add_Click({
         }
         $resultListView.Items.Add($item)
         
-        # Update stats
-        $statsLabels[0].Text = "📦 Total: $counter"
-        $statsLabels[1].Text = "✅ Safe: $safeCount"
-        $statsLabels[2].Text = "❓ Unknown: $unknownCount"
-        $statsLabels[3].Text = "🚨 Cheats: $cheatCount"
+        $statsLabels["totalLabel"].Text = "📦 TOTAL: $counter"
+        $statsLabels["safeLabel"].Text = "✅ SAFE: $safeCount"
+        $statsLabels["unknownLabel"].Text = "❓ UNKNOWN: $unknownCount"
+        $statsLabels["cheatLabel"].Text = "🚨 CHEATS: $cheatCount"
     }
     
     $statusIndicator.Text = "● COMPLETE"
@@ -418,19 +453,24 @@ $tabControl.TabPages.Add($tabFileTools)
 $filePanel = New-Object System.Windows.Forms.Panel
 $filePanel.Dock = "Fill"
 $filePanel.BackColor = $DarkBg
-$filePanel.Padding = New-Object System.Windows.Forms.Padding(15)
+$filePanel.Padding = New-Object System.Windows.Forms.Padding(20)
 $tabFileTools.Controls.Add($filePanel)
 
-# Hash group
-$hashGroup = New-Object System.Windows.Forms.GroupBox
-$hashGroup.Text = "🔐 File Hasher"
-$hashGroup.ForeColor = $NeonCyan
-$hashGroup.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
-$hashGroup.Location = New-Object System.Drawing.Point(15, 15)
-$hashGroup.Size = New-Object System.Drawing.Size(1130, 80)
+$hashGroup = New-Object System.Windows.Forms.Panel
+$hashGroup.Location = New-Object System.Drawing.Point(20, 20)
+$hashGroup.Size = New-Object System.Drawing.Size(1160, 80)
 $hashGroup.BackColor = $DarkCard
-$hashGroup.FlatStyle = "Flat"
+$hashGroup.BorderStyle = "FixedSingle"
+$hashGroup.Padding = New-Object System.Windows.Forms.Padding(10)
 $filePanel.Controls.Add($hashGroup)
+
+$hashLabel = New-Object System.Windows.Forms.Label
+$hashLabel.Text = "🔐 FILE HASHER"
+$hashLabel.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
+$hashLabel.ForeColor = $NeonPurple
+$hashLabel.Location = New-Object System.Drawing.Point(15, 5)
+$hashLabel.Size = New-Object System.Drawing.Size(300, 25)
+$hashGroup.Controls.Add($hashLabel)
 
 $hashPathBox = New-Object System.Windows.Forms.TextBox
 $hashPathBox.Location = New-Object System.Drawing.Point(15, 35)
@@ -442,14 +482,14 @@ $hashPathBox.Font = New-Object System.Drawing.Font("Segoe UI", 10)
 $hashGroup.Controls.Add($hashPathBox)
 
 $hashBrowseBtn = New-Object System.Windows.Forms.Button
-$hashBrowseBtn.Text = "📂 Browse"
+$hashBrowseBtn.Text = "📂 BROWSE"
 $hashBrowseBtn.Location = New-Object System.Drawing.Point(875, 33)
-$hashBrowseBtn.Size = New-Object System.Drawing.Size(110, 34)
-$hashBrowseBtn.BackColor = $DarkCard
-$hashBrowseBtn.ForeColor = $NeonCyan
+$hashBrowseBtn.Size = New-Object System.Drawing.Size(120, 35)
+$hashBrowseBtn.BackColor = $DarkBg
+$hashBrowseBtn.ForeColor = $NeonPurple
 $hashBrowseBtn.FlatStyle = "Flat"
 $hashBrowseBtn.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
-$hashBrowseBtn.FlatAppearance.BorderColor = $NeonCyan
+$hashBrowseBtn.FlatAppearance.BorderColor = $NeonPurple
 $hashBrowseBtn.FlatAppearance.BorderSize = 2
 $hashBrowseBtn.Cursor = [System.Windows.Forms.Cursors]::Hand
 $hashBrowseBtn.Add_Click({
@@ -478,13 +518,13 @@ $hashBrowseBtn.Add_Click({
 $hashGroup.Controls.Add($hashBrowseBtn)
 
 $hashBtn = New-Object System.Windows.Forms.Button
-$hashBtn.Text = "🔐 Hash It!"
-$hashBtn.Location = New-Object System.Drawing.Point(995, 33)
-$hashBtn.Size = New-Object System.Drawing.Size(120, 34)
+$hashBtn.Text = "🔐 HASH IT!"
+$hashBtn.Location = New-Object System.Drawing.Point(1005, 33)
+$hashBtn.Size = New-Object System.Drawing.Size(140, 35)
 $hashBtn.BackColor = $NeonPurple
 $hashBtn.ForeColor = [System.Drawing.Color]::White
 $hashBtn.FlatStyle = "Flat"
-$hashBtn.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
+$hashBtn.Font = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
 $hashBtn.FlatAppearance.BorderSize = 0
 $hashBtn.Cursor = [System.Windows.Forms.Cursors]::Hand
 $hashBtn.Add_Click({
@@ -513,8 +553,8 @@ $hashBtn.Add_Click({
 $hashGroup.Controls.Add($hashBtn)
 
 $hashOutputBox = New-Object System.Windows.Forms.RichTextBox
-$hashOutputBox.Location = New-Object System.Drawing.Point(15, 110)
-$hashOutputBox.Size = New-Object System.Drawing.Size(1130, 520)
+$hashOutputBox.Location = New-Object System.Drawing.Point(20, 115)
+$hashOutputBox.Size = New-Object System.Drawing.Size(1160, 590)
 $hashOutputBox.BackColor = $DarkCard
 $hashOutputBox.ForeColor = $TextColor
 $hashOutputBox.Font = New-Object System.Drawing.Font("Consolas", 10)
@@ -536,13 +576,13 @@ $tabControl.TabPages.Add($tabProcess)
 $procPanel = New-Object System.Windows.Forms.Panel
 $procPanel.Dock = "Fill"
 $procPanel.BackColor = $DarkBg
-$procPanel.Padding = New-Object System.Windows.Forms.Padding(15)
+$procPanel.Padding = New-Object System.Windows.Forms.Padding(20)
 $tabProcess.Controls.Add($procPanel)
 
 $procScanBtn = New-Object System.Windows.Forms.Button
 $procScanBtn.Text = "🔍 SCAN PROCESSES"
-$procScanBtn.Location = New-Object System.Drawing.Point(15, 15)
-$procScanBtn.Size = New-Object System.Drawing.Size(200, 45)
+$procScanBtn.Location = New-Object System.Drawing.Point(20, 20)
+$procScanBtn.Size = New-Object System.Drawing.Size(220, 50)
 $procScanBtn.BackColor = $NeonCyan
 $procScanBtn.ForeColor = [System.Drawing.Color]::White
 $procScanBtn.FlatStyle = "Flat"
@@ -576,84 +616,4 @@ $procScanBtn.Add_Click({
         if ($count++ -gt 25) { break }
         try {
             $mem = [math]::Round($p.WorkingSet64 / 1MB, 1)
-            $cpu = [math]::Round($p.PrivilegedProcessorTime.TotalMilliseconds / 10, 1)
-            $procOutputBox.AppendText("  ▸ $($p.ProcessName).exe (PID: $($p.Id)) — ${mem}MB`n", [System.Drawing.Color]::Gray)
-        } catch {}
-    }
-    
-    $procOutputBox.AppendText("`n═══════════════════════════════════════════════════════════════════`n")
-    $procOutputBox.AppendText("✅ Total Processes: $($processes.Count)`n", [System.Drawing.Color]::Green)
-    $procOutputBox.AppendText("✅ Minecraft Processes: $($mcProcesses.Count)`n", [System.Drawing.Color]::Green)
-    $procOutputBox.AppendText("═══════════════════════════════════════════════════════════════════`n")
-})
-$procPanel.Controls.Add($procScanBtn)
-
-$procOutputBox = New-Object System.Windows.Forms.RichTextBox
-$procOutputBox.Location = New-Object System.Drawing.Point(15, 75)
-$procOutputBox.Size = New-Object System.Drawing.Size(1130, 560)
-$procOutputBox.BackColor = $DarkCard
-$procOutputBox.ForeColor = $TextColor
-$procOutputBox.Font = New-Object System.Drawing.Font("Consolas", 10)
-$procOutputBox.BorderStyle = "FixedSingle"
-$procOutputBox.ReadOnly = $true
-$procOutputBox.WordWrap = $true
-$procOutputBox.ScrollBars = "Vertical"
-$procPanel.Controls.Add($procOutputBox)
-
-# ============================================================
-#  TAB 4: ABOUT
-# ============================================================
-$tabAbout = New-Object System.Windows.Forms.TabPage
-$tabAbout.Text = "ℹ  ABOUT"
-$tabAbout.BackColor = $DarkBg
-$tabAbout.UseVisualStyleBackColor = $false
-$tabControl.TabPages.Add($tabAbout)
-
-$aboutPanel = New-Object System.Windows.Forms.Panel
-$aboutPanel.Dock = "Fill"
-$aboutPanel.BackColor = $DarkBg
-$aboutPanel.Padding = New-Object System.Windows.Forms.Padding(50)
-$tabAbout.Controls.Add($aboutPanel)
-
-$aboutLabel = New-Object System.Windows.Forms.Label
-$aboutLabel.Text = @"
-⚡ KETTEH TOOLS PRO v2.0 ⚡
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🔍 MOD SCANNER
-  • Scan your Minecraft mods folder
-  • Detect cheat clients and suspicious mods
-  • Color-coded results (Red = Cheat, Green = Safe, Yellow = Unknown)
-  • Real-time progress tracking
-
-🛠 FILE TOOLS
-  • Calculate SHA1 and MD5 hashes
-  • Browse or paste file path
-  • Instant hash results
-
-🖥️ PROCESS SCANNER
-  • View all running processes
-  • Highlight Minecraft processes
-  • Show memory usage
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🔥 Made by Ketteh · Justice Served · No Mercy for Cheaters
-
-"@
-$aboutLabel.ForeColor = $TextColor
-$aboutLabel.Location = New-Object System.Drawing.Point(50, 50)
-$aboutLabel.Size = New-Object System.Drawing.Size(900, 500)
-$aboutLabel.Font = New-Object System.Drawing.Font("Segoe UI", 11)
-$aboutLabel.TextAlign = "TopLeft"
-$aboutPanel.Controls.Add($aboutLabel)
-
-# ─── RUN THE FORM ─────────────────────────────────────────────
-$form.Add_Shown({ 
-    $form.Activate()
-    $statusIndicator.Text = "● READY"
-    $statusIndicator.ForeColor = $NeonGreen
-})
-
-[System.Windows.Forms.Application]::Run($form)
+            $procOutputBox.AppendText("  ▸ $($p.ProcessName).exe (PID: $
