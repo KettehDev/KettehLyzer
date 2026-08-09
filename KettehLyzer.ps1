@@ -157,7 +157,6 @@ $ToolData = @(
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Left -->
                 <Border Grid.Column="0" Background="#0F0F18" BorderBrush="#1C1C2C" BorderThickness="0,0,1,0">
                     <StackPanel Margin="16,20">
                         <TextBlock Text="ACTIONS" FontSize="10" FontWeight="Bold" Foreground="#444466" Margin="4,0,0,12"/>
@@ -178,7 +177,6 @@ $ToolData = @(
                     </StackPanel>
                 </Border>
 
-                <!-- Cards -->
                 <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Background="#0B0B12">
                     <WrapPanel x:Name="CardPanel" Margin="16"/>
                 </ScrollViewer>
@@ -203,7 +201,7 @@ $ToolData = @(
 "@
 
 # =============================================================================
-# DISCLAIMER
+# DISCLAIMER (FIXED COLOR)
 # =============================================================================
 [xml]$discXaml = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -231,7 +229,7 @@ $ToolData = @(
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Button x:Name="CancelBtn" Grid.Column="0" Content="Cancel" Height="38"
-                        Background="Transparent" Foreground="#AAAA CC" BorderBrush="#333344" BorderThickness="1" Cursor="Hand"/>
+                        Background="Transparent" Foreground="#AAAACC" BorderBrush="#333344" BorderThickness="1" Cursor="Hand"/>
                 <Button x:Name="AcceptBtn" Grid.Column="2" Content="Accept" Height="38"
                         Background="#1A1A2A" Foreground="#00E5FF" BorderThickness="0" Cursor="Hand"/>
             </Grid>
@@ -250,7 +248,7 @@ $discWin.ShowDialog() | Out-Null
 if (-not $script:ok) { exit }
 
 # =============================================================================
-# LOAD
+# LOAD MAIN WINDOW
 # =============================================================================
 $reader = New-Object System.Xml.XmlNodeReader $xaml
 $window = [Windows.Markup.XamlReader]::Load($reader)
@@ -268,9 +266,6 @@ $OpenFolderBtn = $window.FindName("OpenFolderBtn")
 $ClearCacheBtn = $window.FindName("ClearCacheBtn")
 $OpenPsBtn     = $window.FindName("OpenPsBtn")
 
-# =============================================================================
-# HELPERS
-# =============================================================================
 function Write-Log {
     param([string]$msg)
     $t = Get-Date -Format "HH:mm:ss"
@@ -300,7 +295,7 @@ function Set-Status {
 }
 
 # =============================================================================
-# FIXED MOD ANALYZER
+# MOD ANALYZER
 # =============================================================================
 function Start-KettehModAnalyzer {
     $code = @'
@@ -313,16 +308,15 @@ Write-Host "  ====================================" -ForegroundColor DarkCyan
 Write-Host "       KETTEH MOD ANALYZER" -ForegroundColor Cyan
 Write-Host "  ====================================" -ForegroundColor DarkCyan
 Write-Host ""
-
 Write-Host "  Enter path to your mods folder" -ForegroundColor White
-Write-Host "  (press Enter to use default .minecraft\mods)" -ForegroundColor DarkGray
+Write-Host "  (press Enter for default .minecraft\mods)" -ForegroundColor DarkGray
 Write-Host ""
 Write-Host "  Path: " -NoNewline -ForegroundColor Cyan
 $path = Read-Host
 
 if ([string]::IsNullOrWhiteSpace($path)) {
     $path = Join-Path $env:APPDATA ".minecraft\mods"
-    Write-Host "  → Using default: $path" -ForegroundColor Yellow
+    Write-Host "  Using: $path" -ForegroundColor Yellow
 }
 
 if (-not (Test-Path -LiteralPath $path -PathType Container)) {
@@ -346,8 +340,7 @@ $patterns = @(
     "reach","hitbox","triggerbot","nofall","bhop","flight","phase","blink",
     "freecam","scaffold","xray","esp","nametags","chams","tracers",
     "sessionstealer","tokenlogger","tokengrabber","discordtoken","backdoor",
-    "meteordevelopment","cc/novoline","com/alan/clients","net/ccbluex",
-    "com/moonsworth","phantom-refmap"
+    "meteordevelopment","cc/novoline","com/alan/clients","net/ccbluex"
 )
 
 function Get-SHA1([string]$file) {
@@ -388,9 +381,8 @@ function Scan-Jar([string]$file) {
                     $ms = New-Object System.IO.MemoryStream
                     $stream.CopyTo($ms)
                     $stream.Close()
-                    $bytes = $ms.ToArray()
+                    $text = [System.Text.Encoding]::ASCII.GetString($ms.ToArray()).ToLowerInvariant()
                     $ms.Dispose()
-                    $text = [System.Text.Encoding]::ASCII.GetString($bytes).ToLowerInvariant()
                     foreach ($p in $patterns) {
                         if ($p.Length -gt 4 -and $text.Contains($p)) {
                             if (-not $hits.Contains($p)) { $hits.Add($p) }
@@ -415,23 +407,19 @@ $jars = @(Get-ChildItem -LiteralPath $path -Filter "*.jar" -File -ErrorAction Si
 $total = $jars.Count
 
 if ($total -eq 0) {
-    Write-Host "  No .jar files found in that folder." -ForegroundColor Yellow
-    Write-Host ""
+    Write-Host "  No .jar files found." -ForegroundColor Yellow
     Write-Host "  Press any key to exit..." -ForegroundColor DarkGray
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
     exit
 }
 
-$verified = @()
-$unknown = @()
-$cheats = @()
-$suspicious = @()
+$verified = @(); $unknown = @(); $cheats = @(); $suspicious = @()
 $i = 0
 
 foreach ($jar in $jars) {
     $i++
     $percent = [math]::Round(($i / $total) * 100)
-    Write-Host ("`r  [{0,3}%] {1}" -f $percent, $jar.Name.PadRight(50).Substring(0,50)) -NoNewline -ForegroundColor Cyan
+    Write-Host ("`r  [{0,3}%] {1}" -f $percent, $jar.Name.PadRight(50).Substring(0,[Math]::Min(50,$jar.Name.Length))) -NoNewline -ForegroundColor Cyan
 
     $hash = Get-SHA1 $jar.FullName
     $modName = Query-Modrinth $hash
@@ -442,7 +430,6 @@ foreach ($jar in $jars) {
     }
 
     $result = Scan-Jar $jar.FullName
-
     if ($result.IsClient) {
         $cheats += [PSCustomObject]@{ File = $jar.Name; Hits = ($result.Hits -join ", ") }
     }
@@ -455,10 +442,9 @@ foreach ($jar in $jars) {
 }
 
 Write-Host "`r" + (" " * 70) + "`r"
-
 Write-Host ""
 Write-Host "  RESULTS" -ForegroundColor White
-Write-Host "  -------" -ForegroundColor DarkGray
+Write-Host "  -------"
 Write-Host ("  Verified   : {0}" -f $verified.Count) -ForegroundColor Green
 Write-Host ("  Unknown    : {0}" -f $unknown.Count) -ForegroundColor Gray
 Write-Host ("  Suspicious : {0}" -f $suspicious.Count) -ForegroundColor Yellow
@@ -467,7 +453,6 @@ Write-Host ""
 
 if ($cheats.Count -gt 0) {
     Write-Host "  CHEATS DETECTED" -ForegroundColor Red
-    Write-Host "  ---------------" -ForegroundColor DarkRed
     foreach ($c in $cheats) {
         Write-Host "  $($c.File)" -ForegroundColor Red
         Write-Host "    → $($c.Hits)" -ForegroundColor DarkRed
@@ -477,7 +462,6 @@ if ($cheats.Count -gt 0) {
 
 if ($suspicious.Count -gt 0) {
     Write-Host "  SUSPICIOUS" -ForegroundColor Yellow
-    Write-Host "  ----------" -ForegroundColor DarkYellow
     foreach ($s in $suspicious) {
         Write-Host "  $($s.File)" -ForegroundColor Yellow
         Write-Host "    → $($s.Hits)" -ForegroundColor DarkYellow
@@ -585,13 +569,12 @@ function Build-Cards {
         [void]$sp.Children.Add($d)
         $card.Child = $sp
 
-        # REAL hover animation
         $card.Add_MouseEnter({
             $this.BorderBrush = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#00E5FF")
             $this.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#1E1E3A")
             $sc = $this.RenderTransform
-            $ax = New-Object System.Windows.Media.Animation.DoubleAnimation 1.07, ([TimeSpan]::FromMilliseconds(120))
-            $ay = New-Object System.Windows.Media.Animation.DoubleAnimation 1.07, ([TimeSpan]::FromMilliseconds(120))
+            $ax = New-Object System.Windows.Media.Animation.DoubleAnimation 1.06, ([TimeSpan]::FromMilliseconds(120))
+            $ay = New-Object System.Windows.Media.Animation.DoubleAnimation 1.06, ([TimeSpan]::FromMilliseconds(120))
             $sc.BeginAnimation([System.Windows.Media.ScaleTransform]::ScaleXProperty, $ax)
             $sc.BeginAnimation([System.Windows.Media.ScaleTransform]::ScaleYProperty, $ay)
         })
