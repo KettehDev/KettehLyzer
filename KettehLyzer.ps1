@@ -99,28 +99,28 @@ $ToolData = @(
 )
 
 # =============================================================================
-# NEON CYBER UI
+# XAML - Premium Neon Interactive
 # =============================================================================
 [xml]$xaml = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Ketteh" Width="1280" Height="820"
+        Title="Ketteh" Width="1320" Height="840"
         WindowStartupLocation="CenterScreen" WindowStyle="None"
         AllowsTransparency="True" Background="Transparent"
         FontFamily="Segoe UI">
 
-    <Border Background="#06060F" CornerRadius="16" BorderBrush="#1E1E3A" BorderThickness="1">
+    <Border Background="#05050C" CornerRadius="18" BorderBrush="#1A1A32" BorderThickness="1">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="64"/>
-                <RowDefinition Height="56"/>
+                <RowDefinition Height="68"/>
+                <RowDefinition Height="58"/>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="140"/>
+                <RowDefinition Height="148"/>
             </Grid.RowDefinitions>
 
-            <!-- TOP BAR -->
-            <Border Grid.Row="0" Background="#0C0C1A" CornerRadius="16,16,0,0">
-                <Grid Margin="24,0">
+            <!-- HEADER -->
+            <Border Grid.Row="0" Background="#0A0A16" CornerRadius="18,18,0,0">
+                <Grid Margin="28,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
@@ -129,80 +129,113 @@ $ToolData = @(
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="KETTEH" FontSize="20" FontWeight="Bold">
+                        <TextBlock FontSize="22" FontWeight="Bold">
                             <TextBlock.Foreground>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                    <GradientStop Color="#FF2E63" Offset="0"/>
-                                    <GradientStop Color="#00F5FF" Offset="1"/>
+                                <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                    <GradientStop Color="#FF2D6A" Offset="0"/>
+                                    <GradientStop Color="#00F0FF" Offset="1"/>
                                 </LinearGradientBrush>
                             </TextBlock.Foreground>
+                            KETTEH
                         </TextBlock>
-                        <TextBlock Text="  // SS TOOLKIT" FontSize="12" Foreground="#4A4A6A" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        <TextBlock Text="  SS TOOLKIT" FontSize="13" Foreground="#4A4A6E" VerticalAlignment="Center" Margin="10,2,0,0"/>
                     </StackPanel>
 
-                    <Border Grid.Column="2" x:Name="StatusBadgeBorder" Background="#0A2A2A" CornerRadius="20" Padding="16,6" VerticalAlignment="Center" Margin="0,0,16,0">
-                        <TextBlock x:Name="StatusBadge" Text="IDLE" FontSize="12" FontWeight="Bold" Foreground="#00F5FF"/>
+                    <Border Grid.Column="2" x:Name="BadgeBorder" CornerRadius="22" Padding="18,7" VerticalAlignment="Center" Margin="0,0,18,0"
+                            Background="#0D2A2A">
+                        <TextBlock x:Name="StatusBadge" Text="IDLE" FontSize="12" FontWeight="Bold" Foreground="#00F0FF"/>
                     </Border>
 
                     <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button x:Name="MinBtn" Content="─" Width="40" Height="34" Background="Transparent" Foreground="#5A5A7A" BorderThickness="0" Cursor="Hand" FontSize="14"/>
-                        <Button x:Name="CloseBtn" Content="✕" Width="40" Height="34" Background="Transparent" Foreground="#5A5A7A" BorderThickness="0" Cursor="Hand" FontSize="14"/>
+                        <Button x:Name="MinBtn" Content="─" Width="42" Height="36" Background="Transparent" 
+                                Foreground="#5A5A7A" BorderThickness="0" Cursor="Hand" FontSize="14"/>
+                        <Button x:Name="CloseBtn" Content="✕" Width="42" Height="36" Background="Transparent" 
+                                Foreground="#5A5A7A" BorderThickness="0" Cursor="Hand" FontSize="14"/>
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- CATEGORY STRIP -->
-            <Border Grid.Row="1" Background="#0A0A16" BorderBrush="#1A1A30" BorderThickness="0,0,0,1">
+            <!-- CATEGORIES -->
+            <Border Grid.Row="1" Background="#080812" BorderBrush="#15152A" BorderThickness="0,0,0,1">
                 <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
-                    <StackPanel x:Name="CatBar" Orientation="Horizontal" Margin="20,0" VerticalAlignment="Center"/>
+                    <StackPanel x:Name="CatBar" Orientation="Horizontal" Margin="24,0" VerticalAlignment="Center"/>
                 </ScrollViewer>
             </Border>
 
-            <!-- MAIN AREA -->
+            <!-- BODY -->
             <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="210"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- LEFT ACTIONS -->
-                <Border Grid.Column="0" Background="#0A0A16" BorderBrush="#1A1A30" BorderThickness="0,0,1,0">
-                    <StackPanel Margin="16,20">
-                        <TextBlock Text="ACTIONS" FontSize="10" FontWeight="Bold" Foreground="#3A3A5A" Margin="4,0,0,12"/>
-                        
-                        <Button x:Name="OpenFolderBtn" Content="  Open Folder" Height="42" Margin="0,0,0,8"
-                                Background="#12122A" Foreground="#C0C0E0" BorderThickness="0" Cursor="Hand"
-                                FontSize="13" HorizontalContentAlignment="Left"/>
-                        <Button x:Name="ClearCacheBtn" Content="  Clear Cache" Height="42" Margin="0,0,0,8"
-                                Background="#12122A" Foreground="#C0C0E0" BorderThickness="0" Cursor="Hand"
-                                FontSize="13" HorizontalContentAlignment="Left"/>
-                        <Button x:Name="OpenPsBtn" Content="  PowerShell" Height="42" Margin="0,0,0,8"
-                                Background="#12122A" Foreground="#C0C0E0" BorderThickness="0" Cursor="Hand"
-                                FontSize="13" HorizontalContentAlignment="Left"/>
+                <!-- LEFT PANEL -->
+                <Border Grid.Column="0" Background="#080812" BorderBrush="#15152A" BorderThickness="0,0,1,0">
+                    <StackPanel Margin="18,22">
+                        <TextBlock Text="QUICK ACTIONS" FontSize="10" FontWeight="Bold" Foreground="#3A3A5A" Margin="6,0,0,14"/>
 
-                        <TextBlock Text="STATUS" FontSize="10" FontWeight="Bold" Foreground="#3A3A5A" Margin="4,28,0,8"/>
-                        <TextBlock x:Name="StatusTitle" Text="Ready" FontSize="16" FontWeight="SemiBold" Foreground="#E0E0FF" Margin="4,0,0,4"/>
-                        <TextBlock x:Name="StatusSub" Text="Select a tool" FontSize="12" Foreground="#5A5A7A" TextWrapping="Wrap" Margin="4,0,0,0"/>
+                        <Button x:Name="OpenFolderBtn" Height="44" Margin="0,0,0,8" Cursor="Hand"
+                                Background="#12122A" Foreground="#D0D0F0" BorderThickness="0"
+                                FontSize="13" HorizontalContentAlignment="Left" Padding="16,0">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="10">
+                                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="16,0"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                            Open Folder
+                        </Button>
+
+                        <Button x:Name="ClearCacheBtn" Height="44" Margin="0,0,0,8" Cursor="Hand"
+                                Background="#12122A" Foreground="#D0D0F0" BorderThickness="0"
+                                FontSize="13" HorizontalContentAlignment="Left">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="10">
+                                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="16,0"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                            Clear Cache
+                        </Button>
+
+                        <Button x:Name="OpenPsBtn" Height="44" Margin="0,0,0,8" Cursor="Hand"
+                                Background="#12122A" Foreground="#D0D0F0" BorderThickness="0"
+                                FontSize="13" HorizontalContentAlignment="Left">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="10">
+                                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="16,0"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                            PowerShell
+                        </Button>
+
+                        <TextBlock Text="LIVE STATUS" FontSize="10" FontWeight="Bold" Foreground="#3A3A5A" Margin="6,30,0,10"/>
+                        <TextBlock x:Name="StatusTitle" Text="Ready" FontSize="17" FontWeight="SemiBold" Foreground="#E8E8FF" Margin="6,0,0,4"/>
+                        <TextBlock x:Name="StatusSub" Text="Select a tool to begin" FontSize="12" Foreground="#5A5A7A" TextWrapping="Wrap" Margin="6,0,0,0"/>
                     </StackPanel>
                 </Border>
 
                 <!-- CARDS -->
-                <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Background="#06060F">
-                    <WrapPanel x:Name="CardPanel" Margin="16"/>
+                <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Background="#05050C">
+                    <WrapPanel x:Name="CardPanel" Margin="18"/>
                 </ScrollViewer>
             </Grid>
 
             <!-- CONSOLE -->
-            <Border Grid.Row="3" Background="#04040A" CornerRadius="0,0,16,16" BorderBrush="#1A1A30" BorderThickness="0,1,0,0">
-                <Grid Margin="20,12">
+            <Border Grid.Row="3" Background="#030308" CornerRadius="0,0,18,18" BorderBrush="#15152A" BorderThickness="0,1,0,0">
+                <Grid Margin="24,12">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <TextBlock Text="ACTIVITY CONSOLE" FontSize="10" FontWeight="Bold" Foreground="#3A3A5A" Margin="0,0,0,6"/>
                     <TextBox x:Name="LogBox" Grid.Row="1"
-                             Background="Transparent" Foreground="#00F5FF"
-                             BorderThickness="0" FontFamily="Consolas" FontSize="12"
+                             Background="Transparent" Foreground="#00F0FF"
+                             BorderThickness="0" FontFamily="Consolas" FontSize="12.5"
                              IsReadOnly="True" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap"/>
                 </Grid>
             </Border>
@@ -220,17 +253,17 @@ $ToolData = @(
         Title="Ketteh" Width="480" Height="300"
         WindowStartupLocation="CenterScreen" WindowStyle="None"
         AllowsTransparency="True" Background="Transparent" FontFamily="Segoe UI">
-    <Border Background="#0C0C1A" CornerRadius="14" BorderBrush="#1E1E3A" BorderThickness="1" Padding="28">
+    <Border Background="#0A0A16" CornerRadius="16" BorderBrush="#1A1A32" BorderThickness="1" Padding="30">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="50"/>
+                <RowDefinition Height="52"/>
             </Grid.RowDefinitions>
             <StackPanel>
-                <TextBlock Text="KETTEH" FontSize="22" FontWeight="Bold" Foreground="#00F5FF" Margin="0,0,0,14"/>
-                <TextBlock TextWrapping="Wrap" Foreground="#C0C0E0" FontSize="13" Margin="0,0,0,10"
+                <TextBlock Text="KETTEH" FontSize="24" FontWeight="Bold" Foreground="#00F0FF" Margin="0,0,0,16"/>
+                <TextBlock TextWrapping="Wrap" Foreground="#C8C8E8" FontSize="13.5" Margin="0,0,0,10"
                            Text="Tools are downloaded from official sources and stored locally. Nothing is collected."/>
-                <TextBlock TextWrapping="Wrap" Foreground="#C0C0E0" FontSize="13" Margin="0,0,0,10"
+                <TextBlock TextWrapping="Wrap" Foreground="#C8C8E8" FontSize="13.5" Margin="0,0,0,10"
                            Text="Each tool is maintained by its own author. Use at your own risk."/>
                 <TextBlock TextWrapping="Wrap" Foreground="#5A5A7A" FontSize="12" Text="Click Accept to continue."/>
             </StackPanel>
@@ -240,10 +273,10 @@ $ToolData = @(
                     <ColumnDefinition Width="12"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <Button x:Name="CancelBtn" Grid.Column="0" Content="Cancel" Height="40"
-                        Background="Transparent" Foreground="#C0C0E0" BorderBrush="#2A2A4A" BorderThickness="1" Cursor="Hand"/>
-                <Button x:Name="AcceptBtn" Grid.Column="2" Content="Accept" Height="40"
-                        Background="#12122A" Foreground="#00F5FF" BorderBrush="#00F5FF" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold"/>
+                <Button x:Name="CancelBtn" Grid.Column="0" Content="Cancel" Height="42"
+                        Background="Transparent" Foreground="#C8C8E8" BorderBrush="#2A2A4A" BorderThickness="1" Cursor="Hand"/>
+                <Button x:Name="AcceptBtn" Grid.Column="2" Content="Accept" Height="42"
+                        Background="#12122A" Foreground="#00F0FF" BorderBrush="#00F0FF" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold"/>
             </Grid>
         </Grid>
     </Border>
@@ -260,23 +293,23 @@ $discWin.ShowDialog() | Out-Null
 if (-not $script:ok) { exit }
 
 # =============================================================================
-# LOAD WINDOW
+# LOAD
 # =============================================================================
 $reader = New-Object System.Xml.XmlNodeReader $xaml
 $window = [Windows.Markup.XamlReader]::Load($reader)
 
-$MinBtn            = $window.FindName("MinBtn")
-$CloseBtn          = $window.FindName("CloseBtn")
-$StatusTitle       = $window.FindName("StatusTitle")
-$StatusSub         = $window.FindName("StatusSub")
-$StatusBadge       = $window.FindName("StatusBadge")
-$StatusBadgeBorder = $window.FindName("StatusBadgeBorder")
-$LogBox            = $window.FindName("LogBox")
-$CatBar            = $window.FindName("CatBar")
-$CardPanel         = $window.FindName("CardPanel")
-$OpenFolderBtn     = $window.FindName("OpenFolderBtn")
-$ClearCacheBtn     = $window.FindName("ClearCacheBtn")
-$OpenPsBtn         = $window.FindName("OpenPsBtn")
+$MinBtn        = $window.FindName("MinBtn")
+$CloseBtn      = $window.FindName("CloseBtn")
+$StatusTitle   = $window.FindName("StatusTitle")
+$StatusSub     = $window.FindName("StatusSub")
+$StatusBadge   = $window.FindName("StatusBadge")
+$BadgeBorder   = $window.FindName("BadgeBorder")
+$LogBox        = $window.FindName("LogBox")
+$CatBar        = $window.FindName("CatBar")
+$CardPanel     = $window.FindName("CardPanel")
+$OpenFolderBtn = $window.FindName("OpenFolderBtn")
+$ClearCacheBtn = $window.FindName("ClearCacheBtn")
+$OpenPsBtn     = $window.FindName("OpenPsBtn")
 
 # =============================================================================
 # HELPERS
@@ -291,17 +324,24 @@ function Write-Log {
 }
 
 function Set-Status {
-    param([string]$title, [string]$sub, [string]$badge = "BUSY", [string]$color = "#00F5FF")
+    param([string]$title, [string]$sub, [string]$badge = "BUSY", [string]$color = "#00F0FF")
     $window.Dispatcher.Invoke([Action]{
         $StatusTitle.Text = $title
         $StatusSub.Text   = $sub
         $StatusBadge.Text = $badge
         $StatusBadge.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString($color)
+        if ($badge -eq "BUSY") {
+            $BadgeBorder.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#2A0A1A")
+        } elseif ($badge -eq "ERR") {
+            $BadgeBorder.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#2A0A0A")
+        } else {
+            $BadgeBorder.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#0D2A2A")
+        }
     })
 }
 
 # =============================================================================
-# MOD ANALYZER (working)
+# MOD ANALYZER
 # =============================================================================
 function Start-KettehModAnalyzer {
     $code = @'
@@ -446,30 +486,28 @@ $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
     Set-Content -Path $tmp -Value $code -Encoding UTF8
     Start-Process powershell.exe -ArgumentList "-NoExit","-NoProfile","-ExecutionPolicy","Bypass","-File","`"$tmp`""
     Write-Log "Launched Ketteh Mod Analyzer"
-    Set-Status "Ready" "Mod Analyzer running" "IDLE" "#00F5FF"
+    Set-Status "Ready" "Mod Analyzer running" "IDLE" "#00F0FF"
 }
 
 # =============================================================================
-# BUILD CATEGORIES + CARDS (interactive)
+# CATEGORIES + CARDS
 # =============================================================================
 $script:ActiveCat = "All"
 $Categories = @("All","Ketteh","Orbdiff","Spokwn","Tonynoh","Praiselily","RedLotus","Zimmerman","NirSoft","Others","Dependencies")
 
-function New-CatButton {
-    param([string]$Text, [bool]$Active)
-
+function New-CatButton([string]$Text, [bool]$Active) {
     $btn = New-Object System.Windows.Controls.Button
     $btn.Content = $Text
-    $btn.Height = 34
+    $btn.Height = 36
     $btn.Margin = "0,0,8,0"
-    $btn.Padding = "16,0"
+    $btn.Padding = "18,0"
     $btn.FontSize = 13
     $btn.Cursor = "Hand"
     $btn.BorderThickness = 0
     $btn.Tag = $Text
 
     if ($Active) {
-        $btn.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#FF2E63")
+        $btn.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#FF2D6A")
         $btn.Foreground = [System.Windows.Media.Brushes]::White
         $btn.FontWeight = "SemiBold"
     } else {
@@ -479,7 +517,7 @@ function New-CatButton {
 
     $btn.Template = [Windows.Markup.XamlReader]::Parse(@"
 <ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" TargetType="Button">
-    <Border Background="{TemplateBinding Background}" CornerRadius="17" Padding="{TemplateBinding Padding}">
+    <Border Background="{TemplateBinding Background}" CornerRadius="18" Padding="{TemplateBinding Padding}">
         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
     </Border>
 </ControlTemplate>
@@ -490,37 +528,33 @@ function New-CatButton {
         Build-Categories
         Build-Cards
     })
-
     return $btn
 }
 
 function Build-Categories {
     $CatBar.Children.Clear()
     foreach ($cat in $Categories) {
-        $b = New-CatButton -Text $cat -Active ($cat -eq $script:ActiveCat)
-        [void]$CatBar.Children.Add($b)
+        [void]$CatBar.Children.Add((New-CatButton $cat ($cat -eq $script:ActiveCat)))
     }
 }
 
 function Build-Cards {
     $CardPanel.Children.Clear()
-
     $list = if ($script:ActiveCat -eq "All") { $ToolData } else { $ToolData | Where-Object { $_.Category -eq $script:ActiveCat } }
 
     foreach ($tool in $list) {
         $card = New-Object System.Windows.Controls.Border
-        $card.Width = 230
-        $card.Height = 110
+        $card.Width = 236
+        $card.Height = 116
         $card.Margin = "8"
         $card.CornerRadius = 14
         $card.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#12122A")
-        $card.BorderBrush = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#2A2A4A")
-        $card.BorderThickness = 1
+        $card.BorderBrush = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#252545")
+        $card.BorderThickness = 1.5
         $card.Cursor = "Hand"
-        $card.Padding = "16,14"
+        $card.Padding = "18,16"
         $card.Tag = $tool
 
-        # Scale transform for hover
         $scale = New-Object System.Windows.Media.ScaleTransform 1,1
         $card.RenderTransform = $scale
         $card.RenderTransformOrigin = "0.5,0.5"
@@ -529,68 +563,67 @@ function Build-Cards {
 
         $name = New-Object System.Windows.Controls.TextBlock
         $name.Text = $tool.Name
-        $name.FontSize = 14
+        $name.FontSize = 14.5
         $name.FontWeight = "SemiBold"
-        $name.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#E8E8FF")
+        $name.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#F0F0FF")
         $name.TextWrapping = "Wrap"
 
         $desc = New-Object System.Windows.Controls.TextBlock
         $desc.Text = $tool.Desc
-        $desc.FontSize = 11
+        $desc.FontSize = 11.5
         $desc.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#6A6A8A")
         $desc.TextWrapping = "Wrap"
-        $desc.Margin = "0,6,0,0"
+        $desc.Margin = "0,7,0,0"
 
         [void]$stack.Children.Add($name)
         [void]$stack.Children.Add($desc)
         $card.Child = $stack
 
-        # Hover effects
+        # Hover: scale + cyan glow border
         $card.Add_MouseEnter({
             $this.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#1A1A3A")
-            $this.BorderBrush = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#00F5FF")
+            $this.BorderBrush = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#00F0FF")
             $sc = $this.RenderTransform
             if ($sc -is [System.Windows.Media.ScaleTransform]) {
-                $animX = New-Object System.Windows.Media.Animation.DoubleAnimation 1.05, ([TimeSpan]::FromMilliseconds(120))
-                $animY = New-Object System.Windows.Media.Animation.DoubleAnimation 1.05, ([TimeSpan]::FromMilliseconds(120))
-                $sc.BeginAnimation([System.Windows.Media.ScaleTransform]::ScaleXProperty, $animX)
-                $sc.BeginAnimation([System.Windows.Media.ScaleTransform]::ScaleYProperty, $animY)
+                $a1 = New-Object System.Windows.Media.Animation.DoubleAnimation 1.06, ([TimeSpan]::FromMilliseconds(130))
+                $a2 = New-Object System.Windows.Media.Animation.DoubleAnimation 1.06, ([TimeSpan]::FromMilliseconds(130))
+                $sc.BeginAnimation([System.Windows.Media.ScaleTransform]::ScaleXProperty, $a1)
+                $sc.BeginAnimation([System.Windows.Media.ScaleTransform]::ScaleYProperty, $a2)
             }
         })
 
         $card.Add_MouseLeave({
             $this.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#12122A")
-            $this.BorderBrush = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#2A2A4A")
+            $this.BorderBrush = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#252545")
             $sc = $this.RenderTransform
             if ($sc -is [System.Windows.Media.ScaleTransform]) {
-                $animX = New-Object System.Windows.Media.Animation.DoubleAnimation 1.0, ([TimeSpan]::FromMilliseconds(150))
-                $animY = New-Object System.Windows.Media.Animation.DoubleAnimation 1.0, ([TimeSpan]::FromMilliseconds(150))
-                $sc.BeginAnimation([System.Windows.Media.ScaleTransform]::ScaleXProperty, $animX)
-                $sc.BeginAnimation([System.Windows.Media.ScaleTransform]::ScaleYProperty, $animY)
+                $a1 = New-Object System.Windows.Media.Animation.DoubleAnimation 1.0, ([TimeSpan]::FromMilliseconds(160))
+                $a2 = New-Object System.Windows.Media.Animation.DoubleAnimation 1.0, ([TimeSpan]::FromMilliseconds(160))
+                $sc.BeginAnimation([System.Windows.Media.ScaleTransform]::ScaleXProperty, $a1)
+                $sc.BeginAnimation([System.Windows.Media.ScaleTransform]::ScaleYProperty, $a2)
             }
         })
 
+        # Click
         $card.Add_MouseLeftButtonUp({
             $td = $this.Tag
             if ($null -eq $td) { return }
 
             switch ($td.Type) {
-                "Builtin" {
-                    Start-KettehModAnalyzer
-                }
+                "Builtin" { Start-KettehModAnalyzer }
                 "Link" {
                     Start-Process $td.URL
                     Write-Log "Opened $($td.Name)"
                     Set-Status "Ready" "Opened in browser" "IDLE"
                 }
                 "Cmd" {
-                    Set-Status "Running" $td.Name "BUSY" "#FF2E63"
+                    Set-Status "Running" $td.Name "BUSY" "#FF2D6A"
                     Write-Log "Launching $($td.Name)"
                     Start-Process powershell.exe -ArgumentList "-NoExit","-NoProfile","-ExecutionPolicy","Bypass","-Command",$td.Command
                     Set-Status "Ready" "Launched" "IDLE"
                 }
                 default {
-                    Set-Status "Downloading" $td.Name "BUSY" "#FF2E63"
+                    Set-Status "Downloading" $td.Name "BUSY" "#FF2D6A"
                     Write-Log "Downloading $($td.Name)..."
 
                     $rs = [runspacefactory]::CreateRunspace()
@@ -619,7 +652,6 @@ function Build-Cards {
                                 $badgeCtrl.Text = $b
                             })
                         }
-
                         try {
                             [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
                             $target = Join-Path $dir "$($tool.Category)\$($tool.Name)"
@@ -643,20 +675,13 @@ function Build-Cards {
                                 Log "Downloading $fn..."
                                 (New-Object Net.WebClient).DownloadFile($url, $out)
                                 Log "Download complete"
-                            } else {
-                                Log "Using cache: $fn"
-                            }
+                            } else { Log "Using cache: $fn" }
 
                             if ($fn -match "\.zip$") {
                                 Expand-Archive -Path $out -DestinationPath $target -Force
                                 $exe = Get-ChildItem $target -Filter "*.exe" -Recurse | Select-Object -First 1
-                                if ($exe) {
-                                    Start-Process $exe.FullName
-                                    Log "Launched $($exe.Name)"
-                                } else {
-                                    Start-Process explorer.exe $target
-                                    Log "Opened folder"
-                                }
+                                if ($exe) { Start-Process $exe.FullName; Log "Launched $($exe.Name)" }
+                                else { Start-Process explorer.exe $target; Log "Opened folder" }
                             } else {
                                 Start-Process $out
                                 Log "Launched $fn"
@@ -698,8 +723,6 @@ $ClearCacheBtn.Add_Click({
         Get-ChildItem $installDir -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
         Write-Log "Cleared $n items"
         Set-Status "Ready" "Cache cleared" "IDLE"
-    } else {
-        Write-Log "Nothing to clear"
     }
 })
 
@@ -708,7 +731,7 @@ $OpenPsBtn.Add_Click({
     Write-Log "Opened PowerShell"
 })
 
-Write-Log "Ketteh ready — all systems online"
-Set-Status "Ready" "Select a tool" "IDLE" "#00F5FF"
+Write-Log "Ketteh online — all systems ready"
+Set-Status "Ready" "Select a tool to begin" "IDLE" "#00F0FF"
 
 $window.ShowDialog() | Out-Null
