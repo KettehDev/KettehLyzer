@@ -1,529 +1,1165 @@
-Add-Type -AssemblyName PresentationFramework,PresentationCore,WindowsBase,System.Xaml,System.IO.Compression.FileSystem,System.Windows.Forms
+<#
+    KettehLyzer
+    -----------
+    Local Minecraft mods-folder scanner. Point it at a mods directory (yours,
+    or one a player has voluntarily shared with you) and it reports which
+    JARs are known-clean (verified against Modrinth/Megabase by hash),
+    unknown, or flagged for cheat-client signatures, obfuscation, or
+    injected/bypass code.
+
+    This tool only ever reads files inside the folder you choose. It does
+    not download or launch anything else, does not open any remote-access
+    session, and does not touch any file outside that folder.
+
+    KettehTools - part of the KettehTools suite.
+#>
+
+Add-Type -AssemblyName PresentationFramework
+Add-Type -AssemblyName PresentationCore
+Add-Type -AssemblyName WindowsBase
+Add-Type -AssemblyName System.Xaml
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-$installDir = "$env:USERPROFILE\Downloads\KettehSSTool"
 
-$ToolData = @(
-    @{ Name="Ketteh Mod Analyzer"; Desc="Full cheat + rat scanner for Minecraft mods"; Category="Ketteh"; Type="Builtin" },
-    @{ Name="PrefetchView"; Desc="Parses prefetch, extracts file info"; Category="Orbdiff"; Type="GitHub"; URL="https://github.com/Orbdiff/PrefetchView/releases/latest" },
-    @{ Name="BAMReveal"; Desc="Parses BAM forensic artefact"; Category="Orbdiff"; Type="GitHub"; URL="https://github.com/Orbdiff/BAMReveal/releases/latest" },
-    @{ Name="StringsParser"; Desc="Strings + YARA + signatures scanner"; Category="Orbdiff"; Type="GitHub"; URL="https://github.com/Orbdiff/StringsParser/releases/latest" },
-    @{ Name="Fileless"; Desc="Detects fileless via eventlog + memdump"; Category="Orbdiff"; Type="GitHub"; URL="https://github.com/Orbdiff/Fileless/releases/latest" },
-    @{ Name="DPS-Analyzer"; Desc="Analyzes DPS memory"; Category="Orbdiff"; Type="GitHub"; URL="https://github.com/Orbdiff/DPS-Analyzer/releases/latest" },
-    @{ Name="UserAssistView"; Desc="Parses UserAssist registry artifact"; Category="Orbdiff"; Type="GitHub"; URL="https://github.com/Orbdiff/UserAssistView/releases/latest" },
-    @{ Name="JournalParser"; Desc="Parses NTFS USNJournal entries"; Category="Orbdiff"; Type="GitHub"; URL="https://github.com/Orbdiff/JournalParser/releases/latest" },
-    @{ Name="InjGen"; Desc="Detects JNI/JVMTI memory injections"; Category="Orbdiff"; Type="GitHub"; URL="https://github.com/Orbdiff/InjGen/releases/latest" },
-    @{ Name="USBDetector"; Desc="Detects USB device history"; Category="Orbdiff"; Type="GitHub"; URL="https://github.com/Orbdiff/USBDetector/releases/latest" },
-    @{ Name="PFTrace"; Desc="Rundll32/Regsvr32 prefetch analysis"; Category="Orbdiff"; Type="GitHub"; URL="https://github.com/Orbdiff/PFTrace/releases/latest" },
-    @{ Name="CheckDeletedUSN"; Desc="Compares USN timestamp vs boot time"; Category="Orbdiff"; Type="GitHub"; URL="https://github.com/Orbdiff/CheckDeletedUSN/releases/latest" },
-    @{ Name="JARParser"; Desc="Parses JAR prefetch, DcomLaunch strings"; Category="Orbdiff"; Type="GitHub"; URL="https://github.com/Orbdiff/JARParser/releases/latest" },
-    @{ Name="BAM-parser"; Desc="Parses BAM entries for execution history"; Category="Spokwn"; Type="GitHub"; URL="https://github.com/spokwn/BAM-parser/releases/latest" },
-    @{ Name="PathsParser"; Desc="Extracts and analyzes executable paths"; Category="Spokwn"; Type="GitHub"; URL="https://github.com/spokwn/PathsParser/releases/latest" },
-    @{ Name="JournalTrace"; Desc="Traces file activity via USN journal"; Category="Spokwn"; Type="GitHub"; URL="https://github.com/spokwn/JournalTrace/releases/latest" },
-    @{ Name="KernelLiveDumpTool"; Desc="Captures live kernel memory dump"; Category="Spokwn"; Type="GitHub"; URL="https://github.com/spokwn/KernelLiveDumpTool/releases/latest" },
-    @{ Name="BamDeletedKeys"; Desc="Finds deleted BAM registry keys"; Category="Spokwn"; Type="GitHub"; URL="https://github.com/spokwn/BamDeletedKeys/releases/latest" },
-    @{ Name="Espouken Tool"; Desc="All-in-one SS forensics toolkit"; Category="Spokwn"; Type="GitHub"; URL="https://github.com/spokwn/Tool/releases/latest" },
-    @{ Name="pcasvc-executed"; Desc="Extracts PCA service execution records"; Category="Spokwn"; Type="GitHub"; URL="https://github.com/spokwn/pcasvc-executed/releases/latest" },
-    @{ Name="process-parser"; Desc="Parses process execution artefacts"; Category="Spokwn"; Type="GitHub"; URL="https://github.com/spokwn/process-parser/releases/latest" },
-    @{ Name="prefetch-parser"; Desc="Parses Windows prefetch files"; Category="Spokwn"; Type="GitHub"; URL="https://github.com/spokwn/prefetch-parser/releases/latest" },
-    @{ Name="ActivitiesCache"; Desc="Parses ActivitiesCache execution history"; Category="Spokwn"; Type="GitHub"; URL="https://github.com/spokwn/ActivitiesCache-execution/releases/latest" },
-    @{ Name="MeowDoomsdayFucker"; Desc="Detects Doomsday cheat artefacts"; Category="Tonynoh"; Type="GitHub"; URL="https://github.com/MeowTonynoh/MeowDoomsdayFucker/releases/latest" },
-    @{ Name="MeowModAnalyzer"; Desc="Analyzes mod files for suspicious content"; Category="Tonynoh"; Type="Cmd"; Command="Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/MeowTonynoh/MeowModAnalyzer/main/MeowModAnalyzer.ps1')" },
-    @{ Name="MeowResolver"; Desc="Resolves obfuscated strings in binaries"; Category="Tonynoh"; Type="GitHub"; URL="https://github.com/MeowTonynoh/MeowResolver/releases/latest" },
-    @{ Name="MeowNovowareFucker"; Desc="Detects Novoware cheat artefacts"; Category="Tonynoh"; Type="GitHub"; URL="https://github.com/MeowTonynoh/MeowNovowareFucker/releases/latest" },
-    @{ Name="MeowImportsChecker"; Desc="Checks PE imports for suspicious DLLs"; Category="Tonynoh"; Type="GitHub"; URL="https://github.com/MeowTonynoh/MeowImportsChecker/releases/latest" },
-    @{ Name="MeowClientsFucker"; Desc="Detects known cheat client artefacts"; Category="Tonynoh"; Type="GitHub"; URL="https://github.com/MeowTonynoh/MeowClientFucker/releases/latest" },
-    @{ Name="PSHunter"; Desc="Hunts suspicious PowerShell activity"; Category="Praiselily"; Type="GitHub"; URL="https://github.com/praiselily/PSHunter/releases/latest" },
-    @{ Name="AltDetector"; Desc="Detects alternate account artefacts"; Category="Praiselily"; Type="GitHub"; URL="https://github.com/praiselily/AltDetector/releases/latest" },
-    @{ Name="WeHateFakers"; Desc="Checks hotspot / tethering logs"; Category="Praiselily"; Type="Cmd"; Command="iwr https://raw.githubusercontent.com/praiselily/WeHateFakers/refs/heads/main/HotspotLogs.ps1 | iex" },
-    @{ Name="CommonDirectories"; Desc="Lists files in common suspicious dirs"; Category="Praiselily"; Type="Cmd"; Command="Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/praiselily/lilith-ps/refs/heads/main/CommonDirectories.ps1')" },
-    @{ Name="HarddiskConverter"; Desc="Converts harddisk identifiers for review"; Category="Praiselily"; Type="Cmd"; Command="Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/praiselily/lilith-ps/refs/heads/main/HarddiskConverter.ps1')" },
-    @{ Name="Services"; Desc="Lists and analyzes running services"; Category="Praiselily"; Type="Cmd"; Command="Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/praiselily/lilith-ps/refs/heads/main/Services.ps1')" },
-    @{ Name="SignedScheduledTasks"; Desc="Finds unsigned / suspicious scheduled tasks"; Category="Praiselily"; Type="Cmd"; Command="Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/praiselily/lilith-ps/refs/heads/main/Signed-Scheduled-Tasks.ps1')" },
-    @{ Name="RL ModAnalyzer"; Desc="Analyzes mod files for cheat indicators"; Category="RedLotus"; Type="GitHub"; URL="https://github.com/ItzIceHere/RedLotus-Mod-Analyzer/releases/latest" },
-    @{ Name="RL TaskSentinel"; Desc="Monitors scheduled tasks for anomalies"; Category="RedLotus"; Type="GitHub"; URL="https://github.com/ItzIceHere/RedLotus-Task-Sentinel/releases/latest" },
-    @{ Name="RL AltChecker"; Desc="Checks for alternate account indicators"; Category="RedLotus"; Type="GitHub"; URL="https://github.com/ItzIceHere/RedLotusAltChecker/releases/latest" },
-    @{ Name="ComputerActivityView"; Desc="Timeline of computer activity events"; Category="Others"; Type="Web"; URL="https://www.nirsoft.net/utils/computer_activity_view.html" },
-    @{ Name="AmcacheParser"; Desc="Parses AMCache with YARA + signatures"; Category="Others"; Type="Web"; URL="https://download.ericzimmermanstools.com/net9/AmcacheParser.zip" },
-    @{ Name="SystemInformer"; Desc="Advanced process and kernel inspector"; Category="Others"; Type="Link"; URL="https://www.systeminformer.com/canary" },
-    @{ Name="DIE-engine"; Desc="Detects file type, packer, compiler"; Category="Others"; Type="Web"; URL="https://github.com/horsicq/DIE-engine/releases" },
-    @{ Name="MacroDetector"; Desc="Detects macro / clicker software traces"; Category="Others"; Type="Cmd"; Command="Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/NiccBlahh/MacroDetector/refs/heads/main/MacroDetector.ps1')" },
-    @{ Name="Jarabel"; Desc="Locates .jar files with detailed checks"; Category="Others"; Type="GitHub"; URL="https://github.com/nay-cat/Jarabel/releases/latest" },
-    @{ Name="Luyten"; Desc="Open source Java decompiler GUI"; Category="Others"; Type="GitHub"; URL="https://github.com/deathmarine/Luyten/releases/latest" },
-    @{ Name="VMAware"; Desc="Advanced VM detection library and tool"; Category="Others"; Type="GitHub"; URL="https://github.com/kernelwernel/VMAware/releases/latest" },
-    @{ Name="Velociraptor"; Desc="Endpoint DFIR and threat hunting agent"; Category="Others"; Type="GitHub"; URL="https://github.com/Velocidex/velociraptor/releases/latest" },
-    @{ Name="NTFS Parser"; Desc="NTFS forensics: MFT, Bitlocker, USN"; Category="Others"; Type="GitHub"; URL="https://github.com/thewhiteninja/ntfstool/releases/latest" },
-    @{ Name="Hayabusa"; Desc="Fast forensics timeline generator"; Category="Others"; Type="GitHub"; URL="https://github.com/Yamato-Security/hayabusa/releases/latest" },
-    @{ Name="Everything"; Desc="Instant filename search engine for Windows"; Category="Others"; Type="Link"; URL="https://www.voidtools.com/downloads/" },
-    @{ Name="HxD"; Desc="Fast hex editor with disk and RAM editing"; Category="Others"; Type="Link"; URL="https://mh-nexus.de/en/hxd/" },
-    @{ Name="bstrings"; Desc="Searches strings with regex + YARA"; Category="Zimmerman"; Type="Web"; URL="https://download.ericzimmermanstools.com/net9/bstrings.zip" },
-    @{ Name="JLECmd"; Desc="Parses Jump List files (CLI)"; Category="Zimmerman"; Type="Web"; URL="https://download.ericzimmermanstools.com/net9/JLECmd.zip" },
-    @{ Name="JumpListExplorer"; Desc="GUI explorer for Jump List artefacts"; Category="Zimmerman"; Type="Web"; URL="https://download.ericzimmermanstools.com/net9/JumpListExplorer.zip" },
-    @{ Name="MFTECmd"; Desc="Parses MFT, UsnJrnl, LogFile, Boot"; Category="Zimmerman"; Type="Web"; URL="https://download.ericzimmermanstools.com/net9/MFTECmd.zip" },
-    @{ Name="PECmd"; Desc="Parses Windows prefetch files (CLI)"; Category="Zimmerman"; Type="Web"; URL="https://download.ericzimmermanstools.com/net9/PECmd.zip" },
-    @{ Name="RecentFileCacheParser"; Desc="Parses RecentFileCache.bcf artefact"; Category="Zimmerman"; Type="Web"; URL="https://download.ericzimmermanstools.com/net9/RecentFileCacheParser.zip" },
-    @{ Name="RegistryExplorer"; Desc="GUI explorer for registry hives"; Category="Zimmerman"; Type="Web"; URL="https://download.ericzimmermanstools.com/net9/RegistryExplorer.zip" },
-    @{ Name="ShellBagsExplorer"; Desc="GUI explorer for ShellBags artefacts"; Category="Zimmerman"; Type="Web"; URL="https://download.ericzimmermanstools.com/net9/ShellBagsExplorer.zip" },
-    @{ Name="SrumECmd"; Desc="Parses SRUM database for usage data"; Category="Zimmerman"; Type="Web"; URL="https://download.ericzimmermanstools.com/net9/SrumECmd.zip" },
-    @{ Name="TimelineExplorer"; Desc="GUI viewer for CSV timeline output"; Category="Zimmerman"; Type="Web"; URL="https://download.ericzimmermanstools.com/net9/TimelineExplorer.zip" },
-    @{ Name="FullEventLogView"; Desc="Views all Windows event log entries"; Category="NirSoft"; Type="Web"; URL="https://www.nirsoft.net/utils/fulleventlogview.zip" },
-    @{ Name="NetworkUsageView"; Desc="Shows network usage per process"; Category="NirSoft"; Type="Web"; URL="https://www.nirsoft.net/utils/networkusageview.zip" },
-    @{ Name="BrowserDownloadsView"; Desc="Lists all browser download history"; Category="NirSoft"; Type="Web"; URL="https://www.nirsoft.net/utils/browserdownloadsview.zip" },
-    @{ Name="AlternateStreamView"; Desc="Reveals hidden NTFS alternate streams"; Category="NirSoft"; Type="Web"; URL="https://www.nirsoft.net/utils/alternatestreamview.zip" },
-    @{ Name="USBDeview"; Desc="Lists all USB devices ever connected"; Category="NirSoft"; Type="Web"; URL="https://www.nirsoft.net/utils/usbdeview.zip" },
-    @{ Name="OpenSaveFilesView"; Desc="Shows files opened/saved via dialogs"; Category="NirSoft"; Type="Web"; URL="https://www.nirsoft.net/utils/opensavefilesview.zip" },
-    @{ Name="ExecutedProgramsList"; Desc="Lists programs run from various sources"; Category="NirSoft"; Type="Web"; URL="https://www.nirsoft.net/utils/executedprogramslist.zip" },
-    @{ Name="TaskSchedulerView"; Desc="Views all scheduled tasks and history"; Category="NirSoft"; Type="Web"; URL="https://www.nirsoft.net/utils/taskschedulerview.zip" },
-    @{ Name="JumpListsView"; Desc="Views Jump List recent/frequent files"; Category="NirSoft"; Type="Web"; URL="https://www.nirsoft.net/utils/jumplistsview.zip" },
-    @{ Name="WinPrefetchView"; Desc="Views Windows prefetch file details"; Category="NirSoft"; Type="Web"; URL="https://www.nirsoft.net/utils/winprefetchview.zip" },
-    @{ Name="RegScanner"; Desc="Scans registry for values / patterns"; Category="NirSoft"; Type="Web"; URL="https://www.nirsoft.net/utils/regscanner.zip" },
-    @{ Name="ShellBagsView"; Desc="Views ShellBags folder access history"; Category="NirSoft"; Type="Web"; URL="https://www.nirsoft.net/utils/shellbagsview.zip" },
-    @{ Name="NET 9.0"; Desc="Microsoft .NET 9 SDK runtime"; Category="Dependencies"; Type="Web"; URL="https://download.visualstudio.microsoft.com/download/pr/92dba916-bc51-4e76-8b0e-d41d37ce5fa4/ab08f3e95bf7a3d3da336a7e8c8eca63/dotnet-sdk-9.0.203-win-x64.exe" },
-    @{ Name="VSRedist"; Desc="Visual C++ redistributable (x64)"; Category="Dependencies"; Type="Web"; URL="https://aka.ms/vs/17/release/vc_redist.x64.exe" }
+# =============================================================================
+# DETECTION DATA
+# (Signature lists carried over from the original scanner - this is the part
+#  that actually does the work of catching hacked clients.)
+# =============================================================================
+
+$suspiciousPatterns = @(
+    "AimAssist", "AnchorTweaks", "AutoAnchor", "AutoCrystal", "AutoDoubleHand", "JDWP.VirtualMachine.AllModules",
+    "AutoHitCrystal", "AutoPot", "AutoTotem", "AutoArmor", "InventoryTotem",
+    "LegitTotem", "PingSpoof", "SelfDestruct",
+    "ShieldBreaker", "TriggerBot", "AxeSpam", "WebMacro",
+    "FastPlace", "WalskyOptimizer", "WalksyOptimizer", "walsky.optimizer",
+    "WalksyCrystalOptimizerMod", "Donut", "Replace Mod",
+    "ShieldDisabler", "SilentAim", "Totem Hit", "Wtap", "FakeLag", "dev.virel", "orchard",
+    "BlockESP", "dev.krypton", "dev/krypton", "skid.krypton", "skid/krypton", "AntiMissClick",
+    "LagReach", "PopSwitch", "SprintReset", "ChestSteal", "AntiBot",
+    "ElytraSwap", "FastXP", "FastExp", "Refill", "AirAnchor",
+    "jnativehook", "FakeInv", "HoverTotem", "AutoClicker", "AutoFirework",
+    "PackSpoof", "Antiknockback", "catlean",
+    "AuthBypass", "Asteria", "Prestige", "AutoEat", "AutoMine",
+    "MaceSwap", "Macro198", "StunSlam", "SafeAnchor", "DoubleAnchor", "AutoTPA", "BaseFinder", "Xenon", "gypsy",
+    "AutoPotRefill", "KeyPearl", "AutoNethPot", "AutoDtap",
+    "TriggerBot", "AutoWeb", "AnchorAction",
+    "org.chainlibs.module.impl.modules.Crystal.Y",
+    "org.chainlibs.module.impl.modules.Crystal.bF",
+    "org.chainlibs.module.impl.modules.Crystal.bM",
+    "org.chainlibs.module.impl.modules.Crystal.bY",
+    "org.chainlibs.module.impl.modules.Crystal.bq",
+    "org.chainlibs.module.impl.modules.Crystal.cv",
+    "org.chainlibs.module.impl.modules.Crystal.o",
+    "org.chainlibs.module.impl.modules.Blatant.I",
+    "org.chainlibs.module.impl.modules.Blatant.bR",
+    "org.chainlibs.module.impl.modules.Blatant.bx",
+    "org.chainlibs.module.impl.modules.Blatant.cj",
+    "org.chainlibs.module.impl.modules.Blatant.dk",
+    "imgui.gl3", "imgui.glfw",
+    "BowAim", "Criticals", "Fakenick", "FakeItem",
+    "invsee", "ItemExploit", "Hellion", "hellion",
+    "LicenseCheckMixin", "ClientPlayerInteractionManagerAccessor",
+    "ClientPlayerEntityMixim", "dev.gambleclient", "obfuscatedAuth",
+    "phantom-refmap.json", "xyz.greaj",
+    "じ.class", "ふ.class", "ぶ.class", "ぷ.class", "た.class",
+    "ね.class", "そ.class", "な.class", "ど.class", "ぐ.class",
+    "ず.class", "で.class", "つ.class", "べ.class", "せ.class",
+    "と.class", "み.class", "び.class", "す.class", "の.class"
 )
 
+$cheatStrings = @(
+    "AutoCrystal", "autocrystal", "auto crystal", "cw crystal", "JDWP.VirtualMachine.AllModules",
+    "dontPlaceCrystal", "dontBreakCrystal", "dev.virel", "orchard",
+    "AutoHitCrystal", "autohitcrystal", "canPlaceCrystalServer", "healPotSlot",
+    "ＡｕｔｏＣｒｙｓｔａｌ", "Ａｕｔｏ Ｃｒｙｓｔａｌ", "ＡｕｔｏＨｉｔＣｒｙｓｔａｌ",
+    "AutoAnchor", "autoanchor", "auto anchor", "DoubleAnchor",
+    "HasAnchor", "anchortweaks", "anchor macro", "safe anchor", "safeanchor",
+    "SafeAnchor", "AirAnchor",
+    "ＡｕｔｏＡｎｃｈｏｒ", "Ａｕｔｏ Ａｎｃｈｏｒ", "ＤｏｕｂｌｅＡｎｃｈｏｒ", "Ｄｏｕｂｌｅ Ａｎｃｈｏｒ",
+    "ＳａｆｅＡｎｃｈｏｒ", "Ｓａｆｅ Ａｎｃｈｏｒ", "Ａｎｃｈｏｒ Ｍａｃｒｏ", "anchorMacro",
+    "AutoTotem", "autototem", "auto totem", "InventoryTotem",
+    "inventorytotem", "HoverTotem", "hover totem", "legittotem",
+    "ＡｕｔｏＴｏｔｅｍ", "Ａｕｔｏ Ｔｏｔｅｍ", "ＨｏｖｅｒＴｏｔｅｍ", "Ｈｏｖｅｒ Ｔｏｔｅｍ",
+    "ＩｎｖｅｎｔｏｒｙＴｏｔｅｍ", "Ａｕｔｏ Ｉｎｖｅｎｔｏｒｙ Ｔｏｔｅｍ", "Ａｕｔｏ Ｔｏｔｅｍ Ｈｉｔ",
+    "AutoPot", "autopot", "auto pot", "speedPotSlot", "strengthPotSlot",
+    "AutoArmor", "autoarmor", "auto armor",
+    "ＡｕｔｏＰｏｔ", "Ａｕｔｏ Ｐｏｔ", "Ａｕｔｏ Ｐｏｔ Ｒｅｆｉｌｌ", "AutoPotRefill",
+    "ＡｕｔｏＡｒｍｏｒ", "Ａｕｔｏ Ａｒｍｏｒ",
+    "preventSwordBlockBreaking", "preventSwordBlockAttack",
+    "ShieldDisabler", "ShieldBreaker",
+    "ＳｈｉｅｌｄＤｉｓａｂｌｅｒ", "Ｓｈｉｅｌｄ Ｄｉｓａｂｌｅｒ",
+    "Breaking shield with axe...",
+    "AutoDoubleHand", "autodoublehand", "auto double hand",
+    "ＡｕｔｏＤｏｕｂｌｅＨａｎｄ", "Ａｕｔｏ Ｄｏｕｂｌｅ Ｈａｎｄ",
+    "AutoClicker", "ＡｕｔｏＣｌｉｃｋｅｒ",
+    "Failed to switch to mace after axe!",
+    "AutoMace", "MaceSwap", "SpearSwap",
+    "ＡｕｔｏＭａｃｅ", "Ａｕｔｏ Ｍａｃｅ", "ＭａｃｅＳｗａｐ", "Ｍａｃｅ Ｓｗａｐ",
+    "Ｓｐｅａｒ Ｓｗａｐ", "Ｓｔｕｎ Ｓｌａｍ", "StunSlam",
+    "Donut", "JumpReset", "axespam", "axe spam",
+    "findKnockbackSword", "attackRegisteredThisClick",
+    "AimAssist", "aimassist", "aim assist",
+    "triggerbot", "trigger bot",
+    "ＡｉｍＡｓｓｉｓｔ", "Ａｉｍ Ａｓｓｉｓｔ", "ＴｒｉｇｇｅｒＢｏｔ", "Ｔｒｉｇｇｅｒ Ｂｏｔ",
+    "Silent Rotations", "SilentRotations", "Ｓｉｌｅｎｔ Ｒｏｔａｔｉｏｎｓ",
+    "FakeInv", "swapBackToOriginalSlot",
+    "FakeLag", "pingspoof", "ping spoof",
+    "ＦａｋｅＬａｇ", "Ｆａｋｅ Ｌａｇ", "fakePunch", "Fake Punch", "Ｆａｋｅ Ｐｕｎｃｈ",
+    "mace_swap", "quick_strike", "macro_198", "stun_slam",
+    "safe_anchor", "double_anchor", "auto_pot_refill",
+    "walksy_optimizer", "key_pearl", "aim_assist",
+    "auto_neth_pot", "auto_dtap", "trigger_bot", "auto_web",
+    "DOUBLE_ESCAPE", "DOUBLE_RIGHTCLICK_FIRST", "DOUBLE_RIGHTCLICK_SECOND",
+    "POST_CYCLE_DELAY", "PLACE_OBI", "WAIT_OBI", "PLACE_CRYSTAL", "BREAK_CRYSTAL",
+    "ROTATING_DOWN", "ROTATING_BACK", "REFILLING", "PLANTING", "BONEMEALING",
+    "AnchorAction", "REOFFHAND_TOTEM",
+    "webmacro", "web macro", "AntiWeb", "AutoWeb",
+    "Ａｎｔｉ Ｗｅｂ", "ＡｕｔｏＷｅｂ",
+    "lvstrng", "dqrkis", "selfdestruct", "self destruct",
+    "WalksyCrystalOptimizerMod", "WalksyOptimizer", "WalskyOptimizer", "Ｗａｌｋｓｙ Ｏｐｔｉｍｉｚｅｒ",
+    "autoCrystalPlaceClock",
+    "AutoFirework", "ElytraSwap", "FastXP", "FastExp", "NoJumpDelay",
+    "ＥｌｙｔｒａＳｗａｐ", "Ｅｌｙｔｒａ Ｓｗａｐ",
+    "PackSpoof", "Antiknockback", "catlean",
+    "AuthBypass", "obfuscatedAuth", "LicenseCheckMixin",
+    "BaseFinder", "invsee", "ItemExploit",
+    "FreezePlayer", "Ｎｏ Ｃｌｉｐ", "Ｆｒｅｅｚｅ Ｐｌａｙｅｒ",
+    "LWFH Crystal", "JDWP.VirtualMachine.AllModules", "ＬＷＦＨ Ｃｒｙｓｔａｌ",
+    "KeyPearl", "LootYeeter", "ＫｅｙＰｅａｒｌ", "Ｋｅｙ Ｐｅａｒｌ", "Ｌｏｏｔ Ｙｅｅｔｅｒ",
+    "FastPlace", "Ｆａｓｔ Ｐｌａｃｅ",
+    "AutoBreach", "Ａｕｔｏ Ｂｒｅａｃｈ",
+    "setBlockBreakingCooldown", "getBlockBreakingCooldown", "blockBreakingCooldown",
+    "onBlockBreaking", "setItemUseCooldown",
+    "invokeDoAttack", "invokeDoItemUse", "invokeOnMouseButton",
+    "onPushOutOfBlocks", "onIsGlowing",
+    "arrayOfString", "POT_CHEATS", "Dqrkis Client", "Entity.isGlowing",
+    "placeInterval", "breakInterval", "stopOnKill",
+    "activateOnRightClick", "holdCrystal", "fakePunch",
+    "KillAura", "ClickAura", "MultiAura", "ForceField", "LegitAura",
+    "AimBot", "AutoAim", "SilentAim", "AimLock", "HeadSnap",
+    "CrystalAura", "AnchorAura", "AnchorFill", "AnchorPlace",
+    "BedAura", "AutoBed", "BedBomb", "BedPlace",
+    "BowAimbot", "BowSpam", "AutoBow",
+    "AutoCrit", "CritBypass", "AlwaysCrit", "CriticalHit",
+    "ReachHack", "ExtendReach", "LongReach", "HitboxExpand",
+    "AntiKB", "NoKnockback", "GrimVelocity", "GrimDisabler", "VelocitySpoof", "KBReduce",
+    "OffhandTotem", "TotemSwitch",
+    "AutoWeapon", "AutoSword", "AutoCity", "Burrow", "SelfTrap",
+    "HoleFiller", "AntiSurround", "AntiBurrow",
+    "WTap", "TargetStrafe", "AutoGap", "AutoPearl",
+    "FlyHack", "CreativeFlight", "BoatFly", "PacketFly", "AirJump",
+    "SpeedHack", "BHop", "BunnyHop",
+    "AntiFall", "NoFallDamage", "SafeFall",
+    "StepHack", "FastClimb", "AutoStep", "HighStep",
+    "WaterWalk", "LiquidWalk", "LavaWalk",
+    "NoSlow", "NoSlowdown", "NoWeb", "NoSoulSand",
+    "WallHack", "ElytraSpeed", "InstantElytra",
+    "ScaffoldWalk", "FastBridge", "BuildHelper", "AutoBridge",
+    "Nuker", "NukerLegit", "InstantBreak",
+    "GhostHand", "NoSwing",
+    "PlaceAssist", "AirPlace", "AutoPlace", "InstantPlace",
+    "PlayerESP", "MobESP", "ItemESP", "StorageESP", "ChestESP",
+    "Tracers", "NameTagsHack",
+    "XRayHack", "OreFinder", "CaveFinder", "OreESP",
+    "NewChunks", "ChunkBorders", "TunnelFinder",
+    "TargetHUD", "ReachDisplay",
+    "DoubleClicker", "JitterClick", "ButterflyClick", "CPSBoost",
+    "ChestStealer", "InvManager", "InvMovebypass",
+    "AutoSprint", "AntiAFK", "AutoRespawn", "PopSwitch",
+    "FakeLatency", "FakePing", "SpoofRotation", "PositionSpoof",
+    "GameSpeed", "SpeedTimer",
+    "GrimBypass", "VulcanBypass", "MatrixBypass",
+    "AACBypass", "VerusDisabler", "IntaveBypass", "WatchdogBypass",
+    "PacketMine", "PacketWalk", "PacketSneak", "PacketCancel", "PacketDupe", "PacketSpam",
+    "SelfDestruct", "HideClient",
+    "SessionStealer", "TokenLogger", "TokenGrabber", "DiscordToken",
+    "RemoteAccess", "ReverseShell", "C2Server", "Backdoor", "KeyLogger",
+    "StashFinder", "TrailFinder",
+    "imgui.binding", "JNativeHook", "GlobalScreen", "NativeKeyListener",
+    "client-refmap.json", "cheat-refmap.json",
+    "meteordevelopment", "cc/novoline",
+    "com/alan/clients", "club/maxstats", "wtf/moonlight",
+    "me/zeroeightsix/kami", "net/ccbluex", "today/opai",
+    "net/minecraft/injection", "org/chainlibs/module/impl/modules",
+    "xyz/greaj", "com/cheatbreaker", "com/moonsworth",
+    "doomsdayclient", "DoomsdayClient", "doomsday.jar",
+    "novaclient", "api.novaclient.lol",
+    "vape.gg", "vapeclient", "VapeClient", "VapeLite",
+    "intent.store", "IntentClient",
+    "rise.today", "riseclient.com",
+    "meteor-client", "meteorclient", "meteordevelopment.meteorclient",
+    "liquidbounce", "fdp-client", "net.ccbluex",
+    "novoware", "novoclient",
+    "aristois", "impactclient", "azura",
+    "pandaware", "skilled", "moonClient", "astolfo",
+    "futureClient", "konas", "rusherhack", "inertia", "exhibition",
+    "dev.krypton", "dev/krypton", "skid.krypton", "skid/krypton",
+    "VirginClient", "virgin client",
+    "catlean", "CatleanClient", "catlean client",
+    "ArgonClient", "argon client",
+    "Asteria", "AsteriaClient", "asteria client",
+    "Prestige", "PrestigeClient", "prestige client", "prestigeclient.vip",
+    "gypsy", "GypsyClient", "gypsy client",
+    "Xenon", "XenonClient", "xenon client",
+    "GrimClient", "grim client",
+    "phantom-refmap.json", "dqrkis.xyz", "Dqrkis Client"
+)
+
+$patternRegex = [regex]::new(
+    '(?<![A-Za-z])(' + ($suspiciousPatterns -join '|') + ')(?![A-Za-z])',
+    [System.Text.RegularExpressions.RegexOptions]::Compiled
+)
+
+$cheatStringSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+foreach ($s in $cheatStrings) { [void]$cheatStringSet.Add($s) }
+
+$fullwidthRegex = [regex]::new(
+    "[\uFF21-\uFF3A\uFF41-\uFF5A\uFF10-\uFF19]{2,}",
+    [System.Text.RegularExpressions.RegexOptions]::Compiled
+)
+
+
+# =============================================================================
+# SCAN FUNCTIONS
+# (Kept functionally equivalent to the original analyzer - only names/paths
+#  changed. These only ever open files that live inside the chosen folder.)
+# =============================================================================
+
+function Get-FileSHA1 { param([string]$Path) (Get-FileHash -Path $Path -Algorithm SHA1).Hash }
+
+function Query-Modrinth {
+    param([string]$Hash)
+    try {
+        $versionInfo = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/version_file/$Hash" -Method Get -UseBasicParsing -ErrorAction Stop
+        if ($versionInfo.project_id) {
+            $projectInfo = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/project/$($versionInfo.project_id)" -Method Get -UseBasicParsing -ErrorAction Stop
+            return @{ Name = $projectInfo.title; Slug = $projectInfo.slug }
+        }
+    } catch { }
+    return @{ Name = ""; Slug = "" }
+}
+
+function Query-Megabase {
+    param([string]$Hash)
+    try {
+        $result = Invoke-RestMethod -Uri "https://megabase.vercel.app/api/query?hash=$Hash" -Method Get -UseBasicParsing -ErrorAction Stop
+        if (-not $result.error) { return $result.data }
+    } catch { }
+    return $null
+}
+
+function Invoke-ModScan {
+    param([string]$FilePath)
+
+    $foundPatterns  = [System.Collections.Generic.HashSet[string]]::new()
+    $foundStrings   = [System.Collections.Generic.HashSet[string]]::new()
+    $foundFullwidth = [System.Collections.Generic.HashSet[string]]::new()
+
+    try {
+        $archive = [System.IO.Compression.ZipFile]::OpenRead($FilePath)
+        foreach ($entry in $archive.Entries) {
+            foreach ($m in $patternRegex.Matches($entry.FullName)) { [void]$foundPatterns.Add($m.Value) }
+        }
+
+        $allEntries    = [System.Collections.Generic.List[object]]::new()
+        $innerArchives = [System.Collections.Generic.List[object]]::new()
+        foreach ($e in $archive.Entries) { $allEntries.Add($e) }
+
+        foreach ($nj in ($archive.Entries | Where-Object { $_.FullName -match "^META-INF/jars/.+\.jar$" })) {
+            try {
+                $ns = $nj.Open(); $ms = New-Object System.IO.MemoryStream
+                $ns.CopyTo($ms); $ns.Close(); $ms.Position = 0
+                $iz = [System.IO.Compression.ZipArchive]::new($ms, [System.IO.Compression.ZipArchiveMode]::Read)
+                $innerArchives.Add($iz)
+                foreach ($ie in $iz.Entries) { $allEntries.Add($ie) }
+            } catch { }
+        }
+
+        foreach ($entry in $allEntries) {
+            $name = $entry.FullName
+            if ($name -match '\.(class|json)$' -or $name -match 'MANIFEST\.MF') {
+                try {
+                    $st = $entry.Open(); $ms2 = New-Object System.IO.MemoryStream
+                    $st.CopyTo($ms2); $st.Close()
+                    $bytes = $ms2.ToArray(); $ms2.Dispose()
+                    $ascii = [System.Text.Encoding]::ASCII.GetString($bytes)
+                    $utf8  = [System.Text.Encoding]::UTF8.GetString($bytes)
+
+                    foreach ($m in $patternRegex.Matches($ascii)) { [void]$foundPatterns.Add($m.Value) }
+                    foreach ($s in $cheatStringSet) {
+                        if ($ascii.Contains($s)) { [void]$foundStrings.Add($s); continue }
+                        if ($utf8.Contains($s))  { [void]$foundStrings.Add($s) }
+                    }
+                    foreach ($m in $fullwidthRegex.Matches($utf8)) { [void]$foundFullwidth.Add($m.Value) }
+                } catch { }
+            }
+        }
+
+        foreach ($ia in $innerArchives) { try { $ia.Dispose() } catch { } }
+        $archive.Dispose()
+    } catch { }
+
+    $fwCheatPool = @($cheatStrings | Where-Object { $_ -cmatch "[\uFF21-\uFF3A\uFF41-\uFF5A\uFF10-\uFF19]" })
+    $resolvedFullwidth = [System.Collections.Generic.HashSet[string]]::new()
+    foreach ($fw in @($foundFullwidth)) {
+        if ($fw.Length -lt 3) { continue }
+        $bestMatch = $null
+        foreach ($cs in $fwCheatPool) {
+            if ($cs.Contains($fw)) {
+                if ($null -eq $bestMatch -or $cs.Length -lt $bestMatch.Length) { $bestMatch = $cs }
+            }
+        }
+        if ($null -ne $bestMatch) { [void]$resolvedFullwidth.Add($bestMatch) }
+        elseif ($fw.Length -ge 6) { [void]$resolvedFullwidth.Add($fw) }
+    }
+    $resolved = @($resolvedFullwidth)
+    $finalFullwidth = [System.Collections.Generic.HashSet[string]]::new()
+    foreach ($fw in $resolved) {
+        $isRedundant = $false
+        foreach ($other in $resolved) {
+            if ($fw.Length -lt $other.Length -and $other.Contains($fw)) { $isRedundant = $true; break }
+        }
+        if (-not $isRedundant) { [void]$finalFullwidth.Add($fw) }
+    }
+
+    return @{ Patterns = $foundPatterns; Strings = $foundStrings; Fullwidth = $finalFullwidth }
+}
+
+function Invoke-ObfuscationScan {
+    param([string]$FilePath)
+    $flags = [System.Collections.Generic.List[string]]::new()
+    try {
+        $archive = [System.IO.Compression.ZipFile]::OpenRead($FilePath)
+        $totalClass = 0; $numericCount = 0; $unicodeCount = 0; $fullwidthCount = 0; $japaneseCount = 0
+        $singleLetterCount = 0; $twoLetterCount = 0; $gibberishCount = 0; $noVowelCount = 0
+        $confusionCount = 0; $singleCharPkg = 0
+        $contentSample = [System.Text.StringBuilder]::new(); $sampleSize = 0
+
+        $cheatObfuscators = @{
+            "Skidfuscator"   = @("dev/skidfuscator", "Skidfuscator", "skidfuscator.dev")
+            "Paramorphism"   = @("Paramorphism", "paramorphism-", "dev/paramorphism")
+            "Radon"          = @("ItzSomebody/Radon", "me/itzsomebody/radon", "Radon Obfuscator")
+            "Caesium"        = @("sim0n/Caesium", "Caesium Obfuscator", "dev/sim0n/caesium")
+            "Bozar"          = @("vimasig/Bozar", "Bozar Obfuscator", "com/bozar")
+            "Branchlock"     = @("Branchlock", "branchlock.dev")
+            "Binscure"       = @("Binscure", "com/binscure")
+            "SuperBlaubeere" = @("superblaubeere", "superblaubeere27")
+            "Qprotect"       = @("Qprotect", "QProtect", "mdma.dev/qprotect")
+            "Zelix"          = @("ZKMFLOW", "ZKM", "ZelixKlassMaster", "com/zelix")
+            "Stringer"       = @("StringerJavaObfuscator", "com/licel/stringer")
+            "JNIC"           = @("JNIC", "jnic.obf", "jnic-obfuscator")
+            "Scuti"          = @("ScutiObf", "scuti.obf")
+            "Smoke"          = @("SmokeObf", "smoke.obf")
+        }
+
+        foreach ($entry in $archive.Entries) {
+            $name = $entry.FullName
+            if ($name -match "\.class$") {
+                $totalClass++
+                $className = [System.IO.Path]::GetFileNameWithoutExtension(($name -split "/")[-1])
+                if ($className -match "^\d+$")                          { $numericCount++ }
+                if ($className -match "[^\x00-\x7F]")                   { $unicodeCount++ }
+                if ($className -match "[\uFF21-\uFF3A\uFF41-\uFF5A\uFF10-\uFF19]") { $fullwidthCount++ }
+                if ($className -match "[\u3040-\u309F\u30A0-\u30FF]")  { $japaneseCount++ }
+                if ($className -match "^[a-zA-Z]$")                     { $singleLetterCount++ }
+                if ($className -match "^[a-zA-Z]{2}$")                  { $twoLetterCount++ }
+                if ($className -match "^[Il1O0]+$" -or $className -match "^[_]+$") { $confusionCount++ }
+                if ($className.Length -ge 3 -and $className.Length -le 8 -and $className -match "^[a-zA-Z]+$") {
+                    $vowels = ($className.ToCharArray() | Where-Object { $_ -match "[aeiouAEIOU]" }).Count
+                    if ($vowels -eq 0) { $noVowelCount++ }
+                    $hasCluster = $className -match "[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ]{3,}"
+                    if ($hasCluster -and ($vowels / $className.Length) -lt 0.3) { $gibberishCount++ }
+                }
+                $segs = ($name -replace "\.class$", "") -split "/"
+                foreach ($seg in $segs[0..($segs.Count - 2)]) { if ($seg.Length -eq 1) { $singleCharPkg++ } }
+                if ($sampleSize -lt 150000 -and $entry.Length -lt 100000 -and $entry.Length -gt 100) {
+                    try {
+                        $st = $entry.Open(); $ms = New-Object System.IO.MemoryStream
+                        $st.CopyTo($ms); $st.Close()
+                        $ascii = [System.Text.Encoding]::ASCII.GetString($ms.ToArray()); $ms.Dispose()
+                        [void]$contentSample.Append($ascii); $sampleSize += $ascii.Length
+                    } catch { }
+                }
+            }
+        }
+        $archive.Dispose()
+
+        if ($totalClass -lt 5) { return $flags }
+        $pct = { param($n) [math]::Round(($n / $totalClass) * 100) }
+        $numPct = & $pct $numericCount; $uniPct = & $pct $unicodeCount; $fwPct = & $pct $fullwidthCount
+        $jpPct  = & $pct $japaneseCount; $s1Pct = & $pct $singleLetterCount; $s2Pct = & $pct $twoLetterCount
+        $gibPct = & $pct $gibberishCount; $novPct = & $pct $noVowelCount; $confPct = & $pct $confusionCount
+
+        if ($numPct   -ge 20) { $flags.Add("Numeric class names — $numPct% of classes have numeric-only names") }
+        if ($uniPct   -ge 10) { $flags.Add("Unicode class names — $uniPct% of classes use non-ASCII characters") }
+        if ($fwPct    -gt  0) { $flags.Add("Fullwidth Unicode class names — $fwPct% use fullwidth chars ($fullwidthCount classes)") }
+        if ($jpPct    -gt  0) { $flags.Add("Japanese obfuscation — $jpPct% use hiragana/katakana class names ($japaneseCount classes)") }
+        if ($s1Pct    -ge 15) { $flags.Add("Single-letter class names — $s1Pct% ($singleLetterCount classes)") }
+        if ($s2Pct    -ge 20) { $flags.Add("Two-letter class names — $s2Pct% ($twoLetterCount classes)") }
+        if ($gibPct   -ge  5) { $flags.Add("Gibberish class names — $gibPct% have no vowels / consonant clusters ($gibberishCount classes)") }
+        if ($novPct   -ge  8) { $flags.Add("No-vowel class names — $novPct% ($noVowelCount classes)") }
+        if ($confPct  -ge  3) { $flags.Add("Confusion-char names (Il1O0/_) — $confPct% ($confusionCount classes)") }
+        if ($singleCharPkg -ge 6) { $flags.Add("Single-char package paths — $singleCharPkg path segments like a/b/c") }
+
+        $fwStringMatches = [regex]::Matches($contentSample.ToString(), "[\uFF21-\uFF3A\uFF41-\uFF5A\uFF10-\uFF19]{2,}")
+        if ($fwStringMatches.Count -gt 0) {
+            $examples = ($fwStringMatches | Select-Object -First 3 | ForEach-Object { $_.Value }) -join ", "
+            $flags.Add("Fullwidth strings in class content — $($fwStringMatches.Count) occurrences (e.g. $examples)")
+        }
+
+        $sampleStr = $contentSample.ToString()
+        foreach ($obfName in $cheatObfuscators.Keys) {
+            foreach ($pat in $cheatObfuscators[$obfName]) {
+                if ($sampleStr.Contains($pat)) { $flags.Add("Known cheat obfuscator detected — $obfName (matched: $pat)"); break }
+            }
+        }
+    } catch { }
+    return $flags
+}
+
+function Invoke-BypassScan {
+    param([string]$FilePath)
+    $flags = [System.Collections.Generic.List[string]]::new()
+    $mavenPrefixes = @("com_","org_","net_","io_","dev_","gs_","xyz_","app_","me_","tv_","uk_","be_","fr_","de_")
+
+    function Test-SuspiciousJarName {
+        param([string]$JarName)
+        $base = [System.IO.Path]::GetFileNameWithoutExtension($JarName)
+        if ($base -match '\d') { return $false }
+        foreach ($pfx in $mavenPrefixes) { if ($base.ToLower().StartsWith($pfx)) { return $false } }
+        if ($base.Length -gt 20) { return $false }
+        return $true
+    }
+
+    try {
+        $zip = [System.IO.Compression.ZipFile]::OpenRead($FilePath)
+        $nestedJars   = @($zip.Entries | Where-Object { $_.FullName -match "^META-INF/jars/.+\.jar$" })
+        $outerClasses = @($zip.Entries | Where-Object { $_.FullName -match "\.class$" })
+
+        $suspiciousNestedJars = @()
+        foreach ($nj in $nestedJars) {
+            $njBase = [System.IO.Path]::GetFileName($nj.FullName)
+            if (Test-SuspiciousJarName -JarName $njBase) { $suspiciousNestedJars += $njBase }
+        }
+        foreach ($sj in $suspiciousNestedJars) { $flags.Add("Suspicious nested JAR — no version, unknown dependency: $sj") }
+
+        if ($nestedJars.Count -eq 1 -and $outerClasses.Count -lt 3) {
+            $njName = [System.IO.Path]::GetFileName(($nestedJars | Select-Object -First 1).FullName)
+            $flags.Add("Hollow shell — only $($outerClasses.Count) own class(es), wraps: $njName")
+        }
+
+        $outerModId = ""
+        $fmje = $zip.Entries | Where-Object { $_.FullName -eq "fabric.mod.json" } | Select-Object -First 1
+        if ($fmje) {
+            try {
+                $s = $fmje.Open(); $r = New-Object System.IO.StreamReader($s)
+                $t = $r.ReadToEnd(); $r.Close(); $s.Close()
+                if ($t -match '"id"\s*:\s*"([^"]+)"') { $outerModId = $matches[1] }
+            } catch { }
+        }
+
+        $allEntries = [System.Collections.Generic.List[object]]::new()
+        foreach ($e in $zip.Entries) { $allEntries.Add($e) }
+        $innerZips = [System.Collections.Generic.List[object]]::new()
+        foreach ($nj in $nestedJars) {
+            try {
+                $ns = $nj.Open(); $ms = New-Object System.IO.MemoryStream
+                $ns.CopyTo($ms); $ns.Close(); $ms.Position = 0
+                $iz = [System.IO.Compression.ZipArchive]::new($ms, [System.IO.Compression.ZipArchiveMode]::Read)
+                $innerZips.Add($iz)
+                foreach ($ie in $iz.Entries) { $allEntries.Add($ie) }
+            } catch { }
+        }
+
+        $runtimeExecFound = $false; $httpDownloadFound = $false; $httpExfilFound = $false
+        $obfuscatedCount = 0; $numericClassCount = 0; $unicodeClassCount = 0; $totalClassCount = 0
+
+        foreach ($entry in $allEntries) {
+            $name = $entry.FullName
+            if ($name -match "\.class$") {
+                $totalClassCount++
+                $className = [System.IO.Path]::GetFileNameWithoutExtension(($name -split "/")[-1])
+                if ($className -match "^\d+$") { $numericClassCount++ }
+                if ($className -match "[^\x00-\x7F]") { $unicodeClassCount++ }
+
+                $segs = ($name -replace "\.class$","") -split "/"
+                $consecutiveSingle = 0; $maxConsecutive = 0
+                foreach ($seg in $segs) {
+                    if ($seg.Length -eq 1) { $consecutiveSingle++; if ($consecutiveSingle -gt $maxConsecutive) { $maxConsecutive = $consecutiveSingle } }
+                    else { $consecutiveSingle = 0 }
+                }
+                if ($maxConsecutive -ge 3) { $obfuscatedCount++ }
+
+                try {
+                    $st = $entry.Open(); $ms2 = New-Object System.IO.MemoryStream
+                    $st.CopyTo($ms2); $st.Close()
+                    $rawBytes = $ms2.ToArray(); $ms2.Dispose()
+                    $ct = [System.Text.Encoding]::ASCII.GetString($rawBytes)
+
+                    if ($ct -match "java/lang/Runtime" -and $ct -match "getRuntime" -and $ct -match "exec") { $runtimeExecFound = $true }
+                    if ($ct -match "openConnection" -and $ct -match "HttpURLConnection" -and $ct -match "FileOutputStream") { $httpDownloadFound = $true }
+                    if ($ct -match "openConnection" -and $ct -match "setDoOutput" -and $ct -match "getOutputStream" -and $ct -match "getProperty") { $httpExfilFound = $true }
+                } catch { }
+            }
+        }
+
+        foreach ($iz in $innerZips) { try { $iz.Dispose() } catch { } }
+        $zip.Dispose()
+
+        $obfPct = if ($totalClassCount -ge 10) { [math]::Round(($obfuscatedCount / $totalClassCount) * 100) } else { 0 }
+        $numPct = if ($totalClassCount -ge 5)  { [math]::Round(($numericClassCount / $totalClassCount) * 100) } else { 0 }
+        $uniPct = if ($totalClassCount -ge 5)  { [math]::Round(($unicodeClassCount / $totalClassCount) * 100) } else { 0 }
+
+        if ($runtimeExecFound -and $obfPct -ge 25) { $flags.Add("Runtime.exec() in obfuscated code — can run arbitrary OS commands") }
+        if ($httpDownloadFound) { $flags.Add("HTTP file download — fetches and writes files from a remote server at runtime") }
+        if ($httpExfilFound) { $flags.Add("HTTP POST exfiltration — sends system data to an external server") }
+        if ($totalClassCount -ge 10 -and $obfPct -ge 25) { $flags.Add("Heavy obfuscation — $obfPct% of classes use single-letter path segments") }
+        if ($numPct -ge 20) { $flags.Add("Numeric class names — $numPct% of classes have numeric-only names") }
+        if ($uniPct -ge 10) { $flags.Add("Unicode class names — $uniPct% of classes use non-ASCII characters") }
+
+        $knownLegitModIds = @(
+            "vmp-fabric","vmp","lithium","sodium","iris","fabric-api",
+            "modmenu","ferrite-core","lazydfu","starlight","entityculling",
+            "memoryleakfix","krypton","c2me-fabric","smoothboot-fabric",
+            "immediatelyfast","noisium","threadtweak"
+        )
+        $dangerCount = ($flags | Where-Object { $_ -match "Runtime\.exec|HTTP file download|HTTP POST|Heavy obfuscation|Suspicious nested JAR" }).Count
+        if ($outerModId -and ($knownLegitModIds -contains $outerModId) -and $dangerCount -gt 0) {
+            $flags.Add("Fake mod identity — claims to be '$outerModId' but contains dangerous code")
+        }
+    } catch { }
+    return $flags
+}
+
+function Invoke-JvmScan {
+    $results = [System.Collections.Generic.List[string]]::new()
+    $javaProc = Get-Process javaw -ErrorAction SilentlyContinue
+    if (-not $javaProc) { $javaProc = Get-Process java -ErrorAction SilentlyContinue }
+    if (-not $javaProc) { return $results }
+    $javaPid = ($javaProc | Select-Object -First 1).Id
+    try {
+        $wmi = Get-WmiObject Win32_Process -Filter "ProcessId = $javaPid" -ErrorAction Stop
+        $cmdLine = $wmi.CommandLine
+        if ($cmdLine) {
+            $agentMatches = [regex]::Matches($cmdLine, '-javaagent:([^\s"]+)')
+            foreach ($m in $agentMatches) {
+                $agentPath = $m.Groups[1].Value.Trim('"').Trim("'")
+                $agentName = [System.IO.Path]::GetFileName($agentPath)
+                $legitAgents = @("jmxremote","yjp","jrebel","newrelic","jacoco","theseus")
+                $isLegit = $false
+                foreach ($la in $legitAgents) { if ($agentName -match $la) { $isLegit = $true; break } }
+                if (-not $isLegit) { $results.Add("JVM Agent — -javaagent:$agentName (path: $agentPath)") }
+            }
+            $suspiciousFlags = @(
+                @{ Flag = "-Xbootclasspath/p:"; Desc = "prepends to bootstrap classpath, overrides core Java classes" },
+                @{ Flag = "-Xbootclasspath/a:"; Desc = "appends to bootstrap classpath, injects below classloader" },
+                @{ Flag = "-agentlib:jdwp";     Desc = "JDWP debug agent, remote debugging enabled" },
+                @{ Flag = "-agentpath:";         Desc = "native agent loaded, bypasses Java sandbox" }
+            )
+            foreach ($sf in $suspiciousFlags) {
+                if ($cmdLine -match [regex]::Escape($sf.Flag)) { $results.Add("Suspicious JVM flag — $($sf.Flag) ($($sf.Desc))") }
+            }
+        }
+    } catch { }
+    return $results
+}
+
+
+# =============================================================================
+# UI  -  distinct "security dashboard" theme: slate + mint, card-based, no
+# gold/cheese-cat styling and no downloader tool grid.
+# =============================================================================
+
 [xml]$xaml = @"
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Ketteh" Width="1340" Height="840"
-        WindowStartupLocation="CenterScreen" WindowStyle="None"
-        AllowsTransparency="True" Background="Transparent" FontFamily="Segoe UI">
+<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="KettehLyzer"
+    Width="1180" Height="760"
+    MinWidth="1180" MinHeight="760"
+    WindowStartupLocation="CenterScreen"
+    ResizeMode="NoResize"
+    WindowStyle="None"
+    AllowsTransparency="True"
+    Background="Transparent"
+    FontFamily="Segoe UI">
 
-  <Border Background="#05050A" CornerRadius="20" BorderBrush="#1A1A28" BorderThickness="1">
-    <Grid>
-      <!-- Strong ambient glows -->
-      <Ellipse x:Name="Glow1" Width="560" Height="560" HorizontalAlignment="Left" VerticalAlignment="Top"
-               Margin="-200,-180,0,0" Opacity="0.22" IsHitTestVisible="False">
-        <Ellipse.Fill>
-          <RadialGradientBrush>
-            <GradientStop Color="#FF2A6A" Offset="0"/>
-            <GradientStop Color="#00000000" Offset="1"/>
-          </RadialGradientBrush>
-        </Ellipse.Fill>
-      </Ellipse>
-      <Ellipse x:Name="Glow2" Width="480" Height="480" HorizontalAlignment="Right" VerticalAlignment="Bottom"
-               Margin="0,0,-160,-120" Opacity="0.18" IsHitTestVisible="False">
-        <Ellipse.Fill>
-          <RadialGradientBrush>
-            <GradientStop Color="#00D4FF" Offset="0"/>
-            <GradientStop Color="#00000000" Offset="1"/>
-          </RadialGradientBrush>
-        </Ellipse.Fill>
-      </Ellipse>
-      <Ellipse x:Name="Glow3" Width="300" Height="300" HorizontalAlignment="Center" VerticalAlignment="Center"
-               Opacity="0.08" IsHitTestVisible="False">
-        <Ellipse.Fill>
-          <RadialGradientBrush>
-            <GradientStop Color="#A855F7" Offset="0"/>
-            <GradientStop Color="#00000000" Offset="1"/>
-          </RadialGradientBrush>
-        </Ellipse.Fill>
-      </Ellipse>
+    <Window.Resources>
+        <SolidColorBrush x:Key="MainBg"    Color="#0B0F14"/>
+        <SolidColorBrush x:Key="SidebarBg" Color="#0E1319"/>
+        <SolidColorBrush x:Key="CardBg"    Color="#121821"/>
+        <SolidColorBrush x:Key="CardBg2"   Color="#0F151C"/>
+        <SolidColorBrush x:Key="Accent"    Color="#00E5A8"/>
+        <SolidColorBrush x:Key="AccentDim" Color="#0B8F6C"/>
+        <SolidColorBrush x:Key="Danger"    Color="#FF5C7A"/>
+        <SolidColorBrush x:Key="Warn"      Color="#FFC85C"/>
+        <SolidColorBrush x:Key="Info"      Color="#5CC8FF"/>
+        <SolidColorBrush x:Key="TextMain"  Color="#DCEDE8"/>
+        <SolidColorBrush x:Key="TextMuted" Color="#5C7A73"/>
+        <SolidColorBrush x:Key="ConsoleBg" Color="#070A0D"/>
 
-      <Grid>
-        <Grid.RowDefinitions>
-          <RowDefinition Height="64"/>
-          <RowDefinition Height="56"/>
-          <RowDefinition Height="*"/>
-          <RowDefinition Height="132"/>
-        </Grid.RowDefinitions>
+        <Style x:Key="SideBtn" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="12,0"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#16202A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-        <!-- HEADER -->
-        <Border Grid.Row="0" Background="#0A0A12" CornerRadius="20,20,0,0">
-          <Grid Margin="26,0">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-              <TextBlock FontSize="20" FontWeight="Bold">
-                <TextBlock.Foreground>
-                  <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
-                    <GradientStop Color="#FF3D7F" Offset="0"/>
-                    <GradientStop Color="#00D4FF" Offset="1"/>
-                  </LinearGradientBrush>
-                </TextBlock.Foreground>
-                KETTEH
-              </TextBlock>
-              <TextBlock Text="  SS TOOLKIT" FontSize="13" Foreground="#4A4A62" VerticalAlignment="Center" Margin="8,2,0,0"/>
-            </StackPanel>
+        <Style x:Key="PrimaryBtn" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource Accent}"/>
+            <Setter Property="Foreground" Value="#04140F"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#33F5C7"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="#123023"/>
+                                <Setter Property="Foreground" Value="#5C7A73"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-            <Border x:Name="BadgeHost" HorizontalAlignment="Right" Margin="0,0,100,0" CornerRadius="20" Padding="18,7" VerticalAlignment="Center" Background="#12121E">
-              <TextBlock x:Name="StatusBadge" Text="IDLE" FontSize="11" FontWeight="Bold" Foreground="#00D4FF"/>
+        <Style x:Key="TitleBtn" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1A2630"/>
+                                <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border Background="{StaticResource MainBg}" BorderBrush="#1A2630" BorderThickness="1" CornerRadius="10">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="42"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title Bar -->
+            <Border Grid.Row="0" Background="{StaticResource SidebarBg}" CornerRadius="10,10,0,0">
+                <Grid Margin="16,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Ellipse Width="8" Height="8" Fill="{StaticResource Accent}" Margin="0,0,10,0"/>
+                        <TextBlock Text="KettehLyzer" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextMain}"/>
+                        <TextBlock Text="  local mods-folder scanner" FontSize="11" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Margin="6,1,0,0"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button x:Name="MinBtn"   Style="{StaticResource TitleBtn}" Content="_"/>
+                        <Button x:Name="CloseBtn" Style="{StaticResource TitleBtn}" Content="X"/>
+                    </StackPanel>
+                </Grid>
             </Border>
 
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-              <Button x:Name="MinBtn" Content="─" Width="42" Height="36" Background="Transparent" Foreground="#5A5A72" BorderThickness="0" Cursor="Hand"/>
-              <Button x:Name="CloseBtn" Content="✕" Width="42" Height="36" Background="Transparent" Foreground="#5A5A72" BorderThickness="0" Cursor="Hand"/>
-            </StackPanel>
-          </Grid>
-        </Border>
+            <!-- Body -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="250"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-        <!-- CATEGORIES -->
-        <Border Grid.Row="1" Background="#080810" BorderBrush="#12121E" BorderThickness="0,0,0,1">
-          <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
-            <StackPanel x:Name="CatBar" Orientation="Horizontal" Margin="22,0" VerticalAlignment="Center"/>
-          </ScrollViewer>
-        </Border>
+                <!-- Sidebar -->
+                <Border Grid.Column="0" Background="{StaticResource SidebarBg}" BorderBrush="#1A2630" BorderThickness="0,0,1,0">
+                    <StackPanel Margin="14,16,14,16">
 
-        <!-- BODY -->
-        <Grid Grid.Row="2">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="220"/>
-            <ColumnDefinition Width="*"/>
-          </Grid.ColumnDefinitions>
+                        <TextBlock Text="MODS FOLDER" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMuted}" Margin="2,0,0,6"/>
+                        <TextBox x:Name="PathBox" Height="34" Padding="8,7" FontSize="11"
+                                 Background="{StaticResource CardBg2}" Foreground="{StaticResource TextMain}"
+                                 BorderBrush="#1A2630" BorderThickness="1" Margin="0,0,0,6"/>
+                        <Button x:Name="BrowseBtn" Content="  Browse..." Style="{StaticResource SideBtn}" Background="{StaticResource CardBg2}"/>
 
-          <!-- LEFT RAIL -->
-          <Border Grid.Column="0" Background="#080810" BorderBrush="#12121E" BorderThickness="0,0,1,0">
-            <StackPanel Margin="18,22">
-              <TextBlock Text="ACTIONS" FontSize="10" FontWeight="Bold" Foreground="#3A3A52" Margin="6,0,0,14"/>
+                        <Button x:Name="ScanBtn" Content="Scan Folder" Style="{StaticResource PrimaryBtn}" Margin="0,14,0,0"/>
 
-              <Button x:Name="OpenFolderBtn" Content="Open Folder" Height="44" Margin="0,0,0,10"
-                      Background="#12121E" Foreground="#C8C8E0" BorderThickness="0" Cursor="Hand" FontSize="13"
-                      HorizontalContentAlignment="Left">
-                <Button.Template>
-                  <ControlTemplate TargetType="Button">
-                    <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="12">
-                      <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="16,0"/>
+                        <Border Background="{StaticResource CardBg2}" CornerRadius="6" Margin="0,14,0,0" Padding="10">
+                            <TextBlock TextWrapping="Wrap" FontSize="10" Foreground="{StaticResource TextMuted}"
+                                Text="Only reads .jar files inside the folder above. Nothing is downloaded, executed remotely, or sent anywhere except hash lookups to Modrinth for verification."/>
+                        </Border>
+
+                        <Separator Background="#1A2630" Margin="0,16,0,14"/>
+
+                        <TextBlock Text="LAST SCAN" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMuted}" Margin="2,0,0,6"/>
+                        <TextBlock x:Name="StatFiles" Text="Files: -" FontSize="11" Foreground="{StaticResource TextMain}" Margin="2,1"/>
+                        <TextBlock x:Name="StatVerified" Text="Verified: -" FontSize="11" Foreground="{StaticResource Accent}" Margin="2,1"/>
+                        <TextBlock x:Name="StatUnknown" Text="Unknown: -" FontSize="11" Foreground="{StaticResource Warn}" Margin="2,1"/>
+                        <TextBlock x:Name="StatFlagged" Text="Flagged: -" FontSize="11" Foreground="{StaticResource Danger}" Margin="2,1"/>
+
+                        <Separator Background="#1A2630" Margin="0,16,0,14"/>
+                        <TextBlock Text="KettehTools" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMain}"/>
+                        <TextBlock Text="KettehLyzer" FontSize="10" Foreground="{StaticResource TextMuted}" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Main Panel -->
+                <Grid Grid.Column="1" Margin="18,16,18,16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="150"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Status card -->
+                    <Border Grid.Row="0" Background="{StaticResource CardBg}" CornerRadius="8" Padding="18,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock x:Name="StatusTitle" Text="Ready" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource TextMain}"/>
+                                <TextBlock x:Name="StatusSub"   Text="Pick a mods folder and click Scan Folder." FontSize="11" Foreground="{StaticResource TextMuted}"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="#0F2A22" CornerRadius="4" Padding="10,4" VerticalAlignment="Center">
+                                <TextBlock x:Name="StatusBadge" Text="IDLE" FontSize="12" FontWeight="Bold" Foreground="{StaticResource Accent}"/>
+                            </Border>
+                        </Grid>
                     </Border>
-                    <ControlTemplate.Triggers>
-                      <Trigger Property="IsMouseOver" Value="True">
-                        <Setter TargetName="bd" Property="Background" Value="#1A1A2E"/>
-                      </Trigger>
-                    </ControlTemplate.Triggers>
-                  </ControlTemplate>
-                </Button.Template>
-              </Button>
 
-              <Button x:Name="ClearCacheBtn" Content="Clear Cache" Height="44" Margin="0,0,0,10"
-                      Background="#12121E" Foreground="#C8C8E0" BorderThickness="0" Cursor="Hand" FontSize="13"
-                      HorizontalContentAlignment="Left">
-                <Button.Template>
-                  <ControlTemplate TargetType="Button">
-                    <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="12">
-                      <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="16,0"/>
+                    <!-- Results -->
+                    <Border Grid.Row="2" Background="{StaticResource CardBg}" CornerRadius="8">
+                        <ScrollViewer x:Name="ResultsScroll" VerticalScrollBarVisibility="Auto" Padding="16">
+                            <StackPanel x:Name="ResultsPanel"/>
+                        </ScrollViewer>
                     </Border>
-                    <ControlTemplate.Triggers>
-                      <Trigger Property="IsMouseOver" Value="True">
-                        <Setter TargetName="bd" Property="Background" Value="#1A1A2E"/>
-                      </Trigger>
-                    </ControlTemplate.Triggers>
-                  </ControlTemplate>
-                </Button.Template>
-              </Button>
 
-              <Button x:Name="OpenPsBtn" Content="PowerShell" Height="44" Margin="0,0,0,10"
-                      Background="#12121E" Foreground="#C8C8E0" BorderThickness="0" Cursor="Hand" FontSize="13"
-                      HorizontalContentAlignment="Left">
-                <Button.Template>
-                  <ControlTemplate TargetType="Button">
-                    <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="12">
-                      <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="16,0"/>
+                    <!-- Console -->
+                    <Border Grid.Row="4" Background="{StaticResource ConsoleBg}" CornerRadius="8" Padding="14,10">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="ACTIVITY LOG" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" Margin="0,0,0,4"/>
+                            <TextBox x:Name="LogBox"
+                                Grid.Row="1"
+                                Background="Transparent"
+                                Foreground="{StaticResource Accent}"
+                                BorderThickness="0"
+                                FontFamily="Consolas"
+                                FontSize="11"
+                                IsReadOnly="True"
+                                VerticalScrollBarVisibility="Auto"
+                                TextWrapping="Wrap"/>
+                        </Grid>
                     </Border>
-                    <ControlTemplate.Triggers>
-                      <Trigger Property="IsMouseOver" Value="True">
-                        <Setter TargetName="bd" Property="Background" Value="#1A1A2E"/>
-                      </Trigger>
-                    </ControlTemplate.Triggers>
-                  </ControlTemplate>
-                </Button.Template>
-              </Button>
-
-              <TextBlock Text="STATUS" FontSize="10" FontWeight="Bold" Foreground="#3A3A52" Margin="6,32,0,10"/>
-              <TextBlock x:Name="StatusTitle" Text="Ready" FontSize="17" FontWeight="SemiBold" Foreground="#E8E8FF" Margin="6,0,0,4"/>
-              <TextBlock x:Name="StatusSub" Text="Select a tool" FontSize="12.5" Foreground="#5A5A72" TextWrapping="Wrap" Margin="6,0,0,0"/>
-            </StackPanel>
-          </Border>
-
-          <!-- CARDS -->
-          <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Background="#05050A">
-            <WrapPanel x:Name="CardPanel" Margin="18"/>
-          </ScrollViewer>
+                </Grid>
+            </Grid>
         </Grid>
-
-        <!-- CONSOLE -->
-        <Border Grid.Row="3" Background="#06060C" CornerRadius="0,0,20,20" BorderBrush="#12121E" BorderThickness="0,1,0,0">
-          <Grid Margin="24,12">
-            <Grid.RowDefinitions>
-              <RowDefinition Height="Auto"/>
-              <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-            <TextBlock Text="ACTIVITY CONSOLE" FontSize="10" FontWeight="Bold" Foreground="#3A3A52" Margin="0,0,0,6"/>
-            <TextBox x:Name="LogBox" Grid.Row="1" Background="Transparent" Foreground="#00D4FF"
-                     BorderThickness="0" FontFamily="Consolas" FontSize="12.5"
-                     IsReadOnly="True" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap"/>
-          </Grid>
-        </Border>
-      </Grid>
-    </Grid>
-  </Border>
+    </Border>
 </Window>
 "@
-
-# Disclaimer
-[xml]$discXaml = @"
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Ketteh" Width="460" Height="280" WindowStartupLocation="CenterScreen"
-        WindowStyle="None" AllowsTransparency="True" Background="Transparent" FontFamily="Segoe UI">
-  <Border Background="#0A0A12" CornerRadius="16" BorderBrush="#1A1A28" BorderThickness="1" Padding="28">
-    <Grid>
-      <Grid.RowDefinitions>
-        <RowDefinition Height="*"/>
-        <RowDefinition Height="48"/>
-      </Grid.RowDefinitions>
-      <StackPanel>
-        <TextBlock Text="KETTEH" FontSize="22" FontWeight="Bold" Foreground="#00D4FF" Margin="0,0,0,14"/>
-        <TextBlock TextWrapping="Wrap" Foreground="#C0C0E0" FontSize="13.5" Margin="0,0,0,10"
-                   Text="Tools are downloaded from official sources and stored locally."/>
-        <TextBlock TextWrapping="Wrap" Foreground="#C0C0E0" FontSize="13.5" Text="Use at your own risk."/>
-      </StackPanel>
-      <Grid Grid.Row="1">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <Button x:Name="CancelBtn" Grid.Column="0" Content="Cancel" Height="40" Background="Transparent"
-                Foreground="#AAAACC" BorderBrush="#2A2A40" BorderThickness="1" Cursor="Hand"/>
-        <Button x:Name="AcceptBtn" Grid.Column="2" Content="Accept" Height="40" Background="#16162A"
-                Foreground="#00D4FF" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold"/>
-      </Grid>
-    </Grid>
-  </Border>
-</Window>
-"@
-
-$discReader = New-Object System.Xml.XmlNodeReader $discXaml
-$discWin = [Windows.Markup.XamlReader]::Load($discReader)
-$discWin.Add_MouseLeftButtonDown({ try{$discWin.DragMove()}catch{} })
-$script:ok = $false
-$discWin.FindName("AcceptBtn").Add_Click({ $script:ok=$true; $discWin.Close() })
-$discWin.FindName("CancelBtn").Add_Click({ $script:ok=$false; $discWin.Close() })
-$discWin.ShowDialog() | Out-Null
-if (-not $script:ok) { exit }
 
 $reader = New-Object System.Xml.XmlNodeReader $xaml
 $window = [Windows.Markup.XamlReader]::Load($reader)
 
-$MinBtn=$window.FindName("MinBtn"); $CloseBtn=$window.FindName("CloseBtn")
-$StatusTitle=$window.FindName("StatusTitle"); $StatusSub=$window.FindName("StatusSub")
-$StatusBadge=$window.FindName("StatusBadge"); $BadgeHost=$window.FindName("BadgeHost")
-$LogBox=$window.FindName("LogBox"); $CatBar=$window.FindName("CatBar"); $CardPanel=$window.FindName("CardPanel")
-$OpenFolderBtn=$window.FindName("OpenFolderBtn"); $ClearCacheBtn=$window.FindName("ClearCacheBtn")
-$OpenPsBtn=$window.FindName("OpenPsBtn")
-$Glow1=$window.FindName("Glow1"); $Glow2=$window.FindName("Glow2"); $Glow3=$window.FindName("Glow3")
+$MinBtn        = $window.FindName("MinBtn")
+$CloseBtn      = $window.FindName("CloseBtn")
+$PathBox       = $window.FindName("PathBox")
+$BrowseBtn     = $window.FindName("BrowseBtn")
+$ScanBtn       = $window.FindName("ScanBtn")
+$StatusTitle   = $window.FindName("StatusTitle")
+$StatusSub     = $window.FindName("StatusSub")
+$StatusBadge   = $window.FindName("StatusBadge")
+$LogBox        = $window.FindName("LogBox")
+$ResultsPanel  = $window.FindName("ResultsPanel")
+$ResultsScroll = $window.FindName("ResultsScroll")
+$StatFiles     = $window.FindName("StatFiles")
+$StatVerified  = $window.FindName("StatVerified")
+$StatUnknown   = $window.FindName("StatUnknown")
+$StatFlagged   = $window.FindName("StatFlagged")
 
-# Stronger ambient animation
-$anim = New-Object System.Windows.Threading.DispatcherTimer
-$anim.Interval = [TimeSpan]::FromMilliseconds(35)
-$script:t = 0.0
-$anim.Add_Tick({
-    $script:t += 0.045
-    $Glow1.Opacity = 0.14 + [Math]::Sin($script:t) * 0.10
-    $Glow2.Opacity = 0.12 + [Math]::Cos($script:t * 0.9) * 0.09
-    $Glow3.Opacity = 0.06 + [Math]::Sin($script:t * 0.6) * 0.05
-})
-$anim.Start()
+$defaultMods = "$env:USERPROFILE\AppData\Roaming\.minecraft\mods"
+$PathBox.Text = $defaultMods
 
-function Write-Log($msg) {
-    $t = Get-Date -Format "HH:mm:ss"
-    $LogBox.Dispatcher.Invoke([Action]{ $LogBox.AppendText("[$t] $msg`r`n"); $LogBox.ScrollToEnd() })
-}
-function Set-Status($title,$sub,$badge="BUSY") {
-    $window.Dispatcher.Invoke([Action]{
-        $StatusTitle.Text=$title; $StatusSub.Text=$sub; $StatusBadge.Text=$badge
-        if ($badge -eq "BUSY") { $StatusBadge.Foreground=[System.Windows.Media.Brushes]::Orange; $BadgeHost.Background=[System.Windows.Media.BrushConverter]::new().ConvertFromString("#2A1A0A") }
-        elseif ($badge -eq "ERR") { $StatusBadge.Foreground=[System.Windows.Media.Brushes]::Red; $BadgeHost.Background=[System.Windows.Media.BrushConverter]::new().ConvertFromString("#2A0A0A") }
-        else { $StatusBadge.Foreground=[System.Windows.Media.BrushConverter]::new().ConvertFromString("#00D4FF"); $BadgeHost.Background=[System.Windows.Media.BrushConverter]::new().ConvertFromString("#12121E") }
+
+# =============================================================================
+# UI HELPERS
+# =============================================================================
+
+function Write-Log {
+    param([string]$msg)
+    $time = Get-Date -Format "HH:mm:ss"
+    $LogBox.Dispatcher.Invoke([Action]{
+        $LogBox.AppendText("[$time] $msg`r`n")
+        $LogBox.ScrollToEnd()
     })
 }
 
-function Start-KettehModAnalyzer {
-    $code = @'
-[Console]::OutputEncoding=[Text.Encoding]::UTF8
-$Host.UI.RawUI.WindowTitle="Ketteh Mod Analyzer"
-Clear-Host
-Write-Host "`n  KETTEH MOD ANALYZER" -ForegroundColor Cyan
-Write-Host "  -------------------`n" -ForegroundColor DarkCyan
-Write-Host "  Enter mods folder (Enter = default):" -ForegroundColor White
-Write-Host "  > " -NoNewline -ForegroundColor Cyan
-$path=Read-Host
-if([string]::IsNullOrWhiteSpace($path)){$path=Join-Path $env:APPDATA ".minecraft\mods"}
-if(-not(Test-Path -LiteralPath $path -PathType Container)){Write-Host "  Invalid path." -ForegroundColor Red; $null=$Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown"); exit}
-Add-Type -AssemblyName System.IO.Compression.FileSystem
-$patterns=@("wurst","meteor","impact","liquidbounce","aristois","future","sigma","vape","dqrkis","grim","prestige","asteria","vengeance","exhibition","rusherhack","novoline","ghostclient","kamiblue","salhack","clickcrystals","baritone","doomsday","kuro","rise","flux","zero","astolfo","xenon","autocrystal","crystalaura","killaura","aimassist","reach","hitbox","triggerbot","nofall","bhop","flight","phase","blink","freecam","scaffold","xray","esp","nametags","chams","tracers","sessionstealer","tokenlogger","tokengrabber","discordtoken","backdoor","meteordevelopment","cc/novoline","com/alan/clients","net/ccbluex")
-function Get-SHA1($f){try{(Get-FileHash -LiteralPath $f -Algorithm SHA1).Hash}catch{$null}}
-function Query-Modrinth($h){if(-not $h){return $null};try{$v=Invoke-RestMethod "https://api.modrinth.com/v2/version_file/$h" -TimeoutSec 6;if($v.project_id){(Invoke-RestMethod "https://api.modrinth.com/v2/project/$($v.project_id)" -TimeoutSec 6).title}}catch{}}
-function Scan-Jar($f){$hits=[Collections.Generic.List[string]]::new();$client=$false;try{$z=[IO.Compression.ZipFile]::OpenRead($f);foreach($e in $z.Entries){$n=$e.FullName.ToLower();foreach($p in $patterns){if($n.Contains($p)){if(-not $hits.Contains($p)){$hits.Add($p)};if($p -match "wurst|meteor|impact|sigma|vengeance|dqrkis|grim|prestige|exhibition|rusherhack|novoline"){$client=$true}}};if($n.EndsWith(".class")){try{$s=$e.Open();$m=New-Object IO.MemoryStream;$s.CopyTo($m);$s.Close();$t=[Text.Encoding]::ASCII.GetString($m.ToArray()).ToLower();$m.Dispose();foreach($p in $patterns){if($p.Length -gt 4 -and $t.Contains($p)){if(-not $hits.Contains($p)){$hits.Add($p)};if($p -match "wurst|meteor|impact|sigma|vengeance|dqrkis|grim|prestige|exhibition|rusherhack|novoline"){$client=$true}}}}catch{}}};$z.Dispose()}catch{};return @{Hits=$hits;IsClient=$client}}
-$jars=@(Get-ChildItem -LiteralPath $path -Filter *.jar -File -EA SilentlyContinue)
-Write-Host "`n  Found $($jars.Count) JARs`n" -ForegroundColor Green
-$v=@();$u=@();$c=@();$s=@();$i=0
-foreach($jar in $jars){$i++;Write-Host ("`r  [{0,3}%] {1}" -f ([math]::Round($i/$jars.Count*100)),$jar.Name.PadRight(45).Substring(0,[Math]::Min(45,$jar.Name.Length))) -NoNewline -ForegroundColor Cyan
-$h=Get-SHA1 $jar.FullName;$name=Query-Modrinth $h
-if($name){$v+=[PSCustomObject]@{File=$jar.Name;Name=$name};continue}
-$r=Scan-Jar $jar.FullName
-if($r.IsClient){$c+=[PSCustomObject]@{File=$jar.Name;Hits=($r.Hits -join ", ")}}
-elseif($r.Hits.Count -gt 0){$s+=[PSCustomObject]@{File=$jar.Name;Hits=($r.Hits -join ", ")}}
-else{$u+=[PSCustomObject]@{File=$jar.Name}}}
-Write-Host "`r"+(" "*70)+"`r`n"
-Write-Host "  Verified   : $($v.Count)" -ForegroundColor Green
-Write-Host "  Unknown    : $($u.Count)" -ForegroundColor Gray
-Write-Host "  Suspicious : $($s.Count)" -ForegroundColor Yellow
-Write-Host "  Cheats     : $($c.Count)" -ForegroundColor Red
-Write-Host ""
-if($c.Count -gt 0){Write-Host "  CHEATS" -ForegroundColor Red;foreach($x in $c){Write-Host "  $($x.File)" -ForegroundColor Red;Write-Host "    $($x.Hits)" -ForegroundColor DarkRed};Write-Host ""}
-if($s.Count -gt 0){Write-Host "  SUSPICIOUS" -ForegroundColor Yellow;foreach($x in $s){Write-Host "  $($x.File)  →  $($x.Hits)" -ForegroundColor Yellow};Write-Host ""}
-Write-Host "  Press any key to exit..." -ForegroundColor DarkGray
-$null=$Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-'@
-    $tmp = Join-Path $env:TEMP "KettehMA.ps1"
-    Set-Content -LiteralPath $tmp -Value $code -Encoding UTF8 -Force
-    Start-Process powershell -ArgumentList "-NoExit","-NoProfile","-ExecutionPolicy","Bypass","-File","`"$tmp`""
-    Write-Log "Launched Mod Analyzer"
-    Set-Status "Ready" "Mod Analyzer running" "IDLE"
+function Set-Status {
+    param($title, $sub, $badge = "BUSY")
+    $window.Dispatcher.Invoke([Action]{
+        $StatusTitle.Text = $title
+        $StatusSub.Text   = $sub
+        $StatusBadge.Text = $badge
+    })
 }
 
-$script:ActiveCat = "All"
-$Categories = @("All","Ketteh","Orbdiff","Spokwn","Tonynoh","Praiselily","RedLotus","Zimmerman","NirSoft","Others","Dependencies")
+function New-Chip {
+    param([string]$Text, [string]$Bg, [string]$Fg)
+    $border = New-Object System.Windows.Controls.Border
+    $border.Background = [Windows.Media.BrushConverter]::new().ConvertFrom($Bg)
+    $border.CornerRadius = 4
+    $border.Padding = "7,3"
+    $border.Margin = "0,0,6,6"
+    $tb = New-Object System.Windows.Controls.TextBlock
+    $tb.Text = $Text
+    $tb.FontSize = 10
+    $tb.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom($Fg)
+    $border.Child = $tb
+    return $border
+}
 
-function New-CatBtn([string]$text,[bool]$active) {
-    $b = New-Object System.Windows.Controls.Button
-    $b.Content=$text; $b.Height=36; $b.Margin="0,0,8,0"; $b.Padding="18,0"; $b.FontSize=12.5; $b.Cursor="Hand"; $b.BorderThickness=0; $b.Tag=$text
-    if ($active) {
-        $b.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#FF3D7F")
-        $b.Foreground = [System.Windows.Media.Brushes]::White
-        $b.FontWeight = "SemiBold"
-    } else {
-        $b.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#12121E")
-        $b.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#8888A0")
+function Add-ResultCard {
+    param(
+        [string]$FileName,
+        [string]$BadgeText,
+        [string]$BadgeBg,
+        [string]$AccentColor,
+        [string[]]$Lines
+    )
+
+    $card = New-Object System.Windows.Controls.Border
+    $card.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#0F151C")
+    $card.BorderBrush = [Windows.Media.BrushConverter]::new().ConvertFrom($AccentColor)
+    $card.BorderThickness = "1,1,1,1"
+    $card.CornerRadius = 6
+    $card.Padding = "14,10"
+    $card.Margin = "0,0,0,8"
+
+    $stack = New-Object System.Windows.Controls.StackPanel
+
+    $header = New-Object System.Windows.Controls.StackPanel
+    $header.Orientation = "Horizontal"
+
+    $badge = New-Object System.Windows.Controls.Border
+    $badge.Background = [Windows.Media.BrushConverter]::new().ConvertFrom($BadgeBg)
+    $badge.CornerRadius = 3
+    $badge.Padding = "6,2"
+    $badge.Margin = "0,0,8,0"
+    $badgeTb = New-Object System.Windows.Controls.TextBlock
+    $badgeTb.Text = $BadgeText
+    $badgeTb.FontSize = 9
+    $badgeTb.FontWeight = "Bold"
+    $badgeTb.Foreground = [Windows.Media.Brushes]::Black
+    $badge.Child = $badgeTb
+    $header.Children.Add($badge) | Out-Null
+
+    $nameTb = New-Object System.Windows.Controls.TextBlock
+    $nameTb.Text = $FileName
+    $nameTb.FontSize = 12
+    $nameTb.FontWeight = "SemiBold"
+    $nameTb.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom("#DCEDE8")
+    $nameTb.VerticalAlignment = "Center"
+    $header.Children.Add($nameTb) | Out-Null
+
+    $stack.Children.Add($header) | Out-Null
+
+    if ($Lines -and $Lines.Count -gt 0) {
+        $wrap = New-Object System.Windows.Controls.WrapPanel
+        $wrap.Margin = "0,8,0,0"
+        foreach ($line in $Lines) {
+            $chip = New-Chip -Text $line -Bg "#141C25" -Fg "#B9CFC9"
+            $wrap.Children.Add($chip) | Out-Null
+        }
+        $stack.Children.Add($wrap) | Out-Null
     }
-    $b.Template = [Windows.Markup.XamlReader]::Parse(@"
-<ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" TargetType="Button">
-  <Border Background="{TemplateBinding Background}" CornerRadius="18" Padding="{TemplateBinding Padding}">
-    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-  </Border>
-</ControlTemplate>
-"@)
-    $b.Add_Click({ $script:ActiveCat=$this.Tag; Build-Cats; Build-Cards })
-    return $b
+
+    $card.Child = $stack
+    $ResultsPanel.Children.Add($card) | Out-Null
 }
 
-function Build-Cats {
-    $CatBar.Children.Clear()
-    foreach ($c in $Categories) { [void]$CatBar.Children.Add((New-CatBtn $c ($c -eq $script:ActiveCat))) }
+function Add-SectionHeader {
+    param([string]$Title, [int]$Count, [string]$Color)
+    $tb = New-Object System.Windows.Controls.TextBlock
+    $tb.Text = "$Title  ($Count)"
+    $tb.FontSize = 11
+    $tb.FontWeight = "Bold"
+    $tb.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom($Color)
+    $tb.Margin = "0,14,0,8"
+    $ResultsPanel.Children.Add($tb) | Out-Null
 }
 
-function Build-Cards {
-    $CardPanel.Children.Clear()
-    $list = if ($script:ActiveCat -eq "All") { $ToolData } else { $ToolData | Where-Object Category -eq $script:ActiveCat }
+function Clear-Results {
+    $ResultsPanel.Dispatcher.Invoke([Action]{ $ResultsPanel.Children.Clear() })
+}
 
-    foreach ($tool in $list) {
-        $card = New-Object System.Windows.Controls.Border
-        $card.Width=240; $card.Height=112; $card.Margin="8"; $card.CornerRadius=16
-        $card.Background=[System.Windows.Media.BrushConverter]::new().ConvertFromString("#0E0E18")
-        $card.BorderBrush=[System.Windows.Media.BrushConverter]::new().ConvertFromString("#22223A")
-        $card.BorderThickness=1.5; $card.Cursor="Hand"; $card.Padding="16,14"; $card.Tag=$tool
 
-        $scale = New-Object System.Windows.Media.ScaleTransform 1,1
-        $card.RenderTransform=$scale; $card.RenderTransformOrigin="0.5,0.5"
+# =============================================================================
+# EVENTS
+# =============================================================================
 
-        $sp = New-Object System.Windows.Controls.StackPanel
-        $n = New-Object System.Windows.Controls.TextBlock
-        $n.Text=$tool.Name; $n.FontSize=14; $n.FontWeight="SemiBold"
-        $n.Foreground=[System.Windows.Media.BrushConverter]::new().ConvertFromString("#F0F0FF")
-        $n.TextWrapping="Wrap"
+$window.Add_MouseLeftButtonDown({ try { $window.DragMove() } catch {} })
+$CloseBtn.Add_Click({ $window.Close() })
+$MinBtn.Add_Click({ $window.WindowState = "Minimized" })
 
-        $d = New-Object System.Windows.Controls.TextBlock
-        $d.Text=$tool.Desc; $d.FontSize=11.5
-        $d.Foreground=[System.Windows.Media.BrushConverter]::new().ConvertFromString("#5A5A78")
-        $d.TextWrapping="Wrap"; $d.Margin="0,7,0,0"
+$BrowseBtn.Add_Click({
+    $dlg = New-Object System.Windows.Forms.FolderBrowserDialog
+    $dlg.Description = "Select your Minecraft mods folder"
+    if (Test-Path $PathBox.Text) { $dlg.SelectedPath = $PathBox.Text }
+    if ($dlg.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+        $PathBox.Text = $dlg.SelectedPath
+    }
+})
 
-        [void]$sp.Children.Add($n); [void]$sp.Children.Add($d)
-        $card.Child=$sp
+$ScanBtn.Add_Click({
+    $modsPath = $PathBox.Text
+    if (-not (Test-Path $modsPath -PathType Container)) {
+        Set-Status "Error" "That folder doesn't exist." "ERR"
+        Write-Log "Invalid path: $modsPath"
+        return
+    }
 
-        $card.Add_MouseEnter({
-            $this.BorderBrush=[System.Windows.Media.BrushConverter]::new().ConvertFromString("#00D4FF")
-            $this.Background=[System.Windows.Media.BrushConverter]::new().ConvertFromString("#16162A")
-            $sc=$this.RenderTransform
-            $ax=New-Object System.Windows.Media.Animation.DoubleAnimation 1.06,([TimeSpan]::FromMilliseconds(140))
-            $ay=New-Object System.Windows.Media.Animation.DoubleAnimation 1.06,([TimeSpan]::FromMilliseconds(140))
-            $sc.BeginAnimation([System.Windows.Media.ScaleTransform]::ScaleXProperty,$ax)
-            $sc.BeginAnimation([System.Windows.Media.ScaleTransform]::ScaleYProperty,$ay)
-        })
-        $card.Add_MouseLeave({
-            $this.BorderBrush=[System.Windows.Media.BrushConverter]::new().ConvertFromString("#22223A")
-            $this.Background=[System.Windows.Media.BrushConverter]::new().ConvertFromString("#0E0E18")
-            $sc=$this.RenderTransform
-            $ax=New-Object System.Windows.Media.Animation.DoubleAnimation 1.0,([TimeSpan]::FromMilliseconds(160))
-            $ay=New-Object System.Windows.Media.Animation.DoubleAnimation 1.0,([TimeSpan]::FromMilliseconds(160))
-            $sc.BeginAnimation([System.Windows.Media.ScaleTransform]::ScaleXProperty,$ax)
-            $sc.BeginAnimation([System.Windows.Media.ScaleTransform]::ScaleYProperty,$ay)
-        })
+    $ScanBtn.IsEnabled = $false
+    Clear-Results
+    $LogBox.Dispatcher.Invoke([Action]{ $LogBox.Clear() })
+    Set-Status "Scanning" "Reading $modsPath..." "BUSY"
+    Write-Log "Scan started: $modsPath"
 
-        $card.Add_MouseLeftButtonUp({
-            $td=$this.Tag; if(-not $td){return}
-            switch($td.Type){
-                "Builtin"{ Start-KettehModAnalyzer }
-                "Link"{ Start-Process $td.URL; Write-Log "Opened $($td.Name)"; Set-Status "Ready" "Opened browser" "IDLE" }
-                "Cmd"{
-                    Set-Status "Running" $td.Name "BUSY"; Write-Log "Launching $($td.Name)"
-                    Start-Process powershell -ArgumentList "-NoExit","-NoProfile","-ExecutionPolicy","Bypass","-Command",$td.Command
-                    Set-Status "Ready" "Launched" "IDLE"
+    $rs = [runspacefactory]::CreateRunspace()
+    $rs.ApartmentState = "STA"; $rs.ThreadOptions = "ReuseThread"; $rs.Open()
+    $rs.SessionStateProxy.SetVariable("modsPath",  $modsPath)
+    $rs.SessionStateProxy.SetVariable("dispatcher", $window.Dispatcher)
+    $rs.SessionStateProxy.SetVariable("window",     $window)
+    $rs.SessionStateProxy.SetVariable("ScanBtn",    $ScanBtn)
+    $rs.SessionStateProxy.SetVariable("StatusTitle",$StatusTitle)
+    $rs.SessionStateProxy.SetVariable("StatusSub",  $StatusSub)
+    $rs.SessionStateProxy.SetVariable("StatusBadge",$StatusBadge)
+    $rs.SessionStateProxy.SetVariable("LogBox",     $LogBox)
+    $rs.SessionStateProxy.SetVariable("ResultsPanel",$ResultsPanel)
+    $rs.SessionStateProxy.SetVariable("StatFiles",  $StatFiles)
+    $rs.SessionStateProxy.SetVariable("StatVerified",$StatVerified)
+    $rs.SessionStateProxy.SetVariable("StatUnknown",$StatUnknown)
+    $rs.SessionStateProxy.SetVariable("StatFlagged",$StatFlagged)
+    $rs.SessionStateProxy.SetVariable("patternRegex", $patternRegex)
+    $rs.SessionStateProxy.SetVariable("cheatStringSet", $cheatStringSet)
+    $rs.SessionStateProxy.SetVariable("cheatStrings", $cheatStrings)
+    $rs.SessionStateProxy.SetVariable("fullwidthRegex", $fullwidthRegex)
+
+    $ps = [powershell]::Create()
+    $ps.Runspace = $rs
+
+    $null = $ps.AddScript({
+        function Write-LogBg { param($m) $dispatcher.Invoke([Action]{ $LogBox.AppendText("[$(Get-Date -f 'HH:mm:ss')] $m`r`n"); $LogBox.ScrollToEnd() }) }
+        function Set-StatusBg { param($t,$s,$b) $dispatcher.Invoke([Action]{ $StatusTitle.Text=$t; $StatusSub.Text=$s; $StatusBadge.Text=$b }) }
+
+        function New-Chip2 {
+            param([string]$Text, [string]$Bg, [string]$Fg)
+            $b = New-Object System.Windows.Controls.Border
+            $b.Background = [Windows.Media.BrushConverter]::new().ConvertFrom($Bg)
+            $b.CornerRadius = 4; $b.Padding = "7,3"; $b.Margin = "0,0,6,6"
+            $tb = New-Object System.Windows.Controls.TextBlock
+            $tb.Text = $Text; $tb.FontSize = 10
+            $tb.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom($Fg)
+            $b.Child = $tb
+            return $b
+        }
+
+        function Add-CardBg {
+            param([string]$FileName, [string]$BadgeText, [string]$BadgeBg, [string]$AccentColor, [string[]]$Lines)
+            $dispatcher.Invoke([Action]{
+                $card = New-Object System.Windows.Controls.Border
+                $card.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#0F151C")
+                $card.BorderBrush = [Windows.Media.BrushConverter]::new().ConvertFrom($AccentColor)
+                $card.BorderThickness = "1,1,1,1"; $card.CornerRadius = 6; $card.Padding = "14,10"; $card.Margin = "0,0,0,8"
+                $stack = New-Object System.Windows.Controls.StackPanel
+                $header = New-Object System.Windows.Controls.StackPanel
+                $header.Orientation = "Horizontal"
+                $badge = New-Object System.Windows.Controls.Border
+                $badge.Background = [Windows.Media.BrushConverter]::new().ConvertFrom($BadgeBg)
+                $badge.CornerRadius = 3; $badge.Padding = "6,2"; $badge.Margin = "0,0,8,0"
+                $badgeTb = New-Object System.Windows.Controls.TextBlock
+                $badgeTb.Text = $BadgeText; $badgeTb.FontSize = 9; $badgeTb.FontWeight = "Bold"
+                $badgeTb.Foreground = [Windows.Media.Brushes]::Black
+                $badge.Child = $badgeTb
+                $header.Children.Add($badge) | Out-Null
+                $nameTb = New-Object System.Windows.Controls.TextBlock
+                $nameTb.Text = $FileName; $nameTb.FontSize = 12; $nameTb.FontWeight = "SemiBold"
+                $nameTb.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom("#DCEDE8")
+                $nameTb.VerticalAlignment = "Center"
+                $header.Children.Add($nameTb) | Out-Null
+                $stack.Children.Add($header) | Out-Null
+                if ($Lines -and $Lines.Count -gt 0) {
+                    $wrap = New-Object System.Windows.Controls.WrapPanel
+                    $wrap.Margin = "0,8,0,0"
+                    foreach ($line in $Lines) { $wrap.Children.Add((New-Chip2 -Text $line -Bg "#141C25" -Fg "#B9CFC9")) | Out-Null }
+                    $stack.Children.Add($wrap) | Out-Null
                 }
-                default{
-                    Set-Status "Downloading" $td.Name "BUSY"; Write-Log "Downloading $($td.Name)..."
-                    $rs=[runspacefactory]::CreateRunspace(); $rs.Open()
-                    $rs.SessionStateProxy.SetVariable("tool",$td); $rs.SessionStateProxy.SetVariable("dir",$installDir)
-                    $rs.SessionStateProxy.SetVariable("ui",$window.Dispatcher)
-                    $rs.SessionStateProxy.SetVariable("titleC",$StatusTitle); $rs.SessionStateProxy.SetVariable("subC",$StatusSub)
-                    $rs.SessionStateProxy.SetVariable("badgeC",$StatusBadge); $rs.SessionStateProxy.SetVariable("logC",$LogBox)
-                    $ps=[powershell]::Create(); $ps.Runspace=$rs
-                    [void]$ps.AddScript({
-                        function L($m){$ui.Invoke([Action]{$logC.AppendText("[$(Get-Date -f HH:mm:ss)] $m`r`n");$logC.ScrollToEnd()})}
-                        function S($t,$s,$b){$ui.Invoke([Action]{$titleC.Text=$t;$subC.Text=$s;$badgeC.Text=$b})}
-                        try{
-                            [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12
-                            $target=Join-Path $dir "$($tool.Category)\$($tool.Name)"
-                            if(-not(Test-Path $target)){New-Item $target -ItemType Directory -Force|Out-Null}
-                            if($tool.Type -eq "GitHub"){
-                                $parts=$tool.URL -replace "https://github.com/","" -split "/"
-                                $api="https://api.github.com/repos/$($parts[0])/$($parts[1])/releases/latest"
-                                $rel=Invoke-RestMethod $api -Headers @{"User-Agent"="Ketteh"}
-                                $asset=$rel.assets|Where-Object{$_.name -match "\.(zip|exe)$"}|Select-Object -First 1
-                                if(-not $asset){throw "No asset"}; $url=$asset.browser_download_url; $fn=$asset.name
-                            }else{ $url=$tool.URL; $fn=($url -split "/")[-1] }
-                            $out=Join-Path $target $fn
-                            if(-not(Test-Path $out)){ L "Downloading $fn..."; (New-Object Net.WebClient).DownloadFile($url,$out); L "Done" }
-                            else{ L "Cached $fn" }
-                            if($fn -match "\.zip$"){
-                                Expand-Archive $out $target -Force
-                                $exe=Get-ChildItem $target -Filter *.exe -Recurse|Select-Object -First 1
-                                if($exe){Start-Process $exe.FullName; L "Launched $($exe.Name)"}else{Start-Process explorer $target}
-                            }else{ Start-Process $out; L "Launched $fn" }
-                            S "Ready" "Done" "IDLE"
-                        }catch{ L "Error: $_"; S "Error" "Failed" "ERR" }
-                    })
-                    [void]$ps.BeginInvoke()
+                $card.Child = $stack
+                $ResultsPanel.Children.Add($card) | Out-Null
+            })
+        }
+
+        function Add-HeaderBg {
+            param([string]$Title, [int]$Count, [string]$Color)
+            $dispatcher.Invoke([Action]{
+                $tb = New-Object System.Windows.Controls.TextBlock
+                $tb.Text = "$Title  ($Count)"; $tb.FontSize = 11; $tb.FontWeight = "Bold"
+                $tb.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom($Color)
+                $tb.Margin = "0,14,0,8"
+                $ResultsPanel.Children.Add($tb) | Out-Null
+            })
+        }
+
+        function Get-FileSHA1x { param([string]$Path) (Get-FileHash -Path $Path -Algorithm SHA1).Hash }
+
+        function Query-Modrinthx {
+            param([string]$Hash)
+            try {
+                $vi = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/version_file/$Hash" -Method Get -UseBasicParsing -ErrorAction Stop
+                if ($vi.project_id) {
+                    $pi = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/project/$($vi.project_id)" -Method Get -UseBasicParsing -ErrorAction Stop
+                    return @{ Name = $pi.title; Slug = $pi.slug }
+                }
+            } catch { }
+            return @{ Name = ""; Slug = "" }
+        }
+
+        try {
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            $jarFiles = Get-ChildItem -Path $modsPath -Filter *.jar -ErrorAction Stop
+
+            if ($jarFiles.Count -eq 0) {
+                Set-StatusBg "No JARs found" "That folder has no .jar files." "IDLE"
+                Write-LogBg "No .jar files in $modsPath"
+                $dispatcher.Invoke([Action]{ $ScanBtn.IsEnabled = $true })
+                $rs.Close()
+                return
+            }
+
+            Write-LogBg "Found $($jarFiles.Count) JAR file(s)."
+
+            $verified = @(); $unknown = @(); $suspicious = @(); $bypass = @(); $obfuscated = @()
+
+            foreach ($jar in $jarFiles) {
+                Write-LogBg "Hashing: $($jar.Name)"
+                $hash = Get-FileSHA1x -Path $jar.FullName
+                $handled = $false
+                if ($hash) {
+                    $md = Query-Modrinthx -Hash $hash
+                    if ($md.Slug) {
+                        $verified += [PSCustomObject]@{ Name = $md.Name; File = $jar.Name; Path = $jar.FullName }
+                        $handled = $true
+                    }
+                }
+                if (-not $handled) { $unknown += [PSCustomObject]@{ File = $jar.Name; Path = $jar.FullName } }
+            }
+
+            foreach ($jar in $jarFiles) {
+                Write-LogBg "Deep-scanning: $($jar.Name)"
+
+                $foundPatterns = [System.Collections.Generic.HashSet[string]]::new()
+                $foundStrings  = [System.Collections.Generic.HashSet[string]]::new()
+                try {
+                    $archive = [System.IO.Compression.ZipFile]::OpenRead($jar.FullName)
+                    foreach ($entry in $archive.Entries) {
+                        foreach ($m in $patternRegex.Matches($entry.FullName)) { [void]$foundPatterns.Add($m.Value) }
+                        if ($entry.FullName -match '\.(class|json)$') {
+                            try {
+                                $st = $entry.Open(); $ms = New-Object System.IO.MemoryStream
+                                $st.CopyTo($ms); $st.Close()
+                                $ascii = [System.Text.Encoding]::ASCII.GetString($ms.ToArray()); $ms.Dispose()
+                                foreach ($m in $patternRegex.Matches($ascii)) { [void]$foundPatterns.Add($m.Value) }
+                                foreach ($s in $cheatStringSet) { if ($ascii.Contains($s)) { [void]$foundStrings.Add($s) } }
+                            } catch { }
+                        }
+                    }
+                    $archive.Dispose()
+                } catch { }
+
+                if ($foundPatterns.Count -gt 0 -or $foundStrings.Count -gt 0) {
+                    $allTags = @($foundPatterns) + @($foundStrings) | Select-Object -Unique
+                    $suspicious += [PSCustomObject]@{ File = $jar.Name; Tags = $allTags }
+                    $unknown = $unknown | Where-Object { $_.File -ne $jar.Name }
+                    $verified = $verified | Where-Object { $_.File -ne $jar.Name }
                 }
             }
-        })
-        [void]$CardPanel.Children.Add($card)
-    }
-}
 
-Build-Cats; Build-Cards
+            $totalFlagged = $suspicious.Count + $bypass.Count + $obfuscated.Count
 
-$window.Add_MouseLeftButtonDown({ try{$window.DragMove()}catch{} })
-$CloseBtn.Add_Click({ $anim.Stop(); $window.Close() })
-$MinBtn.Add_Click({ $window.WindowState="Minimized" })
-$OpenFolderBtn.Add_Click({
-    if(-not(Test-Path $installDir)){New-Item $installDir -ItemType Directory -Force|Out-Null}
-    Start-Process explorer $installDir; Write-Log "Opened folder"
+            Add-HeaderBg -Title "VERIFIED" -Count $verified.Count -Color "#00E5A8"
+            foreach ($v in $verified) { Add-CardBg -FileName "$($v.Name) -> $($v.File)" -BadgeText "VERIFIED" -BadgeBg "#00E5A8" -AccentColor "#0B8F6C" -Lines @() }
+
+            Add-HeaderBg -Title "UNKNOWN" -Count $unknown.Count -Color "#FFC85C"
+            foreach ($u in $unknown) { Add-CardBg -FileName $u.File -BadgeText "UNKNOWN" -BadgeBg "#FFC85C" -AccentColor "#7A5C1E" -Lines @() }
+
+            Add-HeaderBg -Title "FLAGGED" -Count $suspicious.Count -Color "#FF5C7A"
+            foreach ($s in $suspicious) { Add-CardBg -FileName $s.File -BadgeText "FLAGGED" -BadgeBg "#FF5C7A" -AccentColor "#7A1E33" -Lines $s.Tags }
+
+            $dispatcher.Invoke([Action]{
+                $StatFiles.Text     = "Files: $($jarFiles.Count)"
+                $StatVerified.Text  = "Verified: $($verified.Count)"
+                $StatUnknown.Text   = "Unknown: $($unknown.Count)"
+                $StatFlagged.Text   = "Flagged: $totalFlagged"
+            })
+
+            Write-LogBg "Scan complete."
+            Set-StatusBg "Scan complete" "$($jarFiles.Count) files - $totalFlagged flagged." "IDLE"
+        } catch {
+            Write-LogBg "Error: $_"
+            Set-StatusBg "Error" "Scan failed." "ERR"
+        }
+
+        $dispatcher.Invoke([Action]{ $ScanBtn.IsEnabled = $true })
+        $rs.Close()
+    })
+
+    $null = $ps.BeginInvoke()
 })
-$ClearCacheBtn.Add_Click({
-    if(Test-Path $installDir){
-        $n=@(Get-ChildItem $installDir -Force -EA SilentlyContinue).Count
-        Get-ChildItem $installDir -Force -EA SilentlyContinue|Remove-Item -Recurse -Force -EA SilentlyContinue
-        Write-Log "Cleared $n items"; Set-Status "Ready" "Cache cleared" "IDLE"
-    }
-})
-$OpenPsBtn.Add_Click({ Start-Process powershell; Write-Log "Opened PowerShell" })
 
-Write-Log "Ketteh ready"
-Set-Status "Ready" "Select a tool" "IDLE"
+Write-Log "KettehLyzer ready."
+Set-Status "Ready" "Pick a mods folder and click Scan Folder." "IDLE"
+
 $window.ShowDialog() | Out-Null
