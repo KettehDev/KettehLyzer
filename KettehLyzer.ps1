@@ -1,17 +1,21 @@
 <#
-    KettehLyzer
-    -----------
-    Local Minecraft mods-folder scanner. Point it at a mods directory (yours,
-    or one a player has voluntarily shared with you) and it reports which
-    JARs are known-clean (verified against Modrinth/Megabase by hash),
-    unknown, or flagged for cheat-client signatures, obfuscation, or
-    injected/bypass code.
+    KettehLyzer  v2
+    ───────────────────────────────────────────────────────────────────────────
+    Local mods-folder scanner — KettehTools suite.
 
-    This tool only ever reads files inside the folder you choose. It does
-    not download or launch anything else, does not open any remote-access
-    session, and does not touch any file outside that folder.
+    Scans a Minecraft mods directory and classifies each JAR as:
+      VERIFIED    — SHA-1 hash matched on Modrinth or Megabase
+      UNKNOWN     — not found in any hash database
+      FLAGGED     — cheat-client signatures / module strings found
+      BYPASS      — anticheat-bypass or runtime-injection code detected
+      OBFUSCATED  — heavy obfuscation with no clean hash match
+      JVM ISSUE   — live Java process carries suspicious agents or flags
 
-    KettehTools - part of the KettehTools suite.
+    Only reads files inside the folder you select.
+    Hash lookups go to api.modrinth.com and megabase.vercel.app only;
+    nothing else leaves the machine.
+
+    KettehTools — kettehtools.com
 #>
 
 Add-Type -AssemblyName PresentationFramework
@@ -20,33 +24,29 @@ Add-Type -AssemblyName WindowsBase
 Add-Type -AssemblyName System.Xaml
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 
-# =============================================================================
-# DETECTION DATA
-# (Signature lists carried over from the original scanner - this is the part
-#  that actually does the work of catching hacked clients.)
-# =============================================================================
+# ═══════════════════════════════════════════════════════════════════════════════
+#  DETECTION DATA
+# ═══════════════════════════════════════════════════════════════════════════════
 
 $suspiciousPatterns = @(
-    "AimAssist", "AnchorTweaks", "AutoAnchor", "AutoCrystal", "AutoDoubleHand", "JDWP.VirtualMachine.AllModules",
-    "AutoHitCrystal", "AutoPot", "AutoTotem", "AutoArmor", "InventoryTotem",
-    "LegitTotem", "PingSpoof", "SelfDestruct",
-    "ShieldBreaker", "TriggerBot", "AxeSpam", "WebMacro",
-    "FastPlace", "WalskyOptimizer", "WalksyOptimizer", "walsky.optimizer",
-    "WalksyCrystalOptimizerMod", "Donut", "Replace Mod",
-    "ShieldDisabler", "SilentAim", "Totem Hit", "Wtap", "FakeLag", "dev.virel", "orchard",
-    "BlockESP", "dev.krypton", "dev/krypton", "skid.krypton", "skid/krypton", "AntiMissClick",
-    "LagReach", "PopSwitch", "SprintReset", "ChestSteal", "AntiBot",
-    "ElytraSwap", "FastXP", "FastExp", "Refill", "AirAnchor",
-    "jnativehook", "FakeInv", "HoverTotem", "AutoClicker", "AutoFirework",
-    "PackSpoof", "Antiknockback", "catlean",
-    "AuthBypass", "Asteria", "Prestige", "AutoEat", "AutoMine",
-    "MaceSwap", "Macro198", "StunSlam", "SafeAnchor", "DoubleAnchor", "AutoTPA", "BaseFinder", "Xenon", "gypsy",
-    "AutoPotRefill", "KeyPearl", "AutoNethPot", "AutoDtap",
-    "TriggerBot", "AutoWeb", "AnchorAction",
+    "AimAssist","AnchorTweaks","AutoAnchor","AutoCrystal","AutoDoubleHand",
+    "JDWP.VirtualMachine.AllModules","AutoHitCrystal","AutoPot","AutoTotem",
+    "AutoArmor","InventoryTotem","LegitTotem","PingSpoof","SelfDestruct",
+    "ShieldBreaker","TriggerBot","AxeSpam","WebMacro","FastPlace",
+    "WalskyOptimizer","WalksyOptimizer","walsky.optimizer",
+    "WalksyCrystalOptimizerMod","Donut","Replace Mod","ShieldDisabler",
+    "SilentAim","Totem Hit","Wtap","FakeLag","dev.virel","orchard",
+    "BlockESP","dev.krypton","dev/krypton","skid.krypton","skid/krypton",
+    "AntiMissClick","LagReach","PopSwitch","SprintReset","ChestSteal","AntiBot",
+    "ElytraSwap","FastXP","FastExp","Refill","AirAnchor","jnativehook",
+    "FakeInv","HoverTotem","AutoClicker","AutoFirework","PackSpoof",
+    "Antiknockback","catlean","AuthBypass","Asteria","Prestige","AutoEat",
+    "AutoMine","MaceSwap","Macro198","StunSlam","SafeAnchor","DoubleAnchor",
+    "AutoTPA","BaseFinder","Xenon","gypsy","AutoPotRefill","KeyPearl",
+    "AutoNethPot","AutoDtap","AutoWeb","AnchorAction",
     "org.chainlibs.module.impl.modules.Crystal.Y",
     "org.chainlibs.module.impl.modules.Crystal.bF",
     "org.chainlibs.module.impl.modules.Crystal.bM",
@@ -59,552 +59,174 @@ $suspiciousPatterns = @(
     "org.chainlibs.module.impl.modules.Blatant.bx",
     "org.chainlibs.module.impl.modules.Blatant.cj",
     "org.chainlibs.module.impl.modules.Blatant.dk",
-    "imgui.gl3", "imgui.glfw",
-    "BowAim", "Criticals", "Fakenick", "FakeItem",
-    "invsee", "ItemExploit", "Hellion", "hellion",
-    "LicenseCheckMixin", "ClientPlayerInteractionManagerAccessor",
-    "ClientPlayerEntityMixim", "dev.gambleclient", "obfuscatedAuth",
-    "phantom-refmap.json", "xyz.greaj",
-    "じ.class", "ふ.class", "ぶ.class", "ぷ.class", "た.class",
-    "ね.class", "そ.class", "な.class", "ど.class", "ぐ.class",
-    "ず.class", "で.class", "つ.class", "べ.class", "せ.class",
-    "と.class", "み.class", "び.class", "す.class", "の.class"
+    "imgui.gl3","imgui.glfw","BowAim","Criticals","Fakenick","FakeItem",
+    "invsee","ItemExploit","Hellion","hellion","LicenseCheckMixin",
+    "ClientPlayerInteractionManagerAccessor","ClientPlayerEntityMixim",
+    "dev.gambleclient","obfuscatedAuth","phantom-refmap.json","xyz.greaj",
+    "じ.class","ふ.class","ぶ.class","ぷ.class","た.class","ね.class",
+    "そ.class","な.class","ど.class","ぐ.class","ず.class","で.class",
+    "つ.class","べ.class","せ.class","と.class","み.class","び.class",
+    "す.class","の.class"
 )
 
 $cheatStrings = @(
-    "AutoCrystal", "autocrystal", "auto crystal", "cw crystal", "JDWP.VirtualMachine.AllModules",
-    "dontPlaceCrystal", "dontBreakCrystal", "dev.virel", "orchard",
-    "AutoHitCrystal", "autohitcrystal", "canPlaceCrystalServer", "healPotSlot",
-    "ＡｕｔｏＣｒｙｓｔａｌ", "Ａｕｔｏ Ｃｒｙｓｔａｌ", "ＡｕｔｏＨｉｔＣｒｙｓｔａｌ",
-    "AutoAnchor", "autoanchor", "auto anchor", "DoubleAnchor",
-    "HasAnchor", "anchortweaks", "anchor macro", "safe anchor", "safeanchor",
-    "SafeAnchor", "AirAnchor",
-    "ＡｕｔｏＡｎｃｈｏｒ", "Ａｕｔｏ Ａｎｃｈｏｒ", "ＤｏｕｂｌｅＡｎｃｈｏｒ", "Ｄｏｕｂｌｅ Ａｎｃｈｏｒ",
-    "ＳａｆｅＡｎｃｈｏｒ", "Ｓａｆｅ Ａｎｃｈｏｒ", "Ａｎｃｈｏｒ Ｍａｃｒｏ", "anchorMacro",
-    "AutoTotem", "autototem", "auto totem", "InventoryTotem",
-    "inventorytotem", "HoverTotem", "hover totem", "legittotem",
-    "ＡｕｔｏＴｏｔｅｍ", "Ａｕｔｏ Ｔｏｔｅｍ", "ＨｏｖｅｒＴｏｔｅｍ", "Ｈｏｖｅｒ Ｔｏｔｅｍ",
-    "ＩｎｖｅｎｔｏｒｙＴｏｔｅｍ", "Ａｕｔｏ Ｉｎｖｅｎｔｏｒｙ Ｔｏｔｅｍ", "Ａｕｔｏ Ｔｏｔｅｍ Ｈｉｔ",
-    "AutoPot", "autopot", "auto pot", "speedPotSlot", "strengthPotSlot",
-    "AutoArmor", "autoarmor", "auto armor",
-    "ＡｕｔｏＰｏｔ", "Ａｕｔｏ Ｐｏｔ", "Ａｕｔｏ Ｐｏｔ Ｒｅｆｉｌｌ", "AutoPotRefill",
-    "ＡｕｔｏＡｒｍｏｒ", "Ａｕｔｏ Ａｒｍｏｒ",
-    "preventSwordBlockBreaking", "preventSwordBlockAttack",
-    "ShieldDisabler", "ShieldBreaker",
-    "ＳｈｉｅｌｄＤｉｓａｂｌｅｒ", "Ｓｈｉｅｌｄ Ｄｉｓａｂｌｅｒ",
-    "Breaking shield with axe...",
-    "AutoDoubleHand", "autodoublehand", "auto double hand",
-    "ＡｕｔｏＤｏｕｂｌｅＨａｎｄ", "Ａｕｔｏ Ｄｏｕｂｌｅ Ｈａｎｄ",
-    "AutoClicker", "ＡｕｔｏＣｌｉｃｋｅｒ",
-    "Failed to switch to mace after axe!",
-    "AutoMace", "MaceSwap", "SpearSwap",
-    "ＡｕｔｏＭａｃｅ", "Ａｕｔｏ Ｍａｃｅ", "ＭａｃｅＳｗａｐ", "Ｍａｃｅ Ｓｗａｐ",
-    "Ｓｐｅａｒ Ｓｗａｐ", "Ｓｔｕｎ Ｓｌａｍ", "StunSlam",
-    "Donut", "JumpReset", "axespam", "axe spam",
-    "findKnockbackSword", "attackRegisteredThisClick",
-    "AimAssist", "aimassist", "aim assist",
-    "triggerbot", "trigger bot",
-    "ＡｉｍＡｓｓｉｓｔ", "Ａｉｍ Ａｓｓｉｓｔ", "ＴｒｉｇｇｅｒＢｏｔ", "Ｔｒｉｇｇｅｒ Ｂｏｔ",
-    "Silent Rotations", "SilentRotations", "Ｓｉｌｅｎｔ Ｒｏｔａｔｉｏｎｓ",
-    "FakeInv", "swapBackToOriginalSlot",
-    "FakeLag", "pingspoof", "ping spoof",
-    "ＦａｋｅＬａｇ", "Ｆａｋｅ Ｌａｇ", "fakePunch", "Fake Punch", "Ｆａｋｅ Ｐｕｎｃｈ",
-    "mace_swap", "quick_strike", "macro_198", "stun_slam",
-    "safe_anchor", "double_anchor", "auto_pot_refill",
-    "walksy_optimizer", "key_pearl", "aim_assist",
-    "auto_neth_pot", "auto_dtap", "trigger_bot", "auto_web",
-    "DOUBLE_ESCAPE", "DOUBLE_RIGHTCLICK_FIRST", "DOUBLE_RIGHTCLICK_SECOND",
-    "POST_CYCLE_DELAY", "PLACE_OBI", "WAIT_OBI", "PLACE_CRYSTAL", "BREAK_CRYSTAL",
-    "ROTATING_DOWN", "ROTATING_BACK", "REFILLING", "PLANTING", "BONEMEALING",
-    "AnchorAction", "REOFFHAND_TOTEM",
-    "webmacro", "web macro", "AntiWeb", "AutoWeb",
-    "Ａｎｔｉ Ｗｅｂ", "ＡｕｔｏＷｅｂ",
-    "lvstrng", "dqrkis", "selfdestruct", "self destruct",
-    "WalksyCrystalOptimizerMod", "WalksyOptimizer", "WalskyOptimizer", "Ｗａｌｋｓｙ Ｏｐｔｉｍｉｚｅｒ",
+    # AutoCrystal
+    "AutoCrystal","autocrystal","auto crystal","cw crystal","JDWP.VirtualMachine.AllModules",
+    "dontPlaceCrystal","dontBreakCrystal","dev.virel","orchard",
+    "AutoHitCrystal","autohitcrystal","canPlaceCrystalServer","healPotSlot",
+    "ＡｕｔｏＣｒｙｓｔａｌ","Ａｕｔｏ Ｃｒｙｓｔａｌ","ＡｕｔｏＨｉｔＣｒｙｓｔａｌ",
+    # Anchor
+    "AutoAnchor","autoanchor","auto anchor","DoubleAnchor","HasAnchor",
+    "anchortweaks","anchor macro","safe anchor","safeanchor","SafeAnchor","AirAnchor",
+    "ＡｕｔｏＡｎｃｈｏｒ","Ａｕｔｏ Ａｎｃｈｏｒ","ＤｏｕｂｌｅＡｎｃｈｏｒ","Ｄｏｕｂｌｅ Ａｎｃｈｏｒ",
+    "ＳａｆｅＡｎｃｈｏｒ","Ｓａｆｅ Ａｎｃｈｏｒ","Ａｎｃｈｏｒ Ｍａｃｒｏ","anchorMacro",
+    # Totem
+    "AutoTotem","autototem","auto totem","InventoryTotem","inventorytotem",
+    "HoverTotem","hover totem","legittotem",
+    "ＡｕｔｏＴｏｔｅｍ","Ａｕｔｏ Ｔｏｔｅｍ","ＨｏｖｅｒＴｏｔｅｍ","Ｈｏｖｅｒ Ｔｏｔｅｍ",
+    "ＩｎｖｅｎｔｏｒｙＴｏｔｅｍ","Ａｕｔｏ Ｉｎｖｅｎｔｏｒｙ Ｔｏｔｅｍ","Ａｕｔｏ Ｔｏｔｅｍ Ｈｉｔ",
+    # AutoPot / AutoArmor
+    "AutoPot","autopot","auto pot","speedPotSlot","strengthPotSlot",
+    "AutoArmor","autoarmor","auto armor","ＡｕｔｏＰｏｔ","Ａｕｔｏ Ｐｏｔ",
+    "Ａｕｔｏ Ｐｏｔ Ｒｅｆｉｌｌ","AutoPotRefill","ＡｕｔｏＡｒｍｏｒ","Ａｕｔｏ Ａｒｍｏｒ",
+    # Shield
+    "preventSwordBlockBreaking","preventSwordBlockAttack","ShieldDisabler","ShieldBreaker",
+    "ＳｈｉｅｌｄＤｉｓａｂｌｅｒ","Ｓｈｉｅｌｄ Ｄｉｓａｂｌｅｒ","Breaking shield with axe...",
+    # Mace / Spear
+    "AutoDoubleHand","autodoublehand","auto double hand",
+    "ＡｕｔｏＤｏｕｂｌｅＨａｎｄ","Ａｕｔｏ Ｄｏｕｂｌｅ Ｈａｎｄ",
+    "AutoClicker","ＡｕｔｏＣｌｉｃｋｅｒ","Failed to switch to mace after axe!",
+    "AutoMace","MaceSwap","SpearSwap","ＡｕｔｏＭａｃｅ","Ａｕｔｏ Ｍａｃｅ",
+    "ＭａｃｅＳｗａｐ","Ｍａｃｅ Ｓｗａｐ","Ｓｐｅａｒ Ｓｗａｐ","Ｓｔｕｎ Ｓｌａｍ","StunSlam",
+    # Aim / KB / Lag
+    "Donut","JumpReset","axespam","axe spam","findKnockbackSword","attackRegisteredThisClick",
+    "AimAssist","aimassist","aim assist","triggerbot","trigger bot",
+    "ＡｉｍＡｓｓｉｓｔ","Ａｉｍ Ａｓｓｉｓｔ","ＴｒｉｇｇｅｒＢｏｔ","Ｔｒｉｇｇｅｒ Ｂｏｔ",
+    "Silent Rotations","SilentRotations","Ｓｉｌｅｎｔ Ｒｏｔａｔｉｏｎｓ",
+    "FakeInv","swapBackToOriginalSlot","FakeLag","pingspoof","ping spoof",
+    "ＦａｋｅＬａｇ","Ｆａｋｅ Ｌａｇ","fakePunch","Fake Punch","Ｆａｋｅ Ｐｕｎｃｈ",
+    # Enum constants
+    "mace_swap","quick_strike","macro_198","stun_slam","safe_anchor","double_anchor",
+    "auto_pot_refill","walksy_optimizer","key_pearl","aim_assist","auto_neth_pot",
+    "auto_dtap","trigger_bot","auto_web",
+    "DOUBLE_ESCAPE","DOUBLE_RIGHTCLICK_FIRST","DOUBLE_RIGHTCLICK_SECOND",
+    "POST_CYCLE_DELAY","PLACE_OBI","WAIT_OBI","PLACE_CRYSTAL","BREAK_CRYSTAL",
+    "ROTATING_DOWN","ROTATING_BACK","REFILLING","PLANTING","BONEMEALING",
+    "AnchorAction","REOFFHAND_TOTEM",
+    # Web
+    "webmacro","web macro","AntiWeb","AutoWeb","Ａｎｔｉ Ｗｅｂ","ＡｕｔｏＷｅｂ",
+    # Known dev fingerprints
+    "lvstrng","dqrkis","selfdestruct","self destruct",
+    "WalksyCrystalOptimizerMod","WalksyOptimizer","WalskyOptimizer","Ｗａｌｋｓｙ Ｏｐｔｉｍｉｚｅｒ",
     "autoCrystalPlaceClock",
-    "AutoFirework", "ElytraSwap", "FastXP", "FastExp", "NoJumpDelay",
-    "ＥｌｙｔｒａＳｗａｐ", "Ｅｌｙｔｒａ Ｓｗａｐ",
-    "PackSpoof", "Antiknockback", "catlean",
-    "AuthBypass", "obfuscatedAuth", "LicenseCheckMixin",
-    "BaseFinder", "invsee", "ItemExploit",
-    "FreezePlayer", "Ｎｏ Ｃｌｉｐ", "Ｆｒｅｅｚｅ Ｐｌａｙｅｒ",
-    "LWFH Crystal", "JDWP.VirtualMachine.AllModules", "ＬＷＦＨ Ｃｒｙｓｔａｌ",
-    "KeyPearl", "LootYeeter", "ＫｅｙＰｅａｒｌ", "Ｋｅｙ Ｐｅａｒｌ", "Ｌｏｏｔ Ｙｅｅｔｅｒ",
-    "FastPlace", "Ｆａｓｔ Ｐｌａｃｅ",
-    "AutoBreach", "Ａｕｔｏ Ｂｒｅａｃｈ",
-    "setBlockBreakingCooldown", "getBlockBreakingCooldown", "blockBreakingCooldown",
-    "onBlockBreaking", "setItemUseCooldown",
-    "invokeDoAttack", "invokeDoItemUse", "invokeOnMouseButton",
-    "onPushOutOfBlocks", "onIsGlowing",
-    "arrayOfString", "POT_CHEATS", "Dqrkis Client", "Entity.isGlowing",
-    "placeInterval", "breakInterval", "stopOnKill",
-    "activateOnRightClick", "holdCrystal", "fakePunch",
-    "KillAura", "ClickAura", "MultiAura", "ForceField", "LegitAura",
-    "AimBot", "AutoAim", "SilentAim", "AimLock", "HeadSnap",
-    "CrystalAura", "AnchorAura", "AnchorFill", "AnchorPlace",
-    "BedAura", "AutoBed", "BedBomb", "BedPlace",
-    "BowAimbot", "BowSpam", "AutoBow",
-    "AutoCrit", "CritBypass", "AlwaysCrit", "CriticalHit",
-    "ReachHack", "ExtendReach", "LongReach", "HitboxExpand",
-    "AntiKB", "NoKnockback", "GrimVelocity", "GrimDisabler", "VelocitySpoof", "KBReduce",
-    "OffhandTotem", "TotemSwitch",
-    "AutoWeapon", "AutoSword", "AutoCity", "Burrow", "SelfTrap",
-    "HoleFiller", "AntiSurround", "AntiBurrow",
-    "WTap", "TargetStrafe", "AutoGap", "AutoPearl",
-    "FlyHack", "CreativeFlight", "BoatFly", "PacketFly", "AirJump",
-    "SpeedHack", "BHop", "BunnyHop",
-    "AntiFall", "NoFallDamage", "SafeFall",
-    "StepHack", "FastClimb", "AutoStep", "HighStep",
-    "WaterWalk", "LiquidWalk", "LavaWalk",
-    "NoSlow", "NoSlowdown", "NoWeb", "NoSoulSand",
-    "WallHack", "ElytraSpeed", "InstantElytra",
-    "ScaffoldWalk", "FastBridge", "BuildHelper", "AutoBridge",
-    "Nuker", "NukerLegit", "InstantBreak",
-    "GhostHand", "NoSwing",
-    "PlaceAssist", "AirPlace", "AutoPlace", "InstantPlace",
-    "PlayerESP", "MobESP", "ItemESP", "StorageESP", "ChestESP",
-    "Tracers", "NameTagsHack",
-    "XRayHack", "OreFinder", "CaveFinder", "OreESP",
-    "NewChunks", "ChunkBorders", "TunnelFinder",
-    "TargetHUD", "ReachDisplay",
-    "DoubleClicker", "JitterClick", "ButterflyClick", "CPSBoost",
-    "ChestStealer", "InvManager", "InvMovebypass",
-    "AutoSprint", "AntiAFK", "AutoRespawn", "PopSwitch",
-    "FakeLatency", "FakePing", "SpoofRotation", "PositionSpoof",
-    "GameSpeed", "SpeedTimer",
-    "GrimBypass", "VulcanBypass", "MatrixBypass",
-    "AACBypass", "VerusDisabler", "IntaveBypass", "WatchdogBypass",
-    "PacketMine", "PacketWalk", "PacketSneak", "PacketCancel", "PacketDupe", "PacketSpam",
-    "SelfDestruct", "HideClient",
-    "SessionStealer", "TokenLogger", "TokenGrabber", "DiscordToken",
-    "RemoteAccess", "ReverseShell", "C2Server", "Backdoor", "KeyLogger",
-    "StashFinder", "TrailFinder",
-    "imgui.binding", "JNativeHook", "GlobalScreen", "NativeKeyListener",
-    "client-refmap.json", "cheat-refmap.json",
-    "meteordevelopment", "cc/novoline",
-    "com/alan/clients", "club/maxstats", "wtf/moonlight",
-    "me/zeroeightsix/kami", "net/ccbluex", "today/opai",
-    "net/minecraft/injection", "org/chainlibs/module/impl/modules",
-    "xyz/greaj", "com/cheatbreaker", "com/moonsworth",
-    "doomsdayclient", "DoomsdayClient", "doomsday.jar",
-    "novaclient", "api.novaclient.lol",
-    "vape.gg", "vapeclient", "VapeClient", "VapeLite",
-    "intent.store", "IntentClient",
-    "rise.today", "riseclient.com",
-    "meteor-client", "meteorclient", "meteordevelopment.meteorclient",
-    "liquidbounce", "fdp-client", "net.ccbluex",
-    "novoware", "novoclient",
-    "aristois", "impactclient", "azura",
-    "pandaware", "skilled", "moonClient", "astolfo",
-    "futureClient", "konas", "rusherhack", "inertia", "exhibition",
-    "dev.krypton", "dev/krypton", "skid.krypton", "skid/krypton",
-    "VirginClient", "virgin client",
-    "catlean", "CatleanClient", "catlean client",
-    "ArgonClient", "argon client",
-    "Asteria", "AsteriaClient", "asteria client",
-    "Prestige", "PrestigeClient", "prestige client", "prestigeclient.vip",
-    "gypsy", "GypsyClient", "gypsy client",
-    "Xenon", "XenonClient", "xenon client",
-    "GrimClient", "grim client",
-    "phantom-refmap.json", "dqrkis.xyz", "Dqrkis Client"
+    # Movement / misc features
+    "AutoFirework","ElytraSwap","FastXP","FastExp","NoJumpDelay",
+    "ＥｌｙｔｒａＳｗａｐ","Ｅｌｙｔｒａ Ｓｗａｐ","PackSpoof","Antiknockback","catlean",
+    "AuthBypass","obfuscatedAuth","LicenseCheckMixin","BaseFinder","invsee","ItemExploit",
+    "FreezePlayer","Ｎｏ Ｃｌｉｐ","Ｆｒｅｅｚｅ Ｐｌａｙｅｒ",
+    "LWFH Crystal","JDWP.VirtualMachine.AllModules","ＬＷＦＨ Ｃｒｙｓｔａｌ",
+    "KeyPearl","LootYeeter","ＫｅｙＰｅａｒｌ","Ｋｅｙ Ｐｅａｒｌ","Ｌｏｏｔ Ｙｅｅｔｅｒ",
+    "FastPlace","Ｆａｓｔ Ｐｌａｃｅ","AutoBreach","Ａｕｔｏ Ｂｒｅａｃｈ",
+    # Internals / runtime hooks
+    "setBlockBreakingCooldown","getBlockBreakingCooldown","blockBreakingCooldown",
+    "onBlockBreaking","setItemUseCooldown","invokeDoAttack","invokeDoItemUse",
+    "invokeOnMouseButton","onPushOutOfBlocks","onIsGlowing",
+    "arrayOfString","POT_CHEATS","Dqrkis Client","Entity.isGlowing",
+    "placeInterval","breakInterval","stopOnKill","activateOnRightClick","holdCrystal",
+    # Cheat categories
+    "KillAura","ClickAura","MultiAura","ForceField","LegitAura",
+    "AimBot","AutoAim","SilentAim","AimLock","HeadSnap",
+    "CrystalAura","AnchorAura","AnchorFill","AnchorPlace",
+    "BedAura","AutoBed","BedBomb","BedPlace","BowAimbot","BowSpam","AutoBow",
+    "AutoCrit","CritBypass","AlwaysCrit","CriticalHit",
+    "ReachHack","ExtendReach","LongReach","HitboxExpand",
+    "AntiKB","NoKnockback","GrimVelocity","GrimDisabler","VelocitySpoof","KBReduce",
+    "OffhandTotem","TotemSwitch","AutoWeapon","AutoSword","AutoCity","Burrow","SelfTrap",
+    "HoleFiller","AntiSurround","AntiBurrow","WTap","TargetStrafe","AutoGap","AutoPearl",
+    "FlyHack","CreativeFlight","BoatFly","PacketFly","AirJump","SpeedHack","BHop","BunnyHop",
+    "AntiFall","NoFallDamage","SafeFall","StepHack","FastClimb","AutoStep","HighStep",
+    "WaterWalk","LiquidWalk","LavaWalk","NoSlow","NoSlowdown","NoWeb","NoSoulSand",
+    "WallHack","ElytraSpeed","InstantElytra","ScaffoldWalk","FastBridge","BuildHelper","AutoBridge",
+    "Nuker","NukerLegit","InstantBreak","GhostHand","NoSwing",
+    "PlaceAssist","AirPlace","AutoPlace","InstantPlace",
+    "PlayerESP","MobESP","ItemESP","StorageESP","ChestESP","Tracers","NameTagsHack",
+    "XRayHack","OreFinder","CaveFinder","OreESP","NewChunks","ChunkBorders","TunnelFinder",
+    "TargetHUD","ReachDisplay","DoubleClicker","JitterClick","ButterflyClick","CPSBoost",
+    "ChestStealer","InvManager","InvMovebypass","AutoSprint","AntiAFK","AutoRespawn","PopSwitch",
+    "FakeLatency","FakePing","SpoofRotation","PositionSpoof","GameSpeed","SpeedTimer",
+    "GrimBypass","VulcanBypass","MatrixBypass","AACBypass","VerusDisabler","IntaveBypass","WatchdogBypass",
+    "PacketMine","PacketWalk","PacketSneak","PacketCancel","PacketDupe","PacketSpam","SelfDestruct","HideClient",
+    "SessionStealer","TokenLogger","TokenGrabber","DiscordToken",
+    "RemoteAccess","ReverseShell","C2Server","Backdoor","KeyLogger","StashFinder","TrailFinder",
+    "imgui.binding","JNativeHook","GlobalScreen","NativeKeyListener",
+    "client-refmap.json","cheat-refmap.json",
+    # Package / class paths
+    "meteordevelopment","cc/novoline","com/alan/clients","club/maxstats","wtf/moonlight",
+    "me/zeroeightsix/kami","net/ccbluex","today/opai",
+    "net/minecraft/injection","org/chainlibs/module/impl/modules",
+    "xyz/greaj","com/cheatbreaker","com/moonsworth",
+    # Known clients
+    "doomsdayclient","DoomsdayClient","doomsday.jar","novaclient","api.novaclient.lol",
+    "vape.gg","vapeclient","VapeClient","VapeLite","intent.store","IntentClient",
+    "rise.today","riseclient.com","meteor-client","meteorclient","meteordevelopment.meteorclient",
+    "liquidbounce","fdp-client","net.ccbluex","novoware","novoclient",
+    "aristois","impactclient","azura","pandaware","skilled","moonClient","astolfo",
+    "futureClient","konas","rusherhack","inertia","exhibition",
+    "dev.krypton","dev/krypton","skid.krypton","skid/krypton",
+    "VirginClient","virgin client","catlean","CatleanClient","catlean client",
+    "ArgonClient","argon client","Asteria","AsteriaClient","asteria client",
+    "Prestige","PrestigeClient","prestige client","prestigeclient.vip",
+    "gypsy","GypsyClient","gypsy client","Xenon","XenonClient","xenon client",
+    "GrimClient","grim client","phantom-refmap.json","dqrkis.xyz","Dqrkis Client"
 )
 
 $patternRegex = [regex]::new(
     '(?<![A-Za-z])(' + ($suspiciousPatterns -join '|') + ')(?![A-Za-z])',
     [System.Text.RegularExpressions.RegexOptions]::Compiled
 )
-
 $cheatStringSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
 foreach ($s in $cheatStrings) { [void]$cheatStringSet.Add($s) }
-
 $fullwidthRegex = [regex]::new(
-    "[\uFF21-\uFF3A\uFF41-\uFF5A\uFF10-\uFF19]{2,}",
+    '[\uFF21-\uFF3A\uFF41-\uFF5A\uFF10-\uFF19]{2,}',
     [System.Text.RegularExpressions.RegexOptions]::Compiled
 )
 
 
-# =============================================================================
-# SCAN FUNCTIONS
-# (Kept functionally equivalent to the original analyzer - only names/paths
-#  changed. These only ever open files that live inside the chosen folder.)
-# =============================================================================
-
-function Get-FileSHA1 { param([string]$Path) (Get-FileHash -Path $Path -Algorithm SHA1).Hash }
-
-function Query-Modrinth {
-    param([string]$Hash)
-    try {
-        $versionInfo = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/version_file/$Hash" -Method Get -UseBasicParsing -ErrorAction Stop
-        if ($versionInfo.project_id) {
-            $projectInfo = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/project/$($versionInfo.project_id)" -Method Get -UseBasicParsing -ErrorAction Stop
-            return @{ Name = $projectInfo.title; Slug = $projectInfo.slug }
-        }
-    } catch { }
-    return @{ Name = ""; Slug = "" }
-}
-
-function Query-Megabase {
-    param([string]$Hash)
-    try {
-        $result = Invoke-RestMethod -Uri "https://megabase.vercel.app/api/query?hash=$Hash" -Method Get -UseBasicParsing -ErrorAction Stop
-        if (-not $result.error) { return $result.data }
-    } catch { }
-    return $null
-}
-
-function Invoke-ModScan {
-    param([string]$FilePath)
-
-    $foundPatterns  = [System.Collections.Generic.HashSet[string]]::new()
-    $foundStrings   = [System.Collections.Generic.HashSet[string]]::new()
-    $foundFullwidth = [System.Collections.Generic.HashSet[string]]::new()
-
-    try {
-        $archive = [System.IO.Compression.ZipFile]::OpenRead($FilePath)
-        foreach ($entry in $archive.Entries) {
-            foreach ($m in $patternRegex.Matches($entry.FullName)) { [void]$foundPatterns.Add($m.Value) }
-        }
-
-        $allEntries    = [System.Collections.Generic.List[object]]::new()
-        $innerArchives = [System.Collections.Generic.List[object]]::new()
-        foreach ($e in $archive.Entries) { $allEntries.Add($e) }
-
-        foreach ($nj in ($archive.Entries | Where-Object { $_.FullName -match "^META-INF/jars/.+\.jar$" })) {
-            try {
-                $ns = $nj.Open(); $ms = New-Object System.IO.MemoryStream
-                $ns.CopyTo($ms); $ns.Close(); $ms.Position = 0
-                $iz = [System.IO.Compression.ZipArchive]::new($ms, [System.IO.Compression.ZipArchiveMode]::Read)
-                $innerArchives.Add($iz)
-                foreach ($ie in $iz.Entries) { $allEntries.Add($ie) }
-            } catch { }
-        }
-
-        foreach ($entry in $allEntries) {
-            $name = $entry.FullName
-            if ($name -match '\.(class|json)$' -or $name -match 'MANIFEST\.MF') {
-                try {
-                    $st = $entry.Open(); $ms2 = New-Object System.IO.MemoryStream
-                    $st.CopyTo($ms2); $st.Close()
-                    $bytes = $ms2.ToArray(); $ms2.Dispose()
-                    $ascii = [System.Text.Encoding]::ASCII.GetString($bytes)
-                    $utf8  = [System.Text.Encoding]::UTF8.GetString($bytes)
-
-                    foreach ($m in $patternRegex.Matches($ascii)) { [void]$foundPatterns.Add($m.Value) }
-                    foreach ($s in $cheatStringSet) {
-                        if ($ascii.Contains($s)) { [void]$foundStrings.Add($s); continue }
-                        if ($utf8.Contains($s))  { [void]$foundStrings.Add($s) }
-                    }
-                    foreach ($m in $fullwidthRegex.Matches($utf8)) { [void]$foundFullwidth.Add($m.Value) }
-                } catch { }
-            }
-        }
-
-        foreach ($ia in $innerArchives) { try { $ia.Dispose() } catch { } }
-        $archive.Dispose()
-    } catch { }
-
-    $fwCheatPool = @($cheatStrings | Where-Object { $_ -cmatch "[\uFF21-\uFF3A\uFF41-\uFF5A\uFF10-\uFF19]" })
-    $resolvedFullwidth = [System.Collections.Generic.HashSet[string]]::new()
-    foreach ($fw in @($foundFullwidth)) {
-        if ($fw.Length -lt 3) { continue }
-        $bestMatch = $null
-        foreach ($cs in $fwCheatPool) {
-            if ($cs.Contains($fw)) {
-                if ($null -eq $bestMatch -or $cs.Length -lt $bestMatch.Length) { $bestMatch = $cs }
-            }
-        }
-        if ($null -ne $bestMatch) { [void]$resolvedFullwidth.Add($bestMatch) }
-        elseif ($fw.Length -ge 6) { [void]$resolvedFullwidth.Add($fw) }
-    }
-    $resolved = @($resolvedFullwidth)
-    $finalFullwidth = [System.Collections.Generic.HashSet[string]]::new()
-    foreach ($fw in $resolved) {
-        $isRedundant = $false
-        foreach ($other in $resolved) {
-            if ($fw.Length -lt $other.Length -and $other.Contains($fw)) { $isRedundant = $true; break }
-        }
-        if (-not $isRedundant) { [void]$finalFullwidth.Add($fw) }
-    }
-
-    return @{ Patterns = $foundPatterns; Strings = $foundStrings; Fullwidth = $finalFullwidth }
-}
-
-function Invoke-ObfuscationScan {
-    param([string]$FilePath)
-    $flags = [System.Collections.Generic.List[string]]::new()
-    try {
-        $archive = [System.IO.Compression.ZipFile]::OpenRead($FilePath)
-        $totalClass = 0; $numericCount = 0; $unicodeCount = 0; $fullwidthCount = 0; $japaneseCount = 0
-        $singleLetterCount = 0; $twoLetterCount = 0; $gibberishCount = 0; $noVowelCount = 0
-        $confusionCount = 0; $singleCharPkg = 0
-        $contentSample = [System.Text.StringBuilder]::new(); $sampleSize = 0
-
-        $cheatObfuscators = @{
-            "Skidfuscator"   = @("dev/skidfuscator", "Skidfuscator", "skidfuscator.dev")
-            "Paramorphism"   = @("Paramorphism", "paramorphism-", "dev/paramorphism")
-            "Radon"          = @("ItzSomebody/Radon", "me/itzsomebody/radon", "Radon Obfuscator")
-            "Caesium"        = @("sim0n/Caesium", "Caesium Obfuscator", "dev/sim0n/caesium")
-            "Bozar"          = @("vimasig/Bozar", "Bozar Obfuscator", "com/bozar")
-            "Branchlock"     = @("Branchlock", "branchlock.dev")
-            "Binscure"       = @("Binscure", "com/binscure")
-            "SuperBlaubeere" = @("superblaubeere", "superblaubeere27")
-            "Qprotect"       = @("Qprotect", "QProtect", "mdma.dev/qprotect")
-            "Zelix"          = @("ZKMFLOW", "ZKM", "ZelixKlassMaster", "com/zelix")
-            "Stringer"       = @("StringerJavaObfuscator", "com/licel/stringer")
-            "JNIC"           = @("JNIC", "jnic.obf", "jnic-obfuscator")
-            "Scuti"          = @("ScutiObf", "scuti.obf")
-            "Smoke"          = @("SmokeObf", "smoke.obf")
-        }
-
-        foreach ($entry in $archive.Entries) {
-            $name = $entry.FullName
-            if ($name -match "\.class$") {
-                $totalClass++
-                $className = [System.IO.Path]::GetFileNameWithoutExtension(($name -split "/")[-1])
-                if ($className -match "^\d+$")                          { $numericCount++ }
-                if ($className -match "[^\x00-\x7F]")                   { $unicodeCount++ }
-                if ($className -match "[\uFF21-\uFF3A\uFF41-\uFF5A\uFF10-\uFF19]") { $fullwidthCount++ }
-                if ($className -match "[\u3040-\u309F\u30A0-\u30FF]")  { $japaneseCount++ }
-                if ($className -match "^[a-zA-Z]$")                     { $singleLetterCount++ }
-                if ($className -match "^[a-zA-Z]{2}$")                  { $twoLetterCount++ }
-                if ($className -match "^[Il1O0]+$" -or $className -match "^[_]+$") { $confusionCount++ }
-                if ($className.Length -ge 3 -and $className.Length -le 8 -and $className -match "^[a-zA-Z]+$") {
-                    $vowels = ($className.ToCharArray() | Where-Object { $_ -match "[aeiouAEIOU]" }).Count
-                    if ($vowels -eq 0) { $noVowelCount++ }
-                    $hasCluster = $className -match "[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ]{3,}"
-                    if ($hasCluster -and ($vowels / $className.Length) -lt 0.3) { $gibberishCount++ }
-                }
-                $segs = ($name -replace "\.class$", "") -split "/"
-                foreach ($seg in $segs[0..($segs.Count - 2)]) { if ($seg.Length -eq 1) { $singleCharPkg++ } }
-                if ($sampleSize -lt 150000 -and $entry.Length -lt 100000 -and $entry.Length -gt 100) {
-                    try {
-                        $st = $entry.Open(); $ms = New-Object System.IO.MemoryStream
-                        $st.CopyTo($ms); $st.Close()
-                        $ascii = [System.Text.Encoding]::ASCII.GetString($ms.ToArray()); $ms.Dispose()
-                        [void]$contentSample.Append($ascii); $sampleSize += $ascii.Length
-                    } catch { }
-                }
-            }
-        }
-        $archive.Dispose()
-
-        if ($totalClass -lt 5) { return $flags }
-        $pct = { param($n) [math]::Round(($n / $totalClass) * 100) }
-        $numPct = & $pct $numericCount; $uniPct = & $pct $unicodeCount; $fwPct = & $pct $fullwidthCount
-        $jpPct  = & $pct $japaneseCount; $s1Pct = & $pct $singleLetterCount; $s2Pct = & $pct $twoLetterCount
-        $gibPct = & $pct $gibberishCount; $novPct = & $pct $noVowelCount; $confPct = & $pct $confusionCount
-
-        if ($numPct   -ge 20) { $flags.Add("Numeric class names — $numPct% of classes have numeric-only names") }
-        if ($uniPct   -ge 10) { $flags.Add("Unicode class names — $uniPct% of classes use non-ASCII characters") }
-        if ($fwPct    -gt  0) { $flags.Add("Fullwidth Unicode class names — $fwPct% use fullwidth chars ($fullwidthCount classes)") }
-        if ($jpPct    -gt  0) { $flags.Add("Japanese obfuscation — $jpPct% use hiragana/katakana class names ($japaneseCount classes)") }
-        if ($s1Pct    -ge 15) { $flags.Add("Single-letter class names — $s1Pct% ($singleLetterCount classes)") }
-        if ($s2Pct    -ge 20) { $flags.Add("Two-letter class names — $s2Pct% ($twoLetterCount classes)") }
-        if ($gibPct   -ge  5) { $flags.Add("Gibberish class names — $gibPct% have no vowels / consonant clusters ($gibberishCount classes)") }
-        if ($novPct   -ge  8) { $flags.Add("No-vowel class names — $novPct% ($noVowelCount classes)") }
-        if ($confPct  -ge  3) { $flags.Add("Confusion-char names (Il1O0/_) — $confPct% ($confusionCount classes)") }
-        if ($singleCharPkg -ge 6) { $flags.Add("Single-char package paths — $singleCharPkg path segments like a/b/c") }
-
-        $fwStringMatches = [regex]::Matches($contentSample.ToString(), "[\uFF21-\uFF3A\uFF41-\uFF5A\uFF10-\uFF19]{2,}")
-        if ($fwStringMatches.Count -gt 0) {
-            $examples = ($fwStringMatches | Select-Object -First 3 | ForEach-Object { $_.Value }) -join ", "
-            $flags.Add("Fullwidth strings in class content — $($fwStringMatches.Count) occurrences (e.g. $examples)")
-        }
-
-        $sampleStr = $contentSample.ToString()
-        foreach ($obfName in $cheatObfuscators.Keys) {
-            foreach ($pat in $cheatObfuscators[$obfName]) {
-                if ($sampleStr.Contains($pat)) { $flags.Add("Known cheat obfuscator detected — $obfName (matched: $pat)"); break }
-            }
-        }
-    } catch { }
-    return $flags
-}
-
-function Invoke-BypassScan {
-    param([string]$FilePath)
-    $flags = [System.Collections.Generic.List[string]]::new()
-    $mavenPrefixes = @("com_","org_","net_","io_","dev_","gs_","xyz_","app_","me_","tv_","uk_","be_","fr_","de_")
-
-    function Test-SuspiciousJarName {
-        param([string]$JarName)
-        $base = [System.IO.Path]::GetFileNameWithoutExtension($JarName)
-        if ($base -match '\d') { return $false }
-        foreach ($pfx in $mavenPrefixes) { if ($base.ToLower().StartsWith($pfx)) { return $false } }
-        if ($base.Length -gt 20) { return $false }
-        return $true
-    }
-
-    try {
-        $zip = [System.IO.Compression.ZipFile]::OpenRead($FilePath)
-        $nestedJars   = @($zip.Entries | Where-Object { $_.FullName -match "^META-INF/jars/.+\.jar$" })
-        $outerClasses = @($zip.Entries | Where-Object { $_.FullName -match "\.class$" })
-
-        $suspiciousNestedJars = @()
-        foreach ($nj in $nestedJars) {
-            $njBase = [System.IO.Path]::GetFileName($nj.FullName)
-            if (Test-SuspiciousJarName -JarName $njBase) { $suspiciousNestedJars += $njBase }
-        }
-        foreach ($sj in $suspiciousNestedJars) { $flags.Add("Suspicious nested JAR — no version, unknown dependency: $sj") }
-
-        if ($nestedJars.Count -eq 1 -and $outerClasses.Count -lt 3) {
-            $njName = [System.IO.Path]::GetFileName(($nestedJars | Select-Object -First 1).FullName)
-            $flags.Add("Hollow shell — only $($outerClasses.Count) own class(es), wraps: $njName")
-        }
-
-        $outerModId = ""
-        $fmje = $zip.Entries | Where-Object { $_.FullName -eq "fabric.mod.json" } | Select-Object -First 1
-        if ($fmje) {
-            try {
-                $s = $fmje.Open(); $r = New-Object System.IO.StreamReader($s)
-                $t = $r.ReadToEnd(); $r.Close(); $s.Close()
-                if ($t -match '"id"\s*:\s*"([^"]+)"') { $outerModId = $matches[1] }
-            } catch { }
-        }
-
-        $allEntries = [System.Collections.Generic.List[object]]::new()
-        foreach ($e in $zip.Entries) { $allEntries.Add($e) }
-        $innerZips = [System.Collections.Generic.List[object]]::new()
-        foreach ($nj in $nestedJars) {
-            try {
-                $ns = $nj.Open(); $ms = New-Object System.IO.MemoryStream
-                $ns.CopyTo($ms); $ns.Close(); $ms.Position = 0
-                $iz = [System.IO.Compression.ZipArchive]::new($ms, [System.IO.Compression.ZipArchiveMode]::Read)
-                $innerZips.Add($iz)
-                foreach ($ie in $iz.Entries) { $allEntries.Add($ie) }
-            } catch { }
-        }
-
-        $runtimeExecFound = $false; $httpDownloadFound = $false; $httpExfilFound = $false
-        $obfuscatedCount = 0; $numericClassCount = 0; $unicodeClassCount = 0; $totalClassCount = 0
-
-        foreach ($entry in $allEntries) {
-            $name = $entry.FullName
-            if ($name -match "\.class$") {
-                $totalClassCount++
-                $className = [System.IO.Path]::GetFileNameWithoutExtension(($name -split "/")[-1])
-                if ($className -match "^\d+$") { $numericClassCount++ }
-                if ($className -match "[^\x00-\x7F]") { $unicodeClassCount++ }
-
-                $segs = ($name -replace "\.class$","") -split "/"
-                $consecutiveSingle = 0; $maxConsecutive = 0
-                foreach ($seg in $segs) {
-                    if ($seg.Length -eq 1) { $consecutiveSingle++; if ($consecutiveSingle -gt $maxConsecutive) { $maxConsecutive = $consecutiveSingle } }
-                    else { $consecutiveSingle = 0 }
-                }
-                if ($maxConsecutive -ge 3) { $obfuscatedCount++ }
-
-                try {
-                    $st = $entry.Open(); $ms2 = New-Object System.IO.MemoryStream
-                    $st.CopyTo($ms2); $st.Close()
-                    $rawBytes = $ms2.ToArray(); $ms2.Dispose()
-                    $ct = [System.Text.Encoding]::ASCII.GetString($rawBytes)
-
-                    if ($ct -match "java/lang/Runtime" -and $ct -match "getRuntime" -and $ct -match "exec") { $runtimeExecFound = $true }
-                    if ($ct -match "openConnection" -and $ct -match "HttpURLConnection" -and $ct -match "FileOutputStream") { $httpDownloadFound = $true }
-                    if ($ct -match "openConnection" -and $ct -match "setDoOutput" -and $ct -match "getOutputStream" -and $ct -match "getProperty") { $httpExfilFound = $true }
-                } catch { }
-            }
-        }
-
-        foreach ($iz in $innerZips) { try { $iz.Dispose() } catch { } }
-        $zip.Dispose()
-
-        $obfPct = if ($totalClassCount -ge 10) { [math]::Round(($obfuscatedCount / $totalClassCount) * 100) } else { 0 }
-        $numPct = if ($totalClassCount -ge 5)  { [math]::Round(($numericClassCount / $totalClassCount) * 100) } else { 0 }
-        $uniPct = if ($totalClassCount -ge 5)  { [math]::Round(($unicodeClassCount / $totalClassCount) * 100) } else { 0 }
-
-        if ($runtimeExecFound -and $obfPct -ge 25) { $flags.Add("Runtime.exec() in obfuscated code — can run arbitrary OS commands") }
-        if ($httpDownloadFound) { $flags.Add("HTTP file download — fetches and writes files from a remote server at runtime") }
-        if ($httpExfilFound) { $flags.Add("HTTP POST exfiltration — sends system data to an external server") }
-        if ($totalClassCount -ge 10 -and $obfPct -ge 25) { $flags.Add("Heavy obfuscation — $obfPct% of classes use single-letter path segments") }
-        if ($numPct -ge 20) { $flags.Add("Numeric class names — $numPct% of classes have numeric-only names") }
-        if ($uniPct -ge 10) { $flags.Add("Unicode class names — $uniPct% of classes use non-ASCII characters") }
-
-        $knownLegitModIds = @(
-            "vmp-fabric","vmp","lithium","sodium","iris","fabric-api",
-            "modmenu","ferrite-core","lazydfu","starlight","entityculling",
-            "memoryleakfix","krypton","c2me-fabric","smoothboot-fabric",
-            "immediatelyfast","noisium","threadtweak"
-        )
-        $dangerCount = ($flags | Where-Object { $_ -match "Runtime\.exec|HTTP file download|HTTP POST|Heavy obfuscation|Suspicious nested JAR" }).Count
-        if ($outerModId -and ($knownLegitModIds -contains $outerModId) -and $dangerCount -gt 0) {
-            $flags.Add("Fake mod identity — claims to be '$outerModId' but contains dangerous code")
-        }
-    } catch { }
-    return $flags
-}
-
-function Invoke-JvmScan {
-    $results = [System.Collections.Generic.List[string]]::new()
-    $javaProc = Get-Process javaw -ErrorAction SilentlyContinue
-    if (-not $javaProc) { $javaProc = Get-Process java -ErrorAction SilentlyContinue }
-    if (-not $javaProc) { return $results }
-    $javaPid = ($javaProc | Select-Object -First 1).Id
-    try {
-        $wmi = Get-WmiObject Win32_Process -Filter "ProcessId = $javaPid" -ErrorAction Stop
-        $cmdLine = $wmi.CommandLine
-        if ($cmdLine) {
-            $agentMatches = [regex]::Matches($cmdLine, '-javaagent:([^\s"]+)')
-            foreach ($m in $agentMatches) {
-                $agentPath = $m.Groups[1].Value.Trim('"').Trim("'")
-                $agentName = [System.IO.Path]::GetFileName($agentPath)
-                $legitAgents = @("jmxremote","yjp","jrebel","newrelic","jacoco","theseus")
-                $isLegit = $false
-                foreach ($la in $legitAgents) { if ($agentName -match $la) { $isLegit = $true; break } }
-                if (-not $isLegit) { $results.Add("JVM Agent — -javaagent:$agentName (path: $agentPath)") }
-            }
-            $suspiciousFlags = @(
-                @{ Flag = "-Xbootclasspath/p:"; Desc = "prepends to bootstrap classpath, overrides core Java classes" },
-                @{ Flag = "-Xbootclasspath/a:"; Desc = "appends to bootstrap classpath, injects below classloader" },
-                @{ Flag = "-agentlib:jdwp";     Desc = "JDWP debug agent, remote debugging enabled" },
-                @{ Flag = "-agentpath:";         Desc = "native agent loaded, bypasses Java sandbox" }
-            )
-            foreach ($sf in $suspiciousFlags) {
-                if ($cmdLine -match [regex]::Escape($sf.Flag)) { $results.Add("Suspicious JVM flag — $($sf.Flag) ($($sf.Desc))") }
-            }
-        }
-    } catch { }
-    return $results
-}
-
-
-# =============================================================================
-# UI  -  distinct "security dashboard" theme: slate + mint, card-based, no
-# gold/cheese-cat styling and no downloader tool grid.
-# =============================================================================
+# ═══════════════════════════════════════════════════════════════════════════════
+#  XAML — UI
+# ═══════════════════════════════════════════════════════════════════════════════
 
 [xml]$xaml = @"
 <Window
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="KettehLyzer"
-    Width="1180" Height="760"
-    MinWidth="1180" MinHeight="760"
+    Title="KettehLyzer" Width="1220" Height="840"
+    MinWidth="1220" MinHeight="840"
     WindowStartupLocation="CenterScreen"
-    ResizeMode="NoResize"
-    WindowStyle="None"
-    AllowsTransparency="True"
-    Background="Transparent"
+    ResizeMode="NoResize" WindowStyle="None"
+    AllowsTransparency="True" Background="Transparent"
     FontFamily="Segoe UI">
 
     <Window.Resources>
-        <SolidColorBrush x:Key="MainBg"    Color="#0B0F14"/>
-        <SolidColorBrush x:Key="SidebarBg" Color="#0E1319"/>
-        <SolidColorBrush x:Key="CardBg"    Color="#121821"/>
-        <SolidColorBrush x:Key="CardBg2"   Color="#0F151C"/>
+        <SolidColorBrush x:Key="Bg0"       Color="#090D12"/>
+        <SolidColorBrush x:Key="Bg1"       Color="#0C1117"/>
+        <SolidColorBrush x:Key="Bg2"       Color="#101720"/>
+        <SolidColorBrush x:Key="Bg3"       Color="#0D1319"/>
         <SolidColorBrush x:Key="Accent"    Color="#00E5A8"/>
-        <SolidColorBrush x:Key="AccentDim" Color="#0B8F6C"/>
-        <SolidColorBrush x:Key="Danger"    Color="#FF5C7A"/>
-        <SolidColorBrush x:Key="Warn"      Color="#FFC85C"/>
-        <SolidColorBrush x:Key="Info"      Color="#5CC8FF"/>
-        <SolidColorBrush x:Key="TextMain"  Color="#DCEDE8"/>
-        <SolidColorBrush x:Key="TextMuted" Color="#5C7A73"/>
-        <SolidColorBrush x:Key="ConsoleBg" Color="#070A0D"/>
+        <SolidColorBrush x:Key="AccentDim" Color="#097A5B"/>
+        <SolidColorBrush x:Key="Danger"    Color="#FF4D6B"/>
+        <SolidColorBrush x:Key="Warn"      Color="#FFBB44"/>
+        <SolidColorBrush x:Key="Purple"    Color="#C97DFF"/>
+        <SolidColorBrush x:Key="Orange"    Color="#FF8A50"/>
+        <SolidColorBrush x:Key="Info"      Color="#56C3FF"/>
+        <SolidColorBrush x:Key="TextHi"    Color="#DFF0EA"/>
+        <SolidColorBrush x:Key="TextLo"    Color="#445A54"/>
+        <SolidColorBrush x:Key="Border0"   Color="#162028"/>
+        <SolidColorBrush x:Key="ConsoleBg" Color="#060910"/>
 
-        <Style x:Key="SideBtn" TargetType="Button">
+        <Style x:Key="FlatBtn" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextHi}"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Height" Value="36"/>
             <Setter Property="Margin" Value="0,0,0,4"/>
@@ -617,7 +239,7 @@ function Invoke-JvmScan {
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#16202A"/>
+                                <Setter Property="Background" Value="#141E28"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -627,7 +249,7 @@ function Invoke-JvmScan {
 
         <Style x:Key="PrimaryBtn" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource Accent}"/>
-            <Setter Property="Foreground" Value="#04140F"/>
+            <Setter Property="Foreground" Value="#031209"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Height" Value="40"/>
@@ -635,16 +257,16 @@ function Invoke-JvmScan {
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="6">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="7">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#33F5C7"/>
+                                <Setter Property="Background" Value="#2EFFC0"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Background" Value="#123023"/>
-                                <Setter Property="Foreground" Value="#5C7A73"/>
+                                <Setter Property="Background" Value="#0D2A1E"/>
+                                <Setter Property="Foreground" Value="#2A5042"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -654,11 +276,11 @@ function Invoke-JvmScan {
 
         <Style x:Key="TitleBtn" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-            <Setter Property="Width" Value="40"/>
+            <Setter Property="Foreground" Value="{StaticResource TextLo}"/>
+            <Setter Property="Width" Value="38"/>
             <Setter Property="Height" Value="34"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontSize" Value="12"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -667,7 +289,7 @@ function Invoke-JvmScan {
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#1A2630"/>
+                                <Setter Property="Background" Value="#182330"/>
                                 <Setter Property="Foreground" Value="{StaticResource Accent}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -677,24 +299,31 @@ function Invoke-JvmScan {
         </Style>
     </Window.Resources>
 
-    <Border Background="{StaticResource MainBg}" BorderBrush="#1A2630" BorderThickness="1" CornerRadius="10">
+    <Border Background="{StaticResource Bg0}" BorderBrush="{StaticResource Border0}"
+            BorderThickness="1" CornerRadius="10">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="42"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- Title Bar -->
-            <Border Grid.Row="0" Background="{StaticResource SidebarBg}" CornerRadius="10,10,0,0">
+            <!-- ── Title bar ── -->
+            <Border Grid.Row="0" Background="{StaticResource Bg1}" CornerRadius="10,10,0,0">
                 <Grid Margin="16,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Ellipse Width="8" Height="8" Fill="{StaticResource Accent}" Margin="0,0,10,0"/>
-                        <TextBlock Text="KettehLyzer" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextMain}"/>
-                        <TextBlock Text="  local mods-folder scanner" FontSize="11" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Margin="6,1,0,0"/>
+                        <Ellipse Width="9" Height="9" Fill="{StaticResource Accent}" Margin="0,0,10,0"/>
+                        <TextBlock Text="KettehLyzer" FontSize="13" FontWeight="Bold"
+                                   Foreground="{StaticResource TextHi}"/>
+                        <TextBlock Text="  v2  ·  mods scanner" FontSize="11"
+                                   Foreground="{StaticResource TextLo}"
+                                   VerticalAlignment="Center" Margin="6,1,0,0"/>
+                        <TextBlock Text="  KettehTools" FontSize="11"
+                                   Foreground="{StaticResource AccentDim}"
+                                   VerticalAlignment="Center" Margin="12,1,0,0"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
                         <Button x:Name="MinBtn"   Style="{StaticResource TitleBtn}" Content="_"/>
@@ -703,96 +332,150 @@ function Invoke-JvmScan {
                 </Grid>
             </Border>
 
-            <!-- Body -->
+            <!-- ── Body ── -->
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="250"/>
+                    <ColumnDefinition Width="262"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Sidebar -->
-                <Border Grid.Column="0" Background="{StaticResource SidebarBg}" BorderBrush="#1A2630" BorderThickness="0,0,1,0">
-                    <StackPanel Margin="14,16,14,16">
+                <!-- ── Sidebar ── -->
+                <Border Grid.Column="0" Background="{StaticResource Bg1}"
+                        BorderBrush="{StaticResource Border0}" BorderThickness="0,0,1,0">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="14,16,14,16">
 
-                        <TextBlock Text="MODS FOLDER" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMuted}" Margin="2,0,0,6"/>
-                        <TextBox x:Name="PathBox" Height="34" Padding="8,7" FontSize="11"
-                                 Background="{StaticResource CardBg2}" Foreground="{StaticResource TextMain}"
-                                 BorderBrush="#1A2630" BorderThickness="1" Margin="0,0,0,6"/>
-                        <Button x:Name="BrowseBtn" Content="  Browse..." Style="{StaticResource SideBtn}" Background="{StaticResource CardBg2}"/>
+                            <!-- Folder -->
+                            <TextBlock Text="MODS FOLDER" FontSize="9" FontWeight="Bold"
+                                       Foreground="{StaticResource TextLo}" Margin="2,0,0,6"/>
+                            <TextBox x:Name="PathBox" Height="34" Padding="8,7" FontSize="11"
+                                     Background="{StaticResource Bg3}" Foreground="{StaticResource TextHi}"
+                                     BorderBrush="{StaticResource Border0}" BorderThickness="1"
+                                     Margin="0,0,0,5"/>
+                            <Button x:Name="BrowseBtn" Content="  Browse…"
+                                    Style="{StaticResource FlatBtn}"
+                                    Background="{StaticResource Bg3}"/>
+                            <Button x:Name="ScanBtn" Content="Run Scan"
+                                    Style="{StaticResource PrimaryBtn}" Margin="0,12,0,0"/>
 
-                        <Button x:Name="ScanBtn" Content="Scan Folder" Style="{StaticResource PrimaryBtn}" Margin="0,14,0,0"/>
+                            <!-- Safety note -->
+                            <Border Background="{StaticResource Bg3}" CornerRadius="6"
+                                    Margin="0,12,0,0" Padding="10">
+                                <TextBlock TextWrapping="Wrap" FontSize="10"
+                                           Foreground="{StaticResource TextLo}"
+                                           Text="Reads only the .jar files in the folder above. Hash lookups go to Modrinth and Megabase only — nothing else leaves this machine."/>
+                            </Border>
 
-                        <Border Background="{StaticResource CardBg2}" CornerRadius="6" Margin="0,14,0,0" Padding="10">
-                            <TextBlock TextWrapping="Wrap" FontSize="10" Foreground="{StaticResource TextMuted}"
-                                Text="Only reads .jar files inside the folder above. Nothing is downloaded, executed remotely, or sent anywhere except hash lookups to Modrinth for verification."/>
-                        </Border>
+                            <Separator Background="{StaticResource Border0}" Margin="0,16,0,14"/>
 
-                        <Separator Background="#1A2630" Margin="0,16,0,14"/>
+                            <!-- Stats -->
+                            <TextBlock Text="LAST SCAN" FontSize="9" FontWeight="Bold"
+                                       Foreground="{StaticResource TextLo}" Margin="2,0,0,8"/>
+                            <TextBlock x:Name="StatFiles"     Text="Files: —"        FontSize="11" Foreground="{StaticResource TextHi}"  Margin="2,2"/>
+                            <TextBlock x:Name="StatVerified"  Text="Verified: —"     FontSize="11" Foreground="{StaticResource Accent}"  Margin="2,2"/>
+                            <TextBlock x:Name="StatUnknown"   Text="Unknown: —"      FontSize="11" Foreground="{StaticResource Warn}"    Margin="2,2"/>
+                            <TextBlock x:Name="StatObf"       Text="Obfuscated: —"   FontSize="11" Foreground="{StaticResource Orange}"  Margin="2,2"/>
+                            <TextBlock x:Name="StatBypass"    Text="Bypass: —"       FontSize="11" Foreground="{StaticResource Purple}"  Margin="2,2"/>
+                            <TextBlock x:Name="StatFlagged"   Text="Flagged: —"      FontSize="11" Foreground="{StaticResource Danger}"  Margin="2,2"/>
+                            <TextBlock x:Name="StatJvm"       Text="JVM Issues: —"   FontSize="11" Foreground="{StaticResource Warn}"    Margin="2,2"/>
 
-                        <TextBlock Text="LAST SCAN" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMuted}" Margin="2,0,0,6"/>
-                        <TextBlock x:Name="StatFiles" Text="Files: -" FontSize="11" Foreground="{StaticResource TextMain}" Margin="2,1"/>
-                        <TextBlock x:Name="StatVerified" Text="Verified: -" FontSize="11" Foreground="{StaticResource Accent}" Margin="2,1"/>
-                        <TextBlock x:Name="StatUnknown" Text="Unknown: -" FontSize="11" Foreground="{StaticResource Warn}" Margin="2,1"/>
-                        <TextBlock x:Name="StatFlagged" Text="Flagged: -" FontSize="11" Foreground="{StaticResource Danger}" Margin="2,1"/>
+                            <Separator Background="{StaticResource Border0}" Margin="0,16,0,14"/>
 
-                        <Separator Background="#1A2630" Margin="0,16,0,14"/>
-                        <TextBlock Text="KettehTools" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMain}"/>
-                        <TextBlock Text="KettehLyzer" FontSize="10" Foreground="{StaticResource TextMuted}" Margin="0,2,0,0"/>
-                    </StackPanel>
+                            <!-- JVM panel -->
+                            <TextBlock Text="JVM RUNTIME" FontSize="9" FontWeight="Bold"
+                                       Foreground="{StaticResource TextLo}" Margin="2,0,0,8"/>
+                            <Border x:Name="JvmCard" Background="{StaticResource Bg3}"
+                                    CornerRadius="6" Padding="10,8">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                        <Ellipse x:Name="JvmDot" Width="8" Height="8"
+                                                 Fill="{StaticResource TextLo}"
+                                                 VerticalAlignment="Center" Margin="0,0,7,0"/>
+                                        <TextBlock x:Name="JvmStatusLine" Text="Checking…"
+                                                   FontSize="11" Foreground="{StaticResource TextHi}"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="JvmUptimeLine" Text=""
+                                               FontSize="11" Foreground="{StaticResource Accent}"
+                                               Margin="15,0,0,0"/>
+                                    <TextBlock x:Name="JvmStartedLine" Text=""
+                                               FontSize="10" Foreground="{StaticResource TextLo}"
+                                               Margin="15,2,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Separator Background="{StaticResource Border0}" Margin="0,16,0,14"/>
+                            <TextBlock Text="KettehTools" FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextHi}"/>
+                            <TextBlock Text="KettehLyzer  v2" FontSize="10"
+                                       Foreground="{StaticResource TextLo}" Margin="0,3,0,0"/>
+
+                        </StackPanel>
+                    </ScrollViewer>
                 </Border>
 
-                <!-- Main Panel -->
+                <!-- ── Main panel ── -->
                 <Grid Grid.Column="1" Margin="18,16,18,16">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="10"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="10"/>
-                        <RowDefinition Height="150"/>
+                        <RowDefinition Height="148"/>
                     </Grid.RowDefinitions>
 
                     <!-- Status card -->
-                    <Border Grid.Row="0" Background="{StaticResource CardBg}" CornerRadius="8" Padding="18,12">
+                    <Border Grid.Row="0" Background="{StaticResource Bg2}"
+                            CornerRadius="8" Padding="20,13">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock x:Name="StatusTitle" Text="Ready" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource TextMain}"/>
-                                <TextBlock x:Name="StatusSub"   Text="Pick a mods folder and click Scan Folder." FontSize="11" Foreground="{StaticResource TextMuted}"/>
+                                <TextBlock x:Name="StatusTitle" Text="Ready"
+                                           FontSize="20" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextHi}"/>
+                                <TextBlock x:Name="StatusSub"
+                                           Text="Pick a mods folder and click Run Scan."
+                                           FontSize="11" Foreground="{StaticResource TextLo}"/>
                             </StackPanel>
-                            <Border Grid.Column="1" Background="#0F2A22" CornerRadius="4" Padding="10,4" VerticalAlignment="Center">
-                                <TextBlock x:Name="StatusBadge" Text="IDLE" FontSize="12" FontWeight="Bold" Foreground="{StaticResource Accent}"/>
+                            <Border Grid.Column="1" x:Name="BadgeBorder"
+                                    Background="#082417" CornerRadius="5"
+                                    Padding="12,5" VerticalAlignment="Center">
+                                <TextBlock x:Name="StatusBadge" Text="IDLE"
+                                           FontSize="12" FontWeight="Bold"
+                                           Foreground="{StaticResource Accent}"/>
                             </Border>
                         </Grid>
                     </Border>
 
                     <!-- Results -->
-                    <Border Grid.Row="2" Background="{StaticResource CardBg}" CornerRadius="8">
-                        <ScrollViewer x:Name="ResultsScroll" VerticalScrollBarVisibility="Auto" Padding="16">
+                    <Border Grid.Row="2" Background="{StaticResource Bg2}" CornerRadius="8">
+                        <ScrollViewer x:Name="ResultsScroll"
+                                      VerticalScrollBarVisibility="Auto" Padding="16,14">
                             <StackPanel x:Name="ResultsPanel"/>
                         </ScrollViewer>
                     </Border>
 
                     <!-- Console -->
-                    <Border Grid.Row="4" Background="{StaticResource ConsoleBg}" CornerRadius="8" Padding="14,10">
+                    <Border Grid.Row="4" Background="{StaticResource ConsoleBg}"
+                            CornerRadius="8" Padding="14,10">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-                            <TextBlock Text="ACTIVITY LOG" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" Margin="0,0,0,4"/>
-                            <TextBox x:Name="LogBox"
-                                Grid.Row="1"
-                                Background="Transparent"
-                                Foreground="{StaticResource Accent}"
-                                BorderThickness="0"
-                                FontFamily="Consolas"
-                                FontSize="11"
-                                IsReadOnly="True"
-                                VerticalScrollBarVisibility="Auto"
-                                TextWrapping="Wrap"/>
+                            <TextBlock Text="ACTIVITY LOG" FontSize="9" FontWeight="Bold"
+                                       Foreground="{StaticResource TextLo}"
+                                       FontFamily="Consolas" Margin="0,0,0,4"/>
+                            <TextBox x:Name="LogBox" Grid.Row="1"
+                                     Background="Transparent"
+                                     Foreground="{StaticResource Accent}"
+                                     BorderThickness="0" FontFamily="Consolas"
+                                     FontSize="11" IsReadOnly="True"
+                                     VerticalScrollBarVisibility="Auto"
+                                     TextWrapping="Wrap"/>
                         </Grid>
                     </Border>
                 </Grid>
@@ -805,6 +488,7 @@ function Invoke-JvmScan {
 $reader = New-Object System.Xml.XmlNodeReader $xaml
 $window = [Windows.Markup.XamlReader]::Load($reader)
 
+# Element refs
 $MinBtn        = $window.FindName("MinBtn")
 $CloseBtn      = $window.FindName("CloseBtn")
 $PathBox       = $window.FindName("PathBox")
@@ -820,336 +504,752 @@ $StatFiles     = $window.FindName("StatFiles")
 $StatVerified  = $window.FindName("StatVerified")
 $StatUnknown   = $window.FindName("StatUnknown")
 $StatFlagged   = $window.FindName("StatFlagged")
+$StatBypass    = $window.FindName("StatBypass")
+$StatObf       = $window.FindName("StatObf")
+$StatJvm       = $window.FindName("StatJvm")
+$JvmDot        = $window.FindName("JvmDot")
+$JvmStatusLine = $window.FindName("JvmStatusLine")
+$JvmUptimeLine = $window.FindName("JvmUptimeLine")
+$JvmStartedLine= $window.FindName("JvmStartedLine")
 
-$defaultMods = "$env:USERPROFILE\AppData\Roaming\.minecraft\mods"
-$PathBox.Text = $defaultMods
+$PathBox.Text = "$env:USERPROFILE\AppData\Roaming\.minecraft\mods"
 
 
-# =============================================================================
-# UI HELPERS
-# =============================================================================
+# ═══════════════════════════════════════════════════════════════════════════════
+#  JVM SIDEBAR  —  live refresh (DispatcherTimer, UI thread)
+# ═══════════════════════════════════════════════════════════════════════════════
 
-function Write-Log {
-    param([string]$msg)
-    $time = Get-Date -Format "HH:mm:ss"
-    $LogBox.Dispatcher.Invoke([Action]{
-        $LogBox.AppendText("[$time] $msg`r`n")
-        $LogBox.ScrollToEnd()
-    })
-}
-
-function Set-Status {
-    param($title, $sub, $badge = "BUSY")
-    $window.Dispatcher.Invoke([Action]{
-        $StatusTitle.Text = $title
-        $StatusSub.Text   = $sub
-        $StatusBadge.Text = $badge
-    })
-}
-
-function New-Chip {
-    param([string]$Text, [string]$Bg, [string]$Fg)
-    $border = New-Object System.Windows.Controls.Border
-    $border.Background = [Windows.Media.BrushConverter]::new().ConvertFrom($Bg)
-    $border.CornerRadius = 4
-    $border.Padding = "7,3"
-    $border.Margin = "0,0,6,6"
-    $tb = New-Object System.Windows.Controls.TextBlock
-    $tb.Text = $Text
-    $tb.FontSize = 10
-    $tb.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom($Fg)
-    $border.Child = $tb
-    return $border
-}
-
-function Add-ResultCard {
-    param(
-        [string]$FileName,
-        [string]$BadgeText,
-        [string]$BadgeBg,
-        [string]$AccentColor,
-        [string[]]$Lines
-    )
-
-    $card = New-Object System.Windows.Controls.Border
-    $card.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#0F151C")
-    $card.BorderBrush = [Windows.Media.BrushConverter]::new().ConvertFrom($AccentColor)
-    $card.BorderThickness = "1,1,1,1"
-    $card.CornerRadius = 6
-    $card.Padding = "14,10"
-    $card.Margin = "0,0,0,8"
-
-    $stack = New-Object System.Windows.Controls.StackPanel
-
-    $header = New-Object System.Windows.Controls.StackPanel
-    $header.Orientation = "Horizontal"
-
-    $badge = New-Object System.Windows.Controls.Border
-    $badge.Background = [Windows.Media.BrushConverter]::new().ConvertFrom($BadgeBg)
-    $badge.CornerRadius = 3
-    $badge.Padding = "6,2"
-    $badge.Margin = "0,0,8,0"
-    $badgeTb = New-Object System.Windows.Controls.TextBlock
-    $badgeTb.Text = $BadgeText
-    $badgeTb.FontSize = 9
-    $badgeTb.FontWeight = "Bold"
-    $badgeTb.Foreground = [Windows.Media.Brushes]::Black
-    $badge.Child = $badgeTb
-    $header.Children.Add($badge) | Out-Null
-
-    $nameTb = New-Object System.Windows.Controls.TextBlock
-    $nameTb.Text = $FileName
-    $nameTb.FontSize = 12
-    $nameTb.FontWeight = "SemiBold"
-    $nameTb.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom("#DCEDE8")
-    $nameTb.VerticalAlignment = "Center"
-    $header.Children.Add($nameTb) | Out-Null
-
-    $stack.Children.Add($header) | Out-Null
-
-    if ($Lines -and $Lines.Count -gt 0) {
-        $wrap = New-Object System.Windows.Controls.WrapPanel
-        $wrap.Margin = "0,8,0,0"
-        foreach ($line in $Lines) {
-            $chip = New-Chip -Text $line -Bg "#141C25" -Fg "#B9CFC9"
-            $wrap.Children.Add($chip) | Out-Null
-        }
-        $stack.Children.Add($wrap) | Out-Null
+function Update-KLJvmPanel {
+    $jp = Get-Process javaw -ErrorAction SilentlyContinue
+    if (-not $jp) { $jp = Get-Process java -ErrorAction SilentlyContinue }
+    if ($jp) {
+        $p  = $jp | Select-Object -First 1
+        $up = (Get-Date) - $p.StartTime
+        $JvmDot.Fill        = [Windows.Media.BrushConverter]::new().ConvertFrom("#00E5A8")
+        $JvmStatusLine.Text = "$($p.Name)  ·  PID $($p.Id)"
+        $JvmUptimeLine.Text = "Uptime  $($up.Hours)h $($up.Minutes)m $($up.Seconds)s"
+        $JvmStartedLine.Text= "Started $($p.StartTime.ToString('HH:mm:ss'))"
+    } else {
+        $JvmDot.Fill        = [Windows.Media.BrushConverter]::new().ConvertFrom("#1E3028")
+        $JvmStatusLine.Text = "No Java process running"
+        $JvmUptimeLine.Text = ""
+        $JvmStartedLine.Text= ""
     }
-
-    $card.Child = $stack
-    $ResultsPanel.Children.Add($card) | Out-Null
 }
 
-function Add-SectionHeader {
-    param([string]$Title, [int]$Count, [string]$Color)
-    $tb = New-Object System.Windows.Controls.TextBlock
-    $tb.Text = "$Title  ($Count)"
-    $tb.FontSize = 11
-    $tb.FontWeight = "Bold"
-    $tb.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom($Color)
-    $tb.Margin = "0,14,0,8"
-    $ResultsPanel.Children.Add($tb) | Out-Null
-}
-
-function Clear-Results {
-    $ResultsPanel.Dispatcher.Invoke([Action]{ $ResultsPanel.Children.Clear() })
-}
+$jvmTimer          = New-Object System.Windows.Threading.DispatcherTimer
+$jvmTimer.Interval = [TimeSpan]::FromSeconds(4)
+$jvmTimer.Add_Tick({ Update-KLJvmPanel })
+$jvmTimer.Start()
 
 
-# =============================================================================
-# EVENTS
-# =============================================================================
+# ═══════════════════════════════════════════════════════════════════════════════
+#  EVENTS
+# ═══════════════════════════════════════════════════════════════════════════════
 
 $window.Add_MouseLeftButtonDown({ try { $window.DragMove() } catch {} })
-$CloseBtn.Add_Click({ $window.Close() })
+$CloseBtn.Add_Click({ $jvmTimer.Stop(); $window.Close() })
 $MinBtn.Add_Click({ $window.WindowState = "Minimized" })
 
 $BrowseBtn.Add_Click({
     $dlg = New-Object System.Windows.Forms.FolderBrowserDialog
-    $dlg.Description = "Select your Minecraft mods folder"
+    $dlg.Description = "Select a Minecraft mods folder to scan"
     if (Test-Path $PathBox.Text) { $dlg.SelectedPath = $PathBox.Text }
-    if ($dlg.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
-        $PathBox.Text = $dlg.SelectedPath
-    }
+    if ($dlg.ShowDialog() -eq "OK") { $PathBox.Text = $dlg.SelectedPath }
 })
 
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  SCAN  —  background runspace  (all 4 passes + JVM)
+# ═══════════════════════════════════════════════════════════════════════════════
+
 $ScanBtn.Add_Click({
+
     $modsPath = $PathBox.Text
     if (-not (Test-Path $modsPath -PathType Container)) {
-        Set-Status "Error" "That folder doesn't exist." "ERR"
-        Write-Log "Invalid path: $modsPath"
+        $StatusTitle.Text = "Invalid path"
+        $StatusSub.Text   = "That folder doesn't exist."
+        $StatusBadge.Text = "ERR"
+        $LogBox.AppendText("[$(Get-Date -f 'HH:mm:ss')] Path not found: $modsPath`r`n")
         return
     }
 
     $ScanBtn.IsEnabled = $false
-    Clear-Results
-    $LogBox.Dispatcher.Invoke([Action]{ $LogBox.Clear() })
-    Set-Status "Scanning" "Reading $modsPath..." "BUSY"
-    Write-Log "Scan started: $modsPath"
+    $ResultsPanel.Children.Clear()
+    $LogBox.Clear()
+    $StatusTitle.Text = "Scanning…"
+    $StatusSub.Text   = "Starting scan on $modsPath"
+    $StatusBadge.Text = "SCANNING"
 
     $rs = [runspacefactory]::CreateRunspace()
-    $rs.ApartmentState = "STA"; $rs.ThreadOptions = "ReuseThread"; $rs.Open()
-    $rs.SessionStateProxy.SetVariable("modsPath",  $modsPath)
-    $rs.SessionStateProxy.SetVariable("dispatcher", $window.Dispatcher)
-    $rs.SessionStateProxy.SetVariable("window",     $window)
-    $rs.SessionStateProxy.SetVariable("ScanBtn",    $ScanBtn)
-    $rs.SessionStateProxy.SetVariable("StatusTitle",$StatusTitle)
-    $rs.SessionStateProxy.SetVariable("StatusSub",  $StatusSub)
-    $rs.SessionStateProxy.SetVariable("StatusBadge",$StatusBadge)
-    $rs.SessionStateProxy.SetVariable("LogBox",     $LogBox)
-    $rs.SessionStateProxy.SetVariable("ResultsPanel",$ResultsPanel)
-    $rs.SessionStateProxy.SetVariable("StatFiles",  $StatFiles)
-    $rs.SessionStateProxy.SetVariable("StatVerified",$StatVerified)
-    $rs.SessionStateProxy.SetVariable("StatUnknown",$StatUnknown)
-    $rs.SessionStateProxy.SetVariable("StatFlagged",$StatFlagged)
-    $rs.SessionStateProxy.SetVariable("patternRegex", $patternRegex)
-    $rs.SessionStateProxy.SetVariable("cheatStringSet", $cheatStringSet)
-    $rs.SessionStateProxy.SetVariable("cheatStrings", $cheatStrings)
-    $rs.SessionStateProxy.SetVariable("fullwidthRegex", $fullwidthRegex)
+    $rs.ApartmentState = "STA"
+    $rs.ThreadOptions  = "ReuseThread"
+    $rs.Open()
+
+    foreach ($v in @(
+        @("modsPath",       $modsPath),
+        @("dispatcher",     $window.Dispatcher),
+        @("patternRegex",   $patternRegex),
+        @("cheatStringSet", $cheatStringSet),
+        @("cheatStrings",   $cheatStrings),
+        @("fullwidthRegex", $fullwidthRegex),
+        @("ScanBtn",        $ScanBtn),
+        @("StatusTitle",    $StatusTitle),
+        @("StatusSub",      $StatusSub),
+        @("StatusBadge",    $StatusBadge),
+        @("LogBox",         $LogBox),
+        @("ResultsPanel",   $ResultsPanel),
+        @("StatFiles",      $StatFiles),
+        @("StatVerified",   $StatVerified),
+        @("StatUnknown",    $StatUnknown),
+        @("StatFlagged",    $StatFlagged),
+        @("StatBypass",     $StatBypass),
+        @("StatObf",        $StatObf),
+        @("StatJvm",        $StatJvm),
+        @("JvmDot",         $JvmDot),
+        @("JvmStatusLine",  $JvmStatusLine),
+        @("JvmUptimeLine",  $JvmUptimeLine),
+        @("JvmStartedLine", $JvmStartedLine)
+    )) { $rs.SessionStateProxy.SetVariable($v[0], $v[1]) }
 
     $ps = [powershell]::Create()
     $ps.Runspace = $rs
 
     $null = $ps.AddScript({
-        function Write-LogBg { param($m) $dispatcher.Invoke([Action]{ $LogBox.AppendText("[$(Get-Date -f 'HH:mm:ss')] $m`r`n"); $LogBox.ScrollToEnd() }) }
-        function Set-StatusBg { param($t,$s,$b) $dispatcher.Invoke([Action]{ $StatusTitle.Text=$t; $StatusSub.Text=$s; $StatusBadge.Text=$b }) }
 
-        function New-Chip2 {
-            param([string]$Text, [string]$Bg, [string]$Fg)
-            $b = New-Object System.Windows.Controls.Border
-            $b.Background = [Windows.Media.BrushConverter]::new().ConvertFrom($Bg)
-            $b.CornerRadius = 4; $b.Padding = "7,3"; $b.Margin = "0,0,6,6"
-            $tb = New-Object System.Windows.Controls.TextBlock
-            $tb.Text = $Text; $tb.FontSize = 10
-            $tb.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom($Fg)
-            $b.Child = $tb
-            return $b
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+        # ── UI helpers ────────────────────────────────────────────────────────
+
+        function KL-Log { param($m)
+            $dispatcher.Invoke([Action]{
+                $LogBox.AppendText("[$(Get-Date -f 'HH:mm:ss')] $m`r`n")
+                $LogBox.ScrollToEnd()
+            })
         }
 
-        function Add-CardBg {
-            param([string]$FileName, [string]$BadgeText, [string]$BadgeBg, [string]$AccentColor, [string[]]$Lines)
+        function KL-Status { param($t,$s,$b="SCANNING")
+            $dispatcher.Invoke([Action]{
+                $StatusTitle.Text = $t
+                $StatusSub.Text   = $s
+                $StatusBadge.Text = $b
+            })
+        }
+
+        function KL-AddSection { param([string]$Title,[int]$Count,[string]$Color)
+            if ($Count -eq 0) { return }
+            $dispatcher.Invoke([Action]{
+                $sep = New-Object System.Windows.Controls.Border
+                $sep.Height = 1
+                $sep.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#162028")
+                $sep.Margin = "0,14,0,10"
+                $ResultsPanel.Children.Add($sep) | Out-Null
+
+                $sp = New-Object System.Windows.Controls.StackPanel
+                $sp.Orientation = "Horizontal"
+                $sp.Margin = "0,0,0,8"
+
+                $dot = New-Object System.Windows.Controls.Ellipse
+                $dot.Width = 8; $dot.Height = 8
+                $dot.Fill = [Windows.Media.BrushConverter]::new().ConvertFrom($Color)
+                $dot.VerticalAlignment = "Center"
+                $dot.Margin = "0,0,8,0"
+                $sp.Children.Add($dot) | Out-Null
+
+                $tb = New-Object System.Windows.Controls.TextBlock
+                $tb.Text = "$Title"
+                $tb.FontSize = 11; $tb.FontWeight = "Bold"
+                $tb.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom($Color)
+                $tb.VerticalAlignment = "Center"
+                $sp.Children.Add($tb) | Out-Null
+
+                $ct = New-Object System.Windows.Controls.TextBlock
+                $ct.Text = "  ($Count)"
+                $ct.FontSize = 11
+                $ct.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom("#445A54")
+                $ct.VerticalAlignment = "Center"
+                $sp.Children.Add($ct) | Out-Null
+
+                $ResultsPanel.Children.Add($sp) | Out-Null
+            })
+        }
+
+        function KL-AddCard {
+            param(
+                [string]$FileName,
+                [string]$BadgeText,
+                [string]$BadgeBg,
+                [string]$BorderColor,
+                [string[]]$Chips    = @(),
+                [string]$ChipBg    = "#101720",
+                [string]$ChipFg    = "#AECCC5",
+                [string]$SubNote   = ""
+            )
             $dispatcher.Invoke([Action]{
                 $card = New-Object System.Windows.Controls.Border
-                $card.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#0F151C")
-                $card.BorderBrush = [Windows.Media.BrushConverter]::new().ConvertFrom($AccentColor)
-                $card.BorderThickness = "1,1,1,1"; $card.CornerRadius = 6; $card.Padding = "14,10"; $card.Margin = "0,0,0,8"
+                $card.Background     = [Windows.Media.BrushConverter]::new().ConvertFrom("#0D1319")
+                $card.BorderBrush    = [Windows.Media.BrushConverter]::new().ConvertFrom($BorderColor)
+                $card.BorderThickness= "1"
+                $card.CornerRadius   = 7
+                $card.Padding        = "14,10"
+                $card.Margin         = "0,0,0,7"
+
                 $stack = New-Object System.Windows.Controls.StackPanel
-                $header = New-Object System.Windows.Controls.StackPanel
-                $header.Orientation = "Horizontal"
-                $badge = New-Object System.Windows.Controls.Border
-                $badge.Background = [Windows.Media.BrushConverter]::new().ConvertFrom($BadgeBg)
-                $badge.CornerRadius = 3; $badge.Padding = "6,2"; $badge.Margin = "0,0,8,0"
-                $badgeTb = New-Object System.Windows.Controls.TextBlock
-                $badgeTb.Text = $BadgeText; $badgeTb.FontSize = 9; $badgeTb.FontWeight = "Bold"
-                $badgeTb.Foreground = [Windows.Media.Brushes]::Black
-                $badge.Child = $badgeTb
-                $header.Children.Add($badge) | Out-Null
-                $nameTb = New-Object System.Windows.Controls.TextBlock
-                $nameTb.Text = $FileName; $nameTb.FontSize = 12; $nameTb.FontWeight = "SemiBold"
-                $nameTb.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom("#DCEDE8")
-                $nameTb.VerticalAlignment = "Center"
-                $header.Children.Add($nameTb) | Out-Null
-                $stack.Children.Add($header) | Out-Null
-                if ($Lines -and $Lines.Count -gt 0) {
+
+                # Header row
+                $hdr = New-Object System.Windows.Controls.StackPanel
+                $hdr.Orientation = "Horizontal"
+
+                $bdg = New-Object System.Windows.Controls.Border
+                $bdg.Background   = [Windows.Media.BrushConverter]::new().ConvertFrom($BadgeBg)
+                $bdg.CornerRadius = 3
+                $bdg.Padding      = "7,2"
+                $bdg.Margin       = "0,0,9,0"
+                $bdgTb = New-Object System.Windows.Controls.TextBlock
+                $bdgTb.Text       = $BadgeText
+                $bdgTb.FontSize   = 9
+                $bdgTb.FontWeight = "Bold"
+                $bdgTb.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom("#050D0A")
+                $bdg.Child = $bdgTb
+                $hdr.Children.Add($bdg) | Out-Null
+
+                $nm = New-Object System.Windows.Controls.TextBlock
+                $nm.Text       = $FileName
+                $nm.FontSize   = 12
+                $nm.FontWeight = "SemiBold"
+                $nm.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom("#DFF0EA")
+                $nm.VerticalAlignment = "Center"
+                $nm.TextTrimming = "CharacterEllipsis"
+                $hdr.Children.Add($nm) | Out-Null
+                $stack.Children.Add($hdr) | Out-Null
+
+                # Sub-note
+                if ($SubNote) {
+                    $sn = New-Object System.Windows.Controls.TextBlock
+                    $sn.Text       = $SubNote
+                    $sn.FontSize   = 10
+                    $sn.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom("#3A5248")
+                    $sn.Margin     = "0,4,0,0"
+                    $stack.Children.Add($sn) | Out-Null
+                }
+
+                # Chips
+                if ($Chips.Count -gt 0) {
                     $wrap = New-Object System.Windows.Controls.WrapPanel
-                    $wrap.Margin = "0,8,0,0"
-                    foreach ($line in $Lines) { $wrap.Children.Add((New-Chip2 -Text $line -Bg "#141C25" -Fg "#B9CFC9")) | Out-Null }
+                    $wrap.Margin = "0,9,0,0"
+                    foreach ($c in ($Chips | Select-Object -Unique)) {
+                        $chip = New-Object System.Windows.Controls.Border
+                        $chip.Background   = [Windows.Media.BrushConverter]::new().ConvertFrom($ChipBg)
+                        $chip.CornerRadius = 4
+                        $chip.Padding      = "7,3"
+                        $chip.Margin       = "0,0,5,5"
+                        $chipTb = New-Object System.Windows.Controls.TextBlock
+                        $chipTb.Text        = $c
+                        $chipTb.FontSize    = 10
+                        $chipTb.TextWrapping= "Wrap"
+                        $chipTb.Foreground  = [Windows.Media.BrushConverter]::new().ConvertFrom($ChipFg)
+                        $chip.Child = $chipTb
+                        $wrap.Children.Add($chip) | Out-Null
+                    }
                     $stack.Children.Add($wrap) | Out-Null
                 }
+
                 $card.Child = $stack
                 $ResultsPanel.Children.Add($card) | Out-Null
             })
         }
 
-        function Add-HeaderBg {
-            param([string]$Title, [int]$Count, [string]$Color)
-            $dispatcher.Invoke([Action]{
-                $tb = New-Object System.Windows.Controls.TextBlock
-                $tb.Text = "$Title  ($Count)"; $tb.FontSize = 11; $tb.FontWeight = "Bold"
-                $tb.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom($Color)
-                $tb.Margin = "0,14,0,8"
-                $ResultsPanel.Children.Add($tb) | Out-Null
-            })
-        }
+        # ── Scan helpers ──────────────────────────────────────────────────────
 
-        function Get-FileSHA1x { param([string]$Path) (Get-FileHash -Path $Path -Algorithm SHA1).Hash }
+        function KL-SHA1 { param($p) (Get-FileHash $p -Algorithm SHA1).Hash }
 
-        function Query-Modrinthx {
-            param([string]$Hash)
-            try {
-                $vi = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/version_file/$Hash" -Method Get -UseBasicParsing -ErrorAction Stop
-                if ($vi.project_id) {
-                    $pi = Invoke-RestMethod -Uri "https://api.modrinth.com/v2/project/$($vi.project_id)" -Method Get -UseBasicParsing -ErrorAction Stop
-                    return @{ Name = $pi.title; Slug = $pi.slug }
-                }
-            } catch { }
-            return @{ Name = ""; Slug = "" }
-        }
-
-        try {
-            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-            $jarFiles = Get-ChildItem -Path $modsPath -Filter *.jar -ErrorAction Stop
-
-            if ($jarFiles.Count -eq 0) {
-                Set-StatusBg "No JARs found" "That folder has no .jar files." "IDLE"
-                Write-LogBg "No .jar files in $modsPath"
-                $dispatcher.Invoke([Action]{ $ScanBtn.IsEnabled = $true })
-                $rs.Close()
-                return
+        function KL-Source { param($p)
+            $z = Get-Content -Raw -Stream Zone.Identifier $p -ErrorAction SilentlyContinue
+            if ($z -match "HostUrl=(.+)") {
+                $u = $matches[1].Trim()
+                if ($u -match "mediafire\.com")                          { return "MediaFire" }
+                if ($u -match "discord(app)?\.com|cdn\.discordapp\.com") { return "Discord" }
+                if ($u -match "dropbox\.com")                            { return "Dropbox" }
+                if ($u -match "drive\.google\.com")                      { return "Google Drive" }
+                if ($u -match "mega\.(nz|co\.nz)")                       { return "MEGA" }
+                if ($u -match "github\.com")                             { return "GitHub" }
+                if ($u -match "modrinth\.com")                           { return "Modrinth" }
+                if ($u -match "curseforge\.com")                         { return "CurseForge" }
+                if ($u -match "prestigeclient\.vip")                     { return "PrestigeClient ⚠" }
+                if ($u -match "dqrkis\.xyz")                             { return "Dqrkis ⚠" }
+                if ($u -match "https?://(?:www\.)?([^/?]+)")             { return $matches[1] }
             }
+            return $null
+        }
 
-            Write-LogBg "Found $($jarFiles.Count) JAR file(s)."
+        function KL-Modrinth { param($h)
+            try {
+                $vi = Invoke-RestMethod "https://api.modrinth.com/v2/version_file/$h" -UseBasicParsing -EA Stop
+                if ($vi.project_id) {
+                    $pi = Invoke-RestMethod "https://api.modrinth.com/v2/project/$($vi.project_id)" -UseBasicParsing -EA Stop
+                    return @{ Name=$pi.title; Slug=$pi.slug }
+                }
+            } catch {}
+            return @{ Name=""; Slug="" }
+        }
 
-            $verified = @(); $unknown = @(); $suspicious = @(); $bypass = @(); $obfuscated = @()
+        function KL-Megabase { param($h)
+            try {
+                $r = Invoke-RestMethod "https://megabase.vercel.app/api/query?hash=$h" -UseBasicParsing -EA Stop
+                if (-not $r.error -and $r.data) { return $r.data }
+            } catch {}
+            return $null
+        }
 
-            foreach ($jar in $jarFiles) {
-                Write-LogBg "Hashing: $($jar.Name)"
-                $hash = Get-FileSHA1x -Path $jar.FullName
-                $handled = $false
-                if ($hash) {
-                    $md = Query-Modrinthx -Hash $hash
-                    if ($md.Slug) {
-                        $verified += [PSCustomObject]@{ Name = $md.Name; File = $jar.Name; Path = $jar.FullName }
-                        $handled = $true
+        function KL-ScanSigs { param($path)
+            $pats = [System.Collections.Generic.HashSet[string]]::new()
+            $strs = [System.Collections.Generic.HashSet[string]]::new()
+            $fws  = [System.Collections.Generic.HashSet[string]]::new()
+            try {
+                $zip = [System.IO.Compression.ZipFile]::OpenRead($path)
+                $all = [System.Collections.Generic.List[object]]::new()
+                foreach ($e in $zip.Entries) { $all.Add($e) }
+                foreach ($nj in ($zip.Entries | Where-Object { $_.FullName -match '^META-INF/jars/.+\.jar$' })) {
+                    try {
+                        $ns=$nj.Open(); $ms=New-Object System.IO.MemoryStream
+                        $ns.CopyTo($ms); $ns.Close(); $ms.Position=0
+                        $iz=[System.IO.Compression.ZipArchive]::new($ms)
+                        foreach ($ie in $iz.Entries) { $all.Add($ie) }
+                    } catch {}
+                }
+                foreach ($e in $all) {
+                    foreach ($m in $patternRegex.Matches($e.FullName)) { [void]$pats.Add($m.Value) }
+                    if ($e.FullName -match '\.(class|json)$|MANIFEST\.MF') {
+                        try {
+                            $st=$e.Open(); $ms2=New-Object System.IO.MemoryStream
+                            $st.CopyTo($ms2); $st.Close()
+                            $b=$ms2.ToArray(); $ms2.Dispose()
+                            $a=[System.Text.Encoding]::ASCII.GetString($b)
+                            $u8=[System.Text.Encoding]::UTF8.GetString($b)
+                            foreach ($m in $patternRegex.Matches($a)) { [void]$pats.Add($m.Value) }
+                            foreach ($s in $cheatStringSet) {
+                                if ($a.Contains($s) -or $u8.Contains($s)) { [void]$strs.Add($s) }
+                            }
+                            foreach ($m in $fullwidthRegex.Matches($u8)) { [void]$fws.Add($m.Value) }
+                        } catch {}
                     }
                 }
-                if (-not $handled) { $unknown += [PSCustomObject]@{ File = $jar.Name; Path = $jar.FullName } }
+                $zip.Dispose()
+            } catch {}
+            # Resolve fullwidth matches to canonical cheat-string names
+            $pool = @($cheatStrings | Where-Object { $_ -cmatch '[\uFF21-\uFF3A\uFF41-\uFF5A\uFF10-\uFF19]' })
+            $res  = [System.Collections.Generic.HashSet[string]]::new()
+            foreach ($f in @($fws)) {
+                if ($f.Length -lt 3) { continue }
+                $best = $null
+                foreach ($cs in $pool) {
+                    if ($cs.Contains($f) -and ($null -eq $best -or $cs.Length -lt $best.Length)) { $best = $cs }
+                }
+                if ($null -ne $best) { [void]$res.Add($best) } elseif ($f.Length -ge 6) { [void]$res.Add($f) }
             }
+            $ra    = @($res)
+            $final = [System.Collections.Generic.HashSet[string]]::new()
+            foreach ($f in $ra) {
+                $red = $false
+                foreach ($o in $ra) { if ($f.Length -lt $o.Length -and $o.Contains($f)) { $red=$true; break } }
+                if (-not $red) { [void]$final.Add($f) }
+            }
+            return @{ P=$pats; S=$strs; FW=$final }
+        }
 
-            foreach ($jar in $jarFiles) {
-                Write-LogBg "Deep-scanning: $($jar.Name)"
+        function KL-ScanBypass { param($path)
+            $flags   = [System.Collections.Generic.List[string]]::new()
+            $mvnPfx  = @("com_","org_","net_","io_","dev_","gs_","xyz_","app_","me_","tv_","uk_","be_","fr_","de_")
+            $legitIds= @("vmp-fabric","vmp","lithium","sodium","iris","fabric-api","modmenu",
+                         "ferrite-core","lazydfu","starlight","entityculling","memoryleakfix",
+                         "krypton","c2me-fabric","smoothboot-fabric","immediatelyfast","noisium","threadtweak")
+            try {
+                $zip    = [System.IO.Compression.ZipFile]::OpenRead($path)
+                $nested = @($zip.Entries | Where-Object { $_.FullName -match '^META-INF/jars/.+\.jar$' })
+                $outer  = @($zip.Entries | Where-Object { $_.FullName -match '\.class$' })
 
-                $foundPatterns = [System.Collections.Generic.HashSet[string]]::new()
-                $foundStrings  = [System.Collections.Generic.HashSet[string]]::new()
-                try {
-                    $archive = [System.IO.Compression.ZipFile]::OpenRead($jar.FullName)
-                    foreach ($entry in $archive.Entries) {
-                        foreach ($m in $patternRegex.Matches($entry.FullName)) { [void]$foundPatterns.Add($m.Value) }
-                        if ($entry.FullName -match '\.(class|json)$') {
+                foreach ($nj in $nested) {
+                    $nb = [System.IO.Path]::GetFileName($nj.FullName)
+                    $b  = [System.IO.Path]::GetFileNameWithoutExtension($nb)
+                    $susp = -not ($b -match '\d') -and $b.Length -le 20
+                    foreach ($px in $mvnPfx) { if ($b.ToLower().StartsWith($px)) { $susp = $false } }
+                    if ($susp) { $flags.Add("Suspicious nested JAR — unversioned / unknown dep: $nb") }
+                }
+                if ($nested.Count -eq 1 -and $outer.Count -lt 3) {
+                    $flags.Add("Hollow shell — $($outer.Count) own class(es), wraps: $([IO.Path]::GetFileName(($nested|Select -First 1).FullName))")
+                }
+
+                $modId = ""
+                $fmj = $zip.Entries | Where-Object { $_.FullName -eq "fabric.mod.json" } | Select-Object -First 1
+                if ($fmj) {
+                    try {
+                        $t = (New-Object System.IO.StreamReader($fmj.Open())).ReadToEnd()
+                        if ($t -match '"id"\s*:\s*"([^"]+)"') { $modId = $matches[1] }
+                    } catch {}
+                }
+
+                $all = [System.Collections.Generic.List[object]]::new()
+                foreach ($e in $zip.Entries) { $all.Add($e) }
+                $innerZ = [System.Collections.Generic.List[object]]::new()
+                foreach ($nj in $nested) {
+                    try {
+                        $ns=$nj.Open(); $ms=New-Object System.IO.MemoryStream
+                        $ns.CopyTo($ms); $ns.Close(); $ms.Position=0
+                        $iz=[System.IO.Compression.ZipArchive]::new($ms); $innerZ.Add($iz)
+                        foreach ($ie in $iz.Entries) { $all.Add($ie) }
+                    } catch {}
+                }
+
+                $rtExec=$false; $httpDl=$false; $httpEx=$false
+                $obfN=0; $numN=0; $uniN=0; $totN=0
+
+                foreach ($e in $all) {
+                    if ($e.FullName -match '\.class$') {
+                        $totN++
+                        $cn = [IO.Path]::GetFileNameWithoutExtension(($e.FullName -split '/')[-1])
+                        if ($cn -match '^\d+$')       { $numN++ }
+                        if ($cn -match '[^\x00-\x7F]') { $uniN++ }
+                        $sg=$( ($e.FullName -replace '\.class$','') -split '/' )
+                        $cs=0; $mx=0
+                        foreach ($s in $sg) { if ($s.Length -eq 1) { $cs++; if ($cs -gt $mx){$mx=$cs} } else { $cs=0 } }
+                        if ($mx -ge 3) { $obfN++ }
+                        try {
+                            $st=$e.Open(); $ms2=New-Object System.IO.MemoryStream
+                            $st.CopyTo($ms2); $st.Close()
+                            $ct=[System.Text.Encoding]::ASCII.GetString($ms2.ToArray()); $ms2.Dispose()
+                            if ($ct -match 'java/lang/Runtime' -and $ct -match 'getRuntime' -and $ct -match '\bexec\b') { $rtExec=$true }
+                            if ($ct -match 'openConnection' -and $ct -match 'HttpURLConnection' -and $ct -match 'FileOutputStream') { $httpDl=$true }
+                            if ($ct -match 'openConnection' -and $ct -match 'setDoOutput' -and $ct -match 'getOutputStream' -and $ct -match 'getProperty') { $httpEx=$true }
+                        } catch {}
+                    }
+                }
+                foreach ($iz in $innerZ) { try { $iz.Dispose() } catch {} }
+                $zip.Dispose()
+
+                $obfP = if ($totN -ge 10) { [math]::Round($obfN/$totN*100) } else { 0 }
+                $numP = if ($totN -ge 5)  { [math]::Round($numN/$totN*100) } else { 0 }
+                $uniP = if ($totN -ge 5)  { [math]::Round($uniN/$totN*100) } else { 0 }
+
+                if ($rtExec -and $obfP -ge 25) { $flags.Add("Runtime.exec() in obfuscated code — can run arbitrary OS commands") }
+                if ($httpDl)    { $flags.Add("HTTP file download — fetches and writes files from a remote server at runtime") }
+                if ($httpEx)    { $flags.Add("HTTP POST exfiltration — sends system data to an external server") }
+                if ($totN -ge 10 -and $obfP -ge 25) { $flags.Add("Heavy path obfuscation — $obfP% of classes use single-letter segments (a/b/c)") }
+                if ($numP -ge 20) { $flags.Add("Numeric class names — $numP% of classes are numbered (e.g. 1234.class)") }
+                if ($uniP -ge 10) { $flags.Add("Non-ASCII class names — $uniP% of classes use Unicode identifiers") }
+
+                if ($modId -and ($legitIds -contains $modId) -and
+                    ($flags | Where-Object { $_ -match 'Runtime|HTTP|Heavy|Suspicious' }).Count -gt 0) {
+                    $flags.Add("Fake mod identity — claims to be '$modId' but contains dangerous code")
+                }
+            } catch {}
+            return $flags
+        }
+
+        function KL-ScanObf { param($path)
+            $flags = [System.Collections.Generic.List[string]]::new()
+            try {
+                $zip = [System.IO.Compression.ZipFile]::OpenRead($path)
+                $tot=0;$num=0;$uni=0;$fw=0;$jp=0;$s1=0;$s2=0;$gib=0;$nov=0;$conf=0;$spkg=0
+                $sample=[System.Text.StringBuilder]::new(); $ssz=0
+                $obfuscators = @{
+                    "Skidfuscator"   = @("dev/skidfuscator","Skidfuscator","skidfuscator.dev")
+                    "Paramorphism"   = @("Paramorphism","paramorphism-","dev/paramorphism")
+                    "Radon"          = @("ItzSomebody/Radon","me/itzsomebody/radon","Radon Obfuscator")
+                    "Caesium"        = @("sim0n/Caesium","Caesium Obfuscator","dev/sim0n/caesium")
+                    "Bozar"          = @("vimasig/Bozar","Bozar Obfuscator","com/bozar")
+                    "Branchlock"     = @("Branchlock","branchlock.dev")
+                    "Binscure"       = @("Binscure","com/binscure")
+                    "SuperBlaubeere" = @("superblaubeere","superblaubeere27")
+                    "Qprotect"       = @("Qprotect","QProtect","mdma.dev/qprotect")
+                    "Zelix"          = @("ZKMFLOW","ZKM","ZelixKlassMaster","com/zelix")
+                    "Stringer"       = @("StringerJavaObfuscator","com/licel/stringer")
+                    "JNIC"           = @("JNIC","jnic.obf","jnic-obfuscator")
+                    "Scuti"          = @("ScutiObf","scuti.obf")
+                    "Smoke"          = @("SmokeObf","smoke.obf")
+                }
+                foreach ($e in $zip.Entries) {
+                    if ($e.FullName -match '\.class$') {
+                        $tot++
+                        $cn=[IO.Path]::GetFileNameWithoutExtension(($e.FullName -split '/')[-1])
+                        if ($cn -match '^\d+$')  { $num++ }
+                        if ($cn -match '[^\x00-\x7F]') { $uni++ }
+                        if ($cn -match '[\uFF21-\uFF3A\uFF41-\uFF5A\uFF10-\uFF19]') { $fw++ }
+                        if ($cn -match '[\u3040-\u309F\u30A0-\u30FF]') { $jp++ }
+                        if ($cn -match '^[a-zA-Z]$')   { $s1++ }
+                        if ($cn -match '^[a-zA-Z]{2}$') { $s2++ }
+                        if ($cn -match '^[Il1O0]+$|^[_]+$') { $conf++ }
+                        if ($cn.Length -ge 3 -and $cn.Length -le 8 -and $cn -match '^[a-zA-Z]+$') {
+                            $v=($cn.ToCharArray()|Where-Object{$_ -match '[aeiouAEIOU]'}).Count
+                            if ($v -eq 0) { $nov++ }
+                            if ($cn -match '[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ]{3,}' -and $v/$cn.Length -lt 0.3) { $gib++ }
+                        }
+                        $segs=(($e.FullName -replace '\.class$','') -split '/')
+                        foreach ($sg in $segs[0..([math]::Max(0,$segs.Count-2))]) { if ($sg.Length -eq 1) { $spkg++ } }
+                        if ($ssz -lt 150000 -and $e.Length -lt 100000 -and $e.Length -gt 100) {
                             try {
-                                $st = $entry.Open(); $ms = New-Object System.IO.MemoryStream
+                                $st=$e.Open(); $ms=New-Object System.IO.MemoryStream
                                 $st.CopyTo($ms); $st.Close()
-                                $ascii = [System.Text.Encoding]::ASCII.GetString($ms.ToArray()); $ms.Dispose()
-                                foreach ($m in $patternRegex.Matches($ascii)) { [void]$foundPatterns.Add($m.Value) }
-                                foreach ($s in $cheatStringSet) { if ($ascii.Contains($s)) { [void]$foundStrings.Add($s) } }
-                            } catch { }
+                                $a=[System.Text.Encoding]::ASCII.GetString($ms.ToArray()); $ms.Dispose()
+                                [void]$sample.Append($a); $ssz+=$a.Length
+                            } catch {}
                         }
                     }
-                    $archive.Dispose()
-                } catch { }
+                }
+                $zip.Dispose()
+                if ($tot -lt 5) { return $flags }
+                $P = { param($n) if ($tot -gt 0) { [math]::Round($n/$tot*100) } else { 0 } }
+                if ((& $P $num) -ge 20) { $flags.Add("Numeric class names — $(& $P $num)% of classes have numeric-only names") }
+                if ((& $P $uni) -ge 10) { $flags.Add("Non-ASCII class names — $(& $P $uni)% of classes use non-ASCII identifiers") }
+                if ($fw -gt 0)          { $flags.Add("Fullwidth Unicode class names — $(& $P $fw)% use ａｂｃ / ＡＢＣ / ０１２ chars ($fw classes)") }
+                if ($jp -gt 0)          { $flags.Add("Japanese obfuscation — $(& $P $jp)% use hiragana or katakana class names ($jp classes)") }
+                if ((& $P $s1) -ge 15)  { $flags.Add("Single-letter class names — $(& $P $s1)% ($s1 classes)") }
+                if ((& $P $s2) -ge 20)  { $flags.Add("Two-letter class names — $(& $P $s2)% ($s2 classes)") }
+                if ((& $P $gib) -ge 5)  { $flags.Add("Gibberish class names — $(& $P $gib)% consonant clusters / no vowels ($gib classes)") }
+                if ((& $P $nov) -ge 8)  { $flags.Add("No-vowel class names — $(& $P $nov)% ($nov classes)") }
+                if ((& $P $conf) -ge 3) { $flags.Add("Confusion-char names (Il1O0 / _) — $(& $P $conf)% ($conf classes)") }
+                if ($spkg -ge 6)        { $flags.Add("Single-char package paths — $spkg path segments (a/b/c style)") }
+                $fwm=[regex]::Matches($sample.ToString(),'[\uFF21-\uFF3A\uFF41-\uFF5A\uFF10-\uFF19]{2,}')
+                if ($fwm.Count -gt 0) {
+                    $ex=($fwm|Select -First 3|ForEach-Object{$_.Value})-join", "
+                    $flags.Add("Fullwidth strings in bytecode — $($fwm.Count) occurrences (e.g. $ex)")
+                }
+                $ss=$sample.ToString()
+                foreach ($on in $obfuscators.Keys) {
+                    foreach ($op in $obfuscators[$on]) {
+                        if ($ss.Contains($op)) { $flags.Add("Known cheat obfuscator detected — $on (matched '$op')"); break }
+                    }
+                }
+            } catch {}
+            return $flags
+        }
 
-                if ($foundPatterns.Count -gt 0 -or $foundStrings.Count -gt 0) {
-                    $allTags = @($foundPatterns) + @($foundStrings) | Select-Object -Unique
-                    $suspicious += [PSCustomObject]@{ File = $jar.Name; Tags = $allTags }
-                    $unknown = $unknown | Where-Object { $_.File -ne $jar.Name }
-                    $verified = $verified | Where-Object { $_.File -ne $jar.Name }
+        function KL-ScanJvm {
+            $r = [System.Collections.Generic.List[string]]::new()
+            $jp = Get-Process javaw -EA SilentlyContinue
+            if (-not $jp) { $jp = Get-Process java -EA SilentlyContinue }
+            if (-not $jp) { return $r }
+            $pid0 = ($jp | Select-Object -First 1).Id
+            try {
+                $w = Get-WmiObject Win32_Process -Filter "ProcessId = $pid0" -EA Stop
+                $cmd = $w.CommandLine
+                if ($cmd) {
+                    foreach ($m in [regex]::Matches($cmd, '-javaagent:([^\s"]+)')) {
+                        $ap = $m.Groups[1].Value.Trim('"').Trim("'")
+                        $an = [IO.Path]::GetFileName($ap)
+                        $legit = @("jmxremote","yjp","jrebel","newrelic","jacoco","theseus")
+                        if (-not ($legit | Where-Object { $an -match $_ })) {
+                            $r.Add("JVM agent — -javaagent:$an  (full path: $ap)")
+                        }
+                    }
+                    @(
+                        @{F="-Xbootclasspath/p:"; D="prepends to bootstrap classpath — can override core Java classes"},
+                        @{F="-Xbootclasspath/a:"; D="appends to bootstrap classpath — injects code below the classloader"},
+                        @{F="-agentlib:jdwp";     D="JDWP debug agent active — remote debugging is enabled"},
+                        @{F="-agentpath:";         D="native agent loaded — bypasses the Java security sandbox"}
+                    ) | ForEach-Object {
+                        if ($cmd -match [regex]::Escape($_.F)) {
+                            $r.Add("Suspicious JVM flag — $($_.F)  $($_.D)")
+                        }
+                    }
+                }
+            } catch {}
+            return $r
+        }
+
+
+        # ══════════════════════════════════════════════════════════════════════
+        #  MAIN SCAN
+        # ══════════════════════════════════════════════════════════════════════
+
+        try {
+            $jars = Get-ChildItem $modsPath -Filter *.jar -EA Stop
+            if ($jars.Count -eq 0) {
+                KL-Status "No JARs found" "That folder has no .jar files." "IDLE"
+                KL-Log "No .jar files in $modsPath"
+                $dispatcher.Invoke([Action]{ $ScanBtn.IsEnabled = $true })
+                $rs.Close(); return
+            }
+            KL-Log "Found $($jars.Count) JAR(s) in $modsPath"
+
+            # ── JVM check (updates sidebar panel) ──────────────────────────
+            KL-Status "Scanning" "Checking JVM runtime…" "SCANNING"
+            $jvmFlags = KL-ScanJvm
+            $jp2 = Get-Process javaw -EA SilentlyContinue
+            if (-not $jp2) { $jp2 = Get-Process java -EA SilentlyContinue }
+            if ($jp2) {
+                $p0 = $jp2 | Select-Object -First 1
+                $up = (Get-Date) - $p0.StartTime
+                $dispatcher.Invoke([Action]{
+                    $JvmDot.Fill         = [Windows.Media.BrushConverter]::new().ConvertFrom("#00E5A8")
+                    $JvmStatusLine.Text  = "$($p0.Name)  ·  PID $($p0.Id)"
+                    $JvmUptimeLine.Text  = "Uptime  $($up.Hours)h $($up.Minutes)m $($up.Seconds)s"
+                    $JvmStartedLine.Text = "Started $($p0.StartTime.ToString('HH:mm:ss'))"
+                })
+                if ($jvmFlags.Count -gt 0) {
+                    KL-Log "  JVM: $($jvmFlags.Count) suspicious flag(s) found on PID $($p0.Id)"
+                } else {
+                    KL-Log "  JVM: PID $($p0.Id) looks clean"
+                }
+            } else {
+                KL-Log "  JVM: no Java process detected"
+            }
+
+            # ── Pass 1 — Hash verification ────────────────────────────────
+            KL-Status "Scanning" "Pass 1/4 — Hash verification (Modrinth + Megabase)…" "SCANNING"
+            KL-Log "Pass 1 — Hash verification"
+
+            $verified = @(); $remaining = @()
+
+            foreach ($jar in $jars) {
+                KL-Log "  Hash: $($jar.Name)"
+                $h = KL-SHA1 $jar.FullName
+                $ok = $false
+                if ($h) {
+                    $mr = KL-Modrinth $h
+                    if ($mr.Slug) {
+                        $verified += [PSCustomObject]@{ Label=$mr.Name; File=$jar.Name; Path=$jar.FullName }
+                        $ok = $true
+                    }
+                    if (-not $ok) {
+                        $mb = KL-Megabase $h
+                        if ($mb -and $mb.name) {
+                            $verified += [PSCustomObject]@{ Label=$mb.name; File=$jar.Name; Path=$jar.FullName }
+                            $ok = $true
+                        }
+                    }
+                }
+                if (-not $ok) {
+                    $remaining += [PSCustomObject]@{
+                        File   = $jar.Name
+                        Path   = $jar.FullName
+                        Source = (KL-Source $jar.FullName)
+                    }
+                }
+            }
+            KL-Log "  Verified: $($verified.Count)  |  To deep-scan: $($remaining.Count)"
+
+            # ── Pass 2 — Signature scan (unverified only) ─────────────────
+            KL-Status "Scanning" "Pass 2/4 — Signature scan…" "SCANNING"
+            KL-Log "Pass 2 — Cheat-signature scan"
+
+            $flagged = @(); $stillUnknown = @()
+
+            foreach ($u in $remaining) {
+                KL-Log "  Sigs: $($u.File)"
+                $r = KL-ScanSigs $u.Path
+                if ($r.P.Count -gt 0 -or $r.S.Count -gt 0 -or $r.FW.Count -gt 0) {
+                    $tags = @(@($r.P) + @($r.S) + @($r.FW) | Select-Object -Unique)
+                    $flagged += [PSCustomObject]@{ File=$u.File; Tags=$tags }
+                } else {
+                    $stillUnknown += $u
+                }
+            }
+            KL-Log "  Flagged: $($flagged.Count)  |  Remaining: $($stillUnknown.Count)"
+
+            # ── Pass 3 — Bypass / injection scan ─────────────────────────
+            KL-Status "Scanning" "Pass 3/4 — Bypass detection…" "SCANNING"
+            KL-Log "Pass 3 — Bypass / injection scan"
+
+            $bypass = @(); $afterBypass = @()
+
+            foreach ($u in $stillUnknown) {
+                KL-Log "  Bypass: $($u.File)"
+                $bf = KL-ScanBypass $u.Path
+                if ($bf.Count -gt 0) {
+                    $bypass += [PSCustomObject]@{ File=$u.File; Flags=$bf }
+                } else {
+                    $afterBypass += $u
+                }
+            }
+            KL-Log "  Bypass flagged: $($bypass.Count)  |  Remaining: $($afterBypass.Count)"
+
+            # ── Pass 4 — Obfuscation scan ──────────────────────────────────
+            KL-Status "Scanning" "Pass 4/4 — Obfuscation analysis…" "SCANNING"
+            KL-Log "Pass 4 — Obfuscation scan"
+
+            $obfuscated = @(); $unknown = @()
+
+            foreach ($u in $afterBypass) {
+                KL-Log "  Obf: $($u.File)"
+                $of = KL-ScanObf $u.Path
+                if ($of.Count -gt 0) {
+                    $obfuscated += [PSCustomObject]@{ File=$u.File; Flags=$of }
+                } else {
+                    $unknown += $u
+                }
+            }
+            KL-Log "  Obfuscated: $($obfuscated.Count)  |  Unknown (clean, unverified): $($unknown.Count)"
+
+            # ── Render results ────────────────────────────────────────────
+            $dispatcher.Invoke([Action]{ $ResultsPanel.Children.Clear() })
+
+            if ($verified.Count -gt 0) {
+                KL-AddSection "VERIFIED" $verified.Count "#00E5A8"
+                foreach ($v in $verified) {
+                    KL-AddCard "$($v.Label)  →  $($v.File)" "VERIFIED" "#00E5A8" "#097A5B"
                 }
             }
 
-            $totalFlagged = $suspicious.Count + $bypass.Count + $obfuscated.Count
+            if ($unknown.Count -gt 0) {
+                KL-AddSection "UNKNOWN" $unknown.Count "#FFBB44"
+                foreach ($u in $unknown) {
+                    $note = if ($u.Source) { "Downloaded from: $($u.Source)" } else { "Not in Modrinth or Megabase — source unknown" }
+                    KL-AddCard $u.File "UNKNOWN" "#FFBB44" "#6B4C10" -SubNote $note
+                }
+            }
 
-            Add-HeaderBg -Title "VERIFIED" -Count $verified.Count -Color "#00E5A8"
-            foreach ($v in $verified) { Add-CardBg -FileName "$($v.Name) -> $($v.File)" -BadgeText "VERIFIED" -BadgeBg "#00E5A8" -AccentColor "#0B8F6C" -Lines @() }
+            if ($obfuscated.Count -gt 0) {
+                KL-AddSection "OBFUSCATED" $obfuscated.Count "#FF8A50"
+                foreach ($o in $obfuscated) {
+                    KL-AddCard $o.File "OBFUSCATED" "#FF8A50" "#7A3A14" `
+                        -Chips $o.Flags -ChipBg "#1A0D06" -ChipFg "#FFA870"
+                }
+            }
 
-            Add-HeaderBg -Title "UNKNOWN" -Count $unknown.Count -Color "#FFC85C"
-            foreach ($u in $unknown) { Add-CardBg -FileName $u.File -BadgeText "UNKNOWN" -BadgeBg "#FFC85C" -AccentColor "#7A5C1E" -Lines @() }
+            if ($bypass.Count -gt 0) {
+                KL-AddSection "BYPASS / INJECTION" $bypass.Count "#C97DFF"
+                foreach ($b in $bypass) {
+                    KL-AddCard $b.File "BYPASS" "#C97DFF" "#5C1E8A" `
+                        -Chips $b.Flags -ChipBg "#180D2A" -ChipFg "#D8A8FF"
+                }
+            }
 
-            Add-HeaderBg -Title "FLAGGED" -Count $suspicious.Count -Color "#FF5C7A"
-            foreach ($s in $suspicious) { Add-CardBg -FileName $s.File -BadgeText "FLAGGED" -BadgeBg "#FF5C7A" -AccentColor "#7A1E33" -Lines $s.Tags }
+            if ($flagged.Count -gt 0) {
+                KL-AddSection "FLAGGED  ─  CHEAT SIGNATURES" $flagged.Count "#FF4D6B"
+                foreach ($f in $flagged) {
+                    KL-AddCard $f.File "FLAGGED" "#FF4D6B" "#7A1428" `
+                        -Chips $f.Tags -ChipBg "#1F060C" -ChipFg "#FF7D8F"
+                }
+            }
 
+            if ($jvmFlags.Count -gt 0) {
+                KL-AddSection "JVM / RUNTIME ISSUES" $jvmFlags.Count "#FFD45C"
+                KL-AddCard "javaw  ·  live process" "JVM" "#FFD45C" "#7A5C10" `
+                    -Chips $jvmFlags -ChipBg "#1F1800" -ChipFg "#FFE080"
+            }
+
+            # ── Update stats ──────────────────────────────────────────────
+            $totIssues = $flagged.Count + $bypass.Count + $obfuscated.Count + $jvmFlags.Count
             $dispatcher.Invoke([Action]{
-                $StatFiles.Text     = "Files: $($jarFiles.Count)"
-                $StatVerified.Text  = "Verified: $($verified.Count)"
-                $StatUnknown.Text   = "Unknown: $($unknown.Count)"
-                $StatFlagged.Text   = "Flagged: $totalFlagged"
+                $StatFiles.Text    = "Files: $($jars.Count)"
+                $StatVerified.Text = "Verified: $($verified.Count)"
+                $StatUnknown.Text  = "Unknown: $($unknown.Count)"
+                $StatFlagged.Text  = "Flagged: $($flagged.Count)"
+                $StatBypass.Text   = "Bypass: $($bypass.Count)"
+                $StatObf.Text      = "Obfuscated: $($obfuscated.Count)"
+                $StatJvm.Text      = "JVM Issues: $($jvmFlags.Count)"
             })
 
-            Write-LogBg "Scan complete."
-            Set-StatusBg "Scan complete" "$($jarFiles.Count) files - $totalFlagged flagged." "IDLE"
+            KL-Log "Scan complete — $totIssues issue(s) across $($jars.Count) file(s)."
+            if ($totIssues -gt 0) {
+                KL-Status "Scan complete" "$($jars.Count) files scanned  ·  $totIssues issue(s) found" "DONE"
+            } else {
+                KL-Status "All clear" "$($jars.Count) files scanned  ·  no issues detected" "CLEAN"
+            }
+
         } catch {
-            Write-LogBg "Error: $_"
-            Set-StatusBg "Error" "Scan failed." "ERR"
+            KL-Log "Fatal error: $_"
+            KL-Status "Error" "Scan failed — see log for details." "ERR"
         }
 
         $dispatcher.Invoke([Action]{ $ScanBtn.IsEnabled = $true })
@@ -1159,7 +1259,16 @@ $ScanBtn.Add_Click({
     $null = $ps.BeginInvoke()
 })
 
-Write-Log "KettehLyzer ready."
-Set-Status "Ready" "Pick a mods folder and click Scan Folder." "IDLE"
+
+# ── Initial state ─────────────────────────────────────────────────────────────
+
+function Write-KLLog { param($m)
+    $LogBox.AppendText("[$(Get-Date -f 'HH:mm:ss')] $m`r`n")
+    $LogBox.ScrollToEnd()
+}
+
+Write-KLLog "KettehLyzer v2 ready  ·  KettehTools"
+Update-KLJvmPanel
 
 $window.ShowDialog() | Out-Null
+$jvmTimer.Stop()
