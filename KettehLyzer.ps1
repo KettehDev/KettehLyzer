@@ -1,4 +1,4 @@
-<#
+
     KETTEHLYZER v2.2
     Minecraft Mod Security Analyzer
     No GUI - Pure Terminal
