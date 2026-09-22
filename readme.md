@@ -24,9 +24,10 @@ It also detects the active Minecraft Java process and displays its runtime/uptim
 - Final scan summary
 - Detailed findings for flagged mods
 
-## Powershell Script
-Paste this to RUN the full script
-| ` powershell -Command "Set-ExecutionPolicy Bypass -Scope Process; Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/KettehDev/KettehLyzer/main/KettehLyzer.ps1')"` |
+## Script
+```powershell```
+powershell -Command "Set-ExecutionPolicy Bypass -Scope Process; Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/KettehDev/KettehLyzer/main/KettehLyzer.ps1')"
+
 
 ## Detection Results
 
