@@ -4,6 +4,9 @@ KettehLyzer is a PowerShell-based, terminal-only Minecraft mod analyzer designed
 
 It also detects the active Minecraft Java process and displays its runtime/uptime while automatically redacting sensitive authentication values from JVM command-line output.
 
+## Creds to Tonynoh
+https://github.com/MeowTonynoh
+
 ## 🚀 Quick Start
 
 ### Copy & Paste
