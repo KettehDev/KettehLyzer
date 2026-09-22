@@ -96,6 +96,7 @@ $suspiciousPatterns = @(
     "ElytraSwap","FastXP","FastExp","Refill","AirAnchor","jnativehook",
     "FakeInv","HoverTotem","AutoClicker","AutoFirework","PackSpoof",
     "Antiknockback","catlean","AuthBypass","Asteria","Prestige","AutoMine",
+    "Argon","ArgonClient","argonclient","immedentlyfast","Immedentlyfast",
     "MaceSwap","Macro198","StunSlam","SafeAnchor","DoubleAnchor",
     "AutoTPA","BaseFinder","Xenon","gypsy","AutoPotRefill","KeyPearl",
     "AutoNethPot","AutoDtap","AutoWeb","AnchorAction",
@@ -226,7 +227,9 @@ $cheatStrings = @(
     "futureClient","konas","rusherhack","inertia","exhibition",
     "dev.krypton","dev/krypton","skid.krypton","skid/krypton",
     "VirginClient","virgin client","catlean","CatleanClient","catlean client",
-    "ArgonClient","argon client","Asteria","AsteriaClient","asteria client",
+    "ArgonClient","argon client","argon.client","dev.argon","me.argon",
+    "argonclient","Argon","immedentlyfast","Immedentlyfast",
+    "Asteria","AsteriaClient","asteria client",
     "Prestige","PrestigeClient","prestige client","prestigeclient.vip",
     "gypsy","GypsyClient","gypsy client","Xenon","XenonClient","xenon client",
     "GrimClient","grim client","phantom-refmap.json","dqrkis.xyz","Dqrkis Client"
@@ -591,131 +594,196 @@ function KL-ReadZipEntryBytes {
 }
 
 
+function KL-ExtractPrintableStrings {
+    # Classic "strings" extraction from raw bytes — works on obfuscated .class files
+    param(
+        [byte[]]$Bytes,
+        [int]$MinLen = 4
+    )
+
+    $found = New-Object System.Collections.Generic.List[string]
+    if (-not $Bytes -or $Bytes.Count -eq 0) { return @() }
+
+    $sb = New-Object System.Text.StringBuilder
+    foreach ($b in $Bytes) {
+        # Printable ASCII range (space .. ~) plus tab
+        if (($b -ge 32 -and $b -le 126) -or $b -eq 9) {
+            [void]$sb.Append([char]$b)
+        } else {
+            if ($sb.Length -ge $MinLen) {
+                [void]$found.Add($sb.ToString())
+            }
+            [void]$sb.Clear()
+        }
+    }
+    if ($sb.Length -ge $MinLen) {
+        [void]$found.Add($sb.ToString())
+    }
+    return @($found)
+}
+
 function KL-ScanSigs {
     param([string]$JarPath)
 
     $pats = New-Object System.Collections.Generic.List[string]
     $strs = New-Object System.Collections.Generic.List[string]
     $filesHit = New-Object System.Collections.Generic.List[string]
+    $allStrs = New-Object System.Collections.Generic.HashSet[string] (
+        [StringComparer]::OrdinalIgnoreCase
+    )
 
-    $entries = @(KL-GetJarEntries $JarPath)
+    # ---- Check the JAR's own filename (renamed ghost clients) ----
+    $jarName = [System.IO.Path]::GetFileNameWithoutExtension($JarPath)
+    $jarNameLower = $jarName.ToLowerInvariant()
+    [void]$allStrs.Add($jarName)
+    [void]$allStrs.Add([System.IO.Path]::GetFileName($JarPath))
 
-    $scanEntries = @($entries)
-
-    foreach ($outer in $entries) {
-        if ($outer.FullName -match '(?i)(^|/)META-INF/jars/.+\.jar$') {
-            try {
-                $bytes = KL-ReadZipEntryBytes $outer 52428800
-                if ($bytes.Count -gt 0) {
-                    $ms = New-Object System.IO.MemoryStream(,$bytes)
-                    $nestedZip = [System.IO.Compression.ZipArchive]::new(
-                        $ms,
-                        [System.IO.Compression.ZipArchiveMode]::Read,
-                        $false
-                    )
-
-                    foreach ($nested in $nestedZip.Entries) {
-                        if ($nested.FullName -and -not $nested.FullName.EndsWith('/')) {
-                            $text = KL-ReadZipEntryText $nested 5242880
-
-                            if ($text) {
-                                foreach ($m in [regex]::Matches(
-                                    $text,
-                                    $patternRegex,
-                                    [System.Text.RegularExpressions.RegexOptions]::IgnoreCase
-                                )) {
-                                    $value = $m.Value
-                                    if (-not $pats.Contains($value)) {
-                                        [void]$pats.Add($value)
-                                    }
-                                }
-
-                                $normalized = KL-NormalizeText $text
-
-                                foreach ($s in $cheatStrings) {
-                                    if ($normalized.IndexOf(
-                                        $s,
-                                        [System.StringComparison]::OrdinalIgnoreCase
-                                    ) -ge 0) {
-                                        if (-not $strs.Contains($s)) {
-                                            [void]$strs.Add($s)
-                                        }
-                                    }
-                                }
-
-                                if ($fullwidthRegex.IsMatch($text)) {
-                                    $resolved = KL-NormalizeText $text
-
-                                    foreach ($s in $cheatStrings) {
-                                        if ($resolved.IndexOf(
-                                            $s,
-                                            [System.StringComparison]::OrdinalIgnoreCase
-                                        ) -ge 0) {
-                                            if (-not $strs.Contains($s)) {
-                                                [void]$strs.Add($s)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    $nestedZip.Dispose()
-                    $ms.Dispose()
-                }
-            } catch {}
+    foreach ($s in $cheatStrings) {
+        if ($jarNameLower.Contains($s.ToLowerInvariant())) {
+            if (-not $strs.Contains($s)) { [void]$strs.Add($s) }
+            if (-not $filesHit.Contains("[JAR NAME] $jarName")) {
+                [void]$filesHit.Add("[JAR NAME] $jarName")
+            }
+        }
+    }
+    foreach ($s in $suspiciousPatterns) {
+        if ($jarNameLower.Contains($s.ToLowerInvariant())) {
+            if (-not $pats.Contains($s)) { [void]$pats.Add($s) }
+            if (-not $filesHit.Contains("[JAR NAME] $jarName")) {
+                [void]$filesHit.Add("[JAR NAME] $jarName")
+            }
         }
     }
 
-    foreach ($entry in $entries) {
-        if ($entry.FullName.EndsWith('/')) { continue }
+    # ---- DUMP the entire JAR to a temp folder and scan every file ----
+    $tempRoot = $null
+    try {
+        $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("KL_Dump_" + [guid]::NewGuid().ToString("N"))
+        [void][System.IO.Directory]::CreateDirectory($tempRoot)
 
-        $name = [string]$entry.FullName
-        $lower = $name.ToLowerInvariant()
-
-        foreach ($s in $cheatStrings) {
-            if ($lower.Contains($s.ToLowerInvariant())) {
-                if (-not $strs.Contains($s)) {
-                    [void]$strs.Add($s)
+        # Extract main JAR
+        try {
+            Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
+            [System.IO.Compression.ZipFile]::ExtractToDirectory($JarPath, $tempRoot)
+        } catch {
+            # Fallback: manual extract if ExtractToDirectory fails
+            $entries = @(KL-GetJarEntries $JarPath)
+            foreach ($entry in $entries) {
+                if ($entry.FullName.EndsWith('/')) { continue }
+                $outPath = Join-Path $tempRoot $entry.FullName
+                $outDir = [System.IO.Path]::GetDirectoryName($outPath)
+                if (-not (Test-Path $outDir)) {
+                    [void][System.IO.Directory]::CreateDirectory($outDir)
                 }
-
-                if (-not $filesHit.Contains($name)) {
-                    [void]$filesHit.Add($name)
-                }
+                try {
+                    $bytes = KL-ReadZipEntryBytes $entry 52428800
+                    if ($bytes.Count -gt 0) {
+                        [System.IO.File]::WriteAllBytes($outPath, $bytes)
+                    }
+                } catch {}
             }
         }
 
-        foreach ($s in $suspiciousPatterns) {
-            if ($lower.Contains($s.ToLowerInvariant())) {
-                if (-not $pats.Contains($s)) {
-                    [void]$pats.Add($s)
-                }
-
-                if (-not $filesHit.Contains($name)) {
-                    [void]$filesHit.Add($name)
-                }
-            }
+        # Also extract any nested JARs under META-INF/jars (or anywhere)
+        $nestedJars = @(
+            Get-ChildItem -LiteralPath $tempRoot -Recurse -Filter '*.jar' -File -ErrorAction SilentlyContinue
+        )
+        foreach ($nj in $nestedJars) {
+            $nestedDir = Join-Path $nj.DirectoryName ($nj.BaseName + "_extracted")
+            try {
+                [void][System.IO.Directory]::CreateDirectory($nestedDir)
+                [System.IO.Compression.ZipFile]::ExtractToDirectory($nj.FullName, $nestedDir)
+            } catch {}
         }
 
-        if (
-            $lower.EndsWith('.class') -or
-            $lower.EndsWith('.json') -or
-            $lower.EndsWith('.toml') -or
-            $lower.EndsWith('.properties') -or
-            $lower.EndsWith('.cfg') -or
-            $lower.EndsWith('.txt') -or
-            $lower.EndsWith('.xml') -or
-            $lower.EndsWith('.mf')
-        ) {
-            $bytes = KL-ReadZipEntryBytes $entry 5242880
+        # Walk EVERY extracted file and dump printable strings
+        $allFiles = @(
+            Get-ChildItem -LiteralPath $tempRoot -Recurse -File -ErrorAction SilentlyContinue
+        )
 
-            if ($bytes.Count -gt 0) {
-                $ascii = [System.Text.Encoding]::ASCII.GetString($bytes)
-                $utf8  = [System.Text.Encoding]::UTF8.GetString($bytes)
+        foreach ($file in $allFiles) {
+            $rel = $file.FullName.Substring($tempRoot.Length).TrimStart('\', '/')
+            [void]$allStrs.Add($rel)
 
-                foreach ($blob in @($ascii, $utf8)) {
-                    $normalized = KL-NormalizeText $blob
+            $lowerRel = $rel.ToLowerInvariant()
+
+            # Filename / path matches
+            foreach ($s in $cheatStrings) {
+                if ($lowerRel.Contains($s.ToLowerInvariant())) {
+                    if (-not $strs.Contains($s)) { [void]$strs.Add($s) }
+                    if (-not $filesHit.Contains($rel)) { [void]$filesHit.Add($rel) }
+                }
+            }
+            foreach ($s in $suspiciousPatterns) {
+                if ($lowerRel.Contains($s.ToLowerInvariant())) {
+                    if (-not $pats.Contains($s)) { [void]$pats.Add($s) }
+                    if (-not $filesHit.Contains($rel)) { [void]$filesHit.Add($rel) }
+                }
+            }
+
+            # Read up to 8 MB per file for string dump
+            $maxBytes = 8MB
+            $fileBytes = $null
+            try {
+                $fs = [System.IO.File]::OpenRead($file.FullName)
+                try {
+                    $toRead = [Math]::Min($fs.Length, $maxBytes)
+                    $fileBytes = New-Object byte[] $toRead
+                    [void]$fs.Read($fileBytes, 0, $toRead)
+                } finally {
+                    $fs.Dispose()
+                }
+            } catch {
+                continue
+            }
+
+            if (-not $fileBytes -or $fileBytes.Count -eq 0) { continue }
+
+            # Binary printable-string dump (catches obfuscated constant pools)
+            $dumped = @(KL-ExtractPrintableStrings $fileBytes 4)
+
+            foreach ($raw in $dumped) {
+                $normalized = KL-NormalizeText $raw
+
+                if ($normalized.Length -ge 5 -and $normalized.Length -le 120) {
+                    [void]$allStrs.Add($normalized)
+                }
+
+                # Match against cheat strings
+                foreach ($s in $cheatStrings) {
+                    if ($normalized.IndexOf($s, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
+                        if (-not $strs.Contains($s)) { [void]$strs.Add($s) }
+                        if (-not $filesHit.Contains($rel)) { [void]$filesHit.Add($rel) }
+                    }
+                }
+
+                # Match against suspicious patterns (regex)
+                if ($patternRegex -and $normalized -match $patternRegex) {
+                    foreach ($m in [regex]::Matches(
+                        $normalized,
+                        $patternRegex,
+                        [System.Text.RegularExpressions.RegexOptions]::IgnoreCase
+                    )) {
+                        $value = $m.Value
+                        if (-not $pats.Contains($value)) { [void]$pats.Add($value) }
+                        if (-not $filesHit.Contains($rel)) { [void]$filesHit.Add($rel) }
+                    }
+                }
+            }
+
+            # Also try UTF-8 decode for text-ish files
+            $ext = $file.Extension.ToLowerInvariant()
+            if ($ext -in @('.class', '.json', '.toml', '.properties', '.cfg', '.txt', '.xml', '.mf', '.js', '.yml', '.yaml')) {
+                try {
+                    $utf8 = [System.Text.Encoding]::UTF8.GetString($fileBytes)
+                    $normalized = KL-NormalizeText $utf8
+
+                    foreach ($s in $cheatStrings) {
+                        if ($normalized.IndexOf($s, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
+                            if (-not $strs.Contains($s)) { [void]$strs.Add($s) }
+                            if (-not $filesHit.Contains($rel)) { [void]$filesHit.Add($rel) }
+                        }
+                    }
 
                     if ($patternRegex) {
                         foreach ($m in [regex]::Matches(
@@ -724,33 +792,21 @@ function KL-ScanSigs {
                             [System.Text.RegularExpressions.RegexOptions]::IgnoreCase
                         )) {
                             $value = $m.Value
-
-                            if (-not $pats.Contains($value)) {
-                                [void]$pats.Add($value)
-                            }
-
-                            if (-not $filesHit.Contains($name)) {
-                                [void]$filesHit.Add($name)
-                            }
+                            if (-not $pats.Contains($value)) { [void]$pats.Add($value) }
+                            if (-not $filesHit.Contains($rel)) { [void]$filesHit.Add($rel) }
                         }
                     }
-
-                    foreach ($s in $cheatStrings) {
-                        if ($normalized.IndexOf(
-                            $s,
-                            [System.StringComparison]::OrdinalIgnoreCase
-                        ) -ge 0) {
-                            if (-not $strs.Contains($s)) {
-                                [void]$strs.Add($s)
-                            }
-
-                            if (-not $filesHit.Contains($name)) {
-                                [void]$filesHit.Add($name)
-                            }
-                        }
-                    }
-                }
+                } catch {}
             }
+        }
+    } catch {
+        # Dump failed — fall back to in-memory entry scan is already partially covered
+    } finally {
+        # Clean up the dump folder
+        if ($tempRoot -and (Test-Path -LiteralPath $tempRoot)) {
+            try {
+                Remove-Item -LiteralPath $tempRoot -Recurse -Force -ErrorAction SilentlyContinue
+            } catch {}
         }
     }
 
@@ -759,9 +815,16 @@ function KL-ScanSigs {
         @($strs)
     ) | Where-Object { $_ } | Select-Object -Unique
 
+    # Cap the full-string dump so reports stay usable
+    $allList = @($allStrs | Sort-Object)
+    if ($allList.Count -gt 1500) {
+        $allList = $allList | Select-Object -First 1500
+    }
+
     return @{
         P     = @($pats)
         S     = @($strs)
+        All   = @($allList)
         FW    = @()
         Files = @($filesHit)
         Total = @($final)
@@ -1033,18 +1096,19 @@ function New-KLResult {
     )
 
     [pscustomobject]@{
-        Name        = [System.IO.Path]::GetFileName($Path)
-        Path        = $Path
-        SHA1        = $null
-        Status      = $Status
-        Source      = 'Unknown'
-        VerifiedAs  = $null
-        Signatures  = @()
+        Name         = [System.IO.Path]::GetFileName($Path)
+        Path         = $Path
+        SHA1         = $null
+        Status       = $Status
+        Source       = 'Unknown'
+        VerifiedAs   = $null
+        Signatures   = @()
         CheatStrings = @()
-        HitFiles    = @()
-        Bypass      = @()
-        Obfuscation = @()
-        ScanError   = $null
+        AllStrings   = @()   # broader dump of strings found inside the JAR
+        HitFiles     = @()
+        Bypass       = @()
+        Obfuscation  = @()
+        ScanError    = $null
     }
 }
 
@@ -1321,12 +1385,13 @@ foreach ($result in $results) {
 }
 
 $verified = @($results | Where-Object { $_.Status -eq 'VERIFIED' })
-$toScan = @($results | Where-Object {
-    $_.Status -eq 'UNKNOWN' -or $DeepScanAll
-})
+
+# Always deep-scan EVERY jar (even VERIFIED ones).
+# Renamed ghost clients can still have a hash in Megabase/Modrinth.
+$toScan = @($results)
 
 KL-Write ""
-KL-Info "Verified: $($verified.Count)  |  To deep-scan: $($toScan.Count)"
+KL-Info "Verified (hash): $($verified.Count)  |  Deep-scanning ALL: $($toScan.Count)"
 
 
 KL-Header "PASS 2 — CHEAT-SIGNATURE SCAN"
@@ -1341,16 +1406,21 @@ foreach ($result in $toScan) {
     try {
         $sig = KL-ScanSigs $result.Path
 
-        $result.Signatures = @($sig.P | Select-Object -Unique)
+        $result.Signatures   = @($sig.P | Select-Object -Unique)
         $result.CheatStrings = @($sig.S | Select-Object -Unique)
-        $result.HitFiles = @($sig.Files | Select-Object -Unique)
+        $result.AllStrings   = @($sig.All | Select-Object -Unique)
+        $result.HitFiles     = @($sig.Files | Select-Object -Unique)
 
         if ($result.Signatures.Count -gt 0 -or
             $result.CheatStrings.Count -gt 0) {
 
+            # Hash verification is not trusted when strings match known cheats
             $result.Status = 'FLAGGED'
 
             KL-Bad "  FLAGGED: $($result.Name)"
+            if ($result.Source -eq 'Megabase' -or $result.Source -eq 'Modrinth') {
+                KL-Warn "  (was hash-verified via $($result.Source) — hash match ignored due to cheat strings)"
+            }
             KL-PrintFindings $result
         } else {
             KL-Good "  Clean signature pass: $($result.Name)"
@@ -1382,6 +1452,10 @@ foreach ($result in $toScan) {
 
         if ($result.Bypass.Count -gt 0) {
             if ($result.Status -ne 'FLAGGED') {
+                $result.Status = 'BYPASS'
+            }
+            # Hash match alone is not trusted when injection indicators exist
+            if ($result.Status -eq 'VERIFIED') {
                 $result.Status = 'BYPASS'
             }
 
@@ -1421,7 +1495,8 @@ foreach ($result in $toScan) {
         $result.Obfuscation = @($hits | Select-Object -Unique)
 
         if ($result.Obfuscation.Count -gt 0) {
-            if ($result.Status -eq 'UNKNOWN') {
+            # Demote hash-only VERIFIED / UNKNOWN when heavy obfuscation is present
+            if ($result.Status -eq 'UNKNOWN' -or $result.Status -eq 'VERIFIED') {
                 $result.Status = 'OBFUSCATED'
             }
 
@@ -1651,6 +1726,15 @@ if ($exportAnswer -match '^(?i)y|yes$') {
             [void]$sb.AppendLine("")
         }
 
+        # FULL dump of strings extracted from the mod (classes, json, paths, etc.)
+        if ($r.AllStrings -and $r.AllStrings.Count -gt 0) {
+            [void]$sb.AppendLine("  ALL EXTRACTED STRINGS FROM THIS MOD ($($r.AllStrings.Count)):")
+            foreach ($s in ($r.AllStrings | Sort-Object)) {
+                [void]$sb.AppendLine("    $s")
+            }
+            [void]$sb.AppendLine("")
+        }
+
         if ($r.ScanError) {
             [void]$sb.AppendLine("  Scan error: $($r.ScanError)")
             [void]$sb.AppendLine("")
@@ -1661,7 +1745,8 @@ if ($exportAnswer -match '^(?i)y|yes$') {
             $r.Signatures.Count -eq 0 -and
             $r.Bypass.Count -eq 0 -and
             $r.Obfuscation.Count -eq 0 -and
-            $r.HitFiles.Count -eq 0) {
+            $r.HitFiles.Count -eq 0 -and
+            (-not $r.AllStrings -or $r.AllStrings.Count -eq 0)) {
             [void]$sb.AppendLine("  (no strings / signatures found)")
             [void]$sb.AppendLine("")
         }
