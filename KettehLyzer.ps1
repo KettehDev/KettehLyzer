@@ -1,5 +1,5 @@
-
-    KETTEHLYZER v2.2
+<#
+    KETTEHLYZER v2.3
     Minecraft Mod Security Analyzer
     No GUI - Pure Terminal
 
@@ -14,6 +14,7 @@
       - Java runtime / uptime display
       - Sensitive JVM argument redaction
       - Shows exact cheat strings/signatures found in flagged mods
+#>
 
 param(
     [string]$ModsPath = "",
@@ -75,7 +76,7 @@ function KL-HeaderBanner {
     KL-Write " ██║  ██╗███████╗   ██║      ██║   ███████╗██║  ██║" Cyan
     KL-Write " ╚═╝  ╚═╝╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝" Cyan
     KL-Write ""
-    KL-Write "                  KETTEHLYZER v2.2" Yellow
+    KL-Write "                  KETTEHLYZER v2.3" Yellow
     KL-Write "           Minecraft Mod Security Analyzer" White
     KL-Write "               No GUI • Pure Terminal" DarkGray
     KL-Write ""
@@ -1123,56 +1124,127 @@ function Get-KLDefaultModsPath {
     return $null
 }
 
+function Get-KLModsPathFromCommandLine {
+    param([string]$CommandLine)
+
+    if ([string]::IsNullOrWhiteSpace($CommandLine)) {
+        return $null
+    }
+
+    # Common --gameDir / -gameDir patterns (quoted or unquoted)
+    $patterns = @(
+        '(?i)--gameDir\s+"([^"]+)"',
+        '(?i)--gameDir\s+(\S+)',
+        '(?i)-gameDir\s+"([^"]+)"',
+        '(?i)-gameDir\s+(\S+)',
+        '(?i)--game-dir\s+"([^"]+)"',
+        '(?i)--game-dir\s+(\S+)'
+    )
+
+    foreach ($pat in $patterns) {
+        $m = [regex]::Match($CommandLine, $pat)
+        if ($m.Success) {
+            $gameDir = $m.Groups[1].Value.TrimEnd('\', '/')
+            $mods = Join-Path $gameDir 'mods'
+            if (Test-Path -LiteralPath $mods -PathType Container) {
+                return $mods
+            }
+            if (Test-Path -LiteralPath $gameDir -PathType Container) {
+                return $gameDir   # fallback: scan the game dir itself
+            }
+        }
+    }
+
+    # Modrinth / Theseus style paths sometimes appear as working dir or profile folders
+    $m2 = [regex]::Match($CommandLine, '(?i)(ModrinthApp\\profiles\\[^\\"]+)')
+    if ($m2.Success) {
+        $profile = Join-Path $env:APPDATA $m2.Groups[1].Value
+        $mods = Join-Path $profile 'mods'
+        if (Test-Path -LiteralPath $mods -PathType Container) {
+            return $mods
+        }
+    }
+
+    return $null
+}
+
 
 KL-HeaderBanner
 
-Show-KLJavaRuntime
-
-if ([string]::IsNullOrWhiteSpace($ModsPath)) {
-    $ModsPath = Get-KLDefaultModsPath
-}
-
-if ([string]::IsNullOrWhiteSpace($ModsPath) -or
-    -not (Test-Path -LiteralPath $ModsPath -PathType Container)) {
-
-    KL-Write ""
-    KL-Warn "Mods folder was not automatically found."
-    KL-Write ""
-
-    $ModsPath = Read-Host "Enter the full path to the mods folder"
-
-    if (-not (Test-Path -LiteralPath $ModsPath -PathType Container)) {
-        KL-Bad "Folder not found: $ModsPath"
-
-        if (-not $NoPause) {
-            Read-Host "Press Enter to exit"
-        }
-
-        exit 1
-    }
-}
-
-$ModsPath = (Resolve-Path -LiteralPath $ModsPath).Path
-
-KL-Write ""
-KL-Info "Mods path: $ModsPath"
-
+# ------------------------------------------------------------------
+# Interactive path selection – never auto-scan
+# ------------------------------------------------------------------
 
 $javaProcesses = @(Get-KLJavaProcesses)
 $minecraftProcesses = @($javaProcesses | Where-Object { $_.IsMinecraft })
+
+$selectedModsPath = $null
 
 if ($minecraftProcesses.Count -gt 0) {
     KL-Write ""
     KL-Write "Current Minecraft javaw.exe process found." Cyan
 
-    if (-not $NoPause) {
-        $answer = Read-Host "Would you like to include its runtime in this scan? [y/n]"
+    # Show a short runtime summary so the user knows what was detected
+    $mc = $minecraftProcesses | Sort-Object StartTime -Descending | Select-Object -First 1
+    KL-Write "  PID     : $($mc.ProcessId)" White
+    if ($mc.StartTime) {
+        KL-Write ("  Started : {0}" -f $mc.StartTime.ToString("yyyy-MM-dd HH:mm:ss")) White
+        KL-Write "  Uptime  : $(Format-KLUptime $mc.StartTime)" White
+    }
 
-        if ($answer -match '^(?i)y|yes$') {
-            Show-KLJavaRuntime
+    KL-Write ""
+    $answer = Read-Host "Wanna scan the current javaw.exe process? [y/n]"
+
+    if ($answer -match '^(?i)y|yes$') {
+        # Try to pull the mods folder from the process command line
+        $fromCmd = Get-KLModsPathFromCommandLine $mc.CommandLine
+
+        if ($fromCmd) {
+            $selectedModsPath = $fromCmd
+            KL-Good "Using mods path from running process: $selectedModsPath"
+        } else {
+            KL-Warn "Could not extract a mods folder from the process command line."
+            KL-Write "Falling back to manual path entry." Yellow
+        }
+
+        # Always show full (redacted) runtime info when user chooses yes
+        Show-KLJavaRuntime
+    } else {
+        KL-Write ""
+        KL-Info "Skipping running process. You can enter a path manually."
+    }
+} else {
+    KL-Write ""
+    KL-Warn "No Minecraft javaw.exe process currently running."
+}
+
+# If we still don't have a path (user said n, or extraction failed, or no process)
+if ([string]::IsNullOrWhiteSpace($selectedModsPath)) {
+    if (-not [string]::IsNullOrWhiteSpace($ModsPath) -and
+        (Test-Path -LiteralPath $ModsPath -PathType Container)) {
+        # Honour a path supplied via -ModsPath parameter
+        $selectedModsPath = $ModsPath
+    } else {
+        KL-Write ""
+        $selectedModsPath = Read-Host "Enter the full path to the mods folder"
+
+        if ([string]::IsNullOrWhiteSpace($selectedModsPath) -or
+            -not (Test-Path -LiteralPath $selectedModsPath -PathType Container)) {
+            KL-Bad "Folder not found: $selectedModsPath"
+
+            if (-not $NoPause) {
+                Read-Host "Press Enter to exit"
+            }
+
+            exit 1
         }
     }
 }
+
+$ModsPath = (Resolve-Path -LiteralPath $selectedModsPath).Path
+
+KL-Write ""
+KL-Info "Mods path: $ModsPath"
 
 
 $jars = @(
@@ -1471,6 +1543,150 @@ if ($flaggedCount -gt 0) {
             }
         }
     }
+}
+
+# ------------------------------------------------------------------
+# Optional export of ALL detected strings for every mod
+# ------------------------------------------------------------------
+
+KL-Write ""
+$exportAnswer = Read-Host "Do you wanna upload all mod strings to a .txt? [y/n]"
+
+if ($exportAnswer -match '^(?i)y|yes$') {
+    $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+    $desktop   = [Environment]::GetFolderPath("Desktop")
+    $reportPath = Join-Path $desktop "KettehLyzer_Strings_$timestamp.txt"
+
+    $sb = New-Object System.Text.StringBuilder
+
+    [void]$sb.AppendLine("KETTEHLYZER v2.3 — Full String Export")
+    [void]$sb.AppendLine("Generated : $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')")
+    [void]$sb.AppendLine("Mods path : $ModsPath")
+    [void]$sb.AppendLine("Total JARs: $($results.Count)")
+    [void]$sb.AppendLine("")
+    [void]$sb.AppendLine(("=" * 70))
+    [void]$sb.AppendLine("")
+
+    # ---- Unique summary across all mods ----
+    [void]$sb.AppendLine("UNIQUE CHEAT STRINGS (all mods combined)")
+    [void]$sb.AppendLine(("-" * 40))
+    if ($totalCheatHits.Count -eq 0) {
+        [void]$sb.AppendLine("  (none)")
+    } else {
+        foreach ($s in ($totalCheatHits | Sort-Object)) {
+            [void]$sb.AppendLine("  • $s")
+        }
+    }
+    [void]$sb.AppendLine("")
+
+    [void]$sb.AppendLine("UNIQUE SIGNATURES (all mods combined)")
+    [void]$sb.AppendLine(("-" * 40))
+    if ($totalSigHits.Count -eq 0) {
+        [void]$sb.AppendLine("  (none)")
+    } else {
+        foreach ($s in ($totalSigHits | Sort-Object)) {
+            [void]$sb.AppendLine("  • $s")
+        }
+    }
+    [void]$sb.AppendLine("")
+    [void]$sb.AppendLine(("=" * 70))
+    [void]$sb.AppendLine("")
+
+    # ---- Per-mod breakdown ----
+    [void]$sb.AppendLine("PER-MOD BREAKDOWN")
+    [void]$sb.AppendLine("")
+
+    foreach ($r in ($results | Sort-Object Name)) {
+        [void]$sb.AppendLine(("=" * 70))
+        [void]$sb.AppendLine("MOD      : $($r.Name)")
+        [void]$sb.AppendLine("Status   : $($r.Status)")
+        if ($r.SHA1) {
+            [void]$sb.AppendLine("SHA-1    : $($r.SHA1)")
+        }
+        if ($r.Source -and $r.Source -ne 'Unknown') {
+            [void]$sb.AppendLine("Source   : $($r.Source)")
+        }
+        if ($r.VerifiedAs) {
+            [void]$sb.AppendLine("Match    : $($r.VerifiedAs)")
+        }
+        [void]$sb.AppendLine("")
+
+        if ($r.CheatStrings.Count -gt 0) {
+            [void]$sb.AppendLine("  Cheat strings:")
+            foreach ($s in ($r.CheatStrings | Select-Object -Unique | Sort-Object)) {
+                [void]$sb.AppendLine("    • $s")
+            }
+            [void]$sb.AppendLine("")
+        }
+
+        if ($r.Signatures.Count -gt 0) {
+            [void]$sb.AppendLine("  Suspicious signatures:")
+            foreach ($s in ($r.Signatures | Select-Object -Unique | Sort-Object)) {
+                [void]$sb.AppendLine("    • $s")
+            }
+            [void]$sb.AppendLine("")
+        }
+
+        if ($r.Bypass.Count -gt 0) {
+            [void]$sb.AppendLine("  Bypass / injection indicators:")
+            foreach ($s in ($r.Bypass | Select-Object -Unique | Sort-Object)) {
+                [void]$sb.AppendLine("    • $s")
+            }
+            [void]$sb.AppendLine("")
+        }
+
+        if ($r.Obfuscation.Count -gt 0) {
+            [void]$sb.AppendLine("  Obfuscation indicators:")
+            foreach ($s in ($r.Obfuscation | Select-Object -Unique | Sort-Object)) {
+                [void]$sb.AppendLine("    • $s")
+            }
+            [void]$sb.AppendLine("")
+        }
+
+        if ($r.HitFiles.Count -gt 0) {
+            [void]$sb.AppendLine("  Matching archive entries:")
+            foreach ($s in ($r.HitFiles | Select-Object -Unique | Sort-Object)) {
+                [void]$sb.AppendLine("    • $s")
+            }
+            [void]$sb.AppendLine("")
+        }
+
+        if ($r.ScanError) {
+            [void]$sb.AppendLine("  Scan error: $($r.ScanError)")
+            [void]$sb.AppendLine("")
+        }
+
+        # If the mod had zero findings
+        if ($r.CheatStrings.Count -eq 0 -and
+            $r.Signatures.Count -eq 0 -and
+            $r.Bypass.Count -eq 0 -and
+            $r.Obfuscation.Count -eq 0 -and
+            $r.HitFiles.Count -eq 0) {
+            [void]$sb.AppendLine("  (no strings / signatures found)")
+            [void]$sb.AppendLine("")
+        }
+    }
+
+    [void]$sb.AppendLine(("=" * 70))
+    [void]$sb.AppendLine("End of report.")
+
+    try {
+        [System.IO.File]::WriteAllText($reportPath, $sb.ToString(), [System.Text.Encoding]::UTF8)
+        KL-Good "Exported all mod strings to:"
+        KL-Write "  $reportPath" Cyan
+
+        # Open the file in Notepad
+        try {
+            Start-Process "notepad.exe" -ArgumentList $reportPath
+            KL-Info "Opened the report in Notepad."
+        } catch {
+            KL-Warn "Could not open Notepad automatically. File is saved at the path above."
+        }
+    } catch {
+        KL-Bad "Failed to write report: $($_.Exception.Message)"
+    }
+} else {
+    KL-Info "Skipped string export."
 }
 
 KL-Write ""
